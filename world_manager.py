@@ -30,8 +30,23 @@ class WorldManager:
                     l.append(position.Position(i, j))
         return l
     
+    def tick(self) -> None:
+        self._current_tick += 1
+
+        for homebase in self._homebases:
+            homebase.tick()
+        
+        for rotator in self._rotators:
+            rotator.tick()
+        
+        for attacker in self._attackers:
+            attacker.tick()
+    
     def run(self) -> None:
         pass # Main loop of the world manager.
+
+    def draw(self) -> None:
+        pass # Draws the world map to the screen.
 
     def get_homebases(self) -> list[entity.Entity]:
         return self._homebases # Returns the alive homebases.
@@ -40,4 +55,4 @@ class WorldManager:
         return self._world_map # Returns the world map.
     
     def deregister(self, cell: entity.Entity) -> None:
-        self._world_map[cell.get_pos()[0]][cell.get_pos()[1]] = None
+        self._world_map[cell.get_pos()[0]][cell.get_pos()[1]] = None # Sets the cell to None in the world map.
