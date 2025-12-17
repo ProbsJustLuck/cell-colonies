@@ -1,14 +1,15 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 from pygame import Surface
-import position
+
+import classes.position as position
 
 if TYPE_CHECKING:
-    import world_manager
+    import classes.world_manager as world_manager
 
 class Entity:
-    category: str = "" # What category this entity is (from "type").
-    icon: Surface = None # The icon that this entity uses.
+    _type: Optional[str] = None # What type of entity this is
+    _icon: Optional[Surface] = None # The icon that this entity uses.
     
     def __init__(self, x: int, y: int):
         self.pos = position.Position(x, y)
@@ -18,8 +19,8 @@ class Entity:
     def tick(self) -> None:
         return None # Generic tick function
     
-    def get_pos(self) -> tuple[int, int]:
-        return ( self.pos.get_x(), self.pos.get_y() )
+    def get_pos(self) -> position.Position:
+        return position.Position(self.pos.get_x(), self.pos.get_y())
     
     def _deregister(self, world_manager: world_manager.WorldManager):
         world_manager.deregister(self) # Deregisters this entity from the world manager.
