@@ -7,7 +7,7 @@ import classes.cell as cell
 import classes.homebase as homebase
 
 class Attacker(cell.Cell):
-    __type: str = "hostile"
+    __type: str = "HOSTILE"
     __icon: Optional[pygame.Surface] = None
 
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: classes.world_manager.WorldManager):
