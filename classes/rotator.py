@@ -1,8 +1,10 @@
+from __future__ import annotations
 import random
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import pygame
 
+import classes.position as position 
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
@@ -25,6 +27,7 @@ class Rotator(cell.Cell):
         self.__health: int = health
         self.__homebase: homebase.Homebase = homebase_link
 
+        self.__target: position.Position | None = None
         self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
 
         self.__stationary: bool = False
@@ -44,14 +47,16 @@ class Rotator(cell.Cell):
     def change_health(self, delta: int): self.__health += delta
 
 
-    def get_type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    @property
+    def type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+
+
+    @property
+    def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this homebase.
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
         pass # to be implemented later
-    
-
-    def get_icon(self) -> Optional[pygame.Surface]: return self.__icon # Returns the icon for this homebase.
 
 
     def __move(self) -> None: # type: ignore
@@ -73,13 +78,13 @@ class Rotator(cell.Cell):
 
 
     def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[Optional[entity.Entity]]: # type: ignore
-        l: list[Optional[entity.Entity]] = []
+        l: list[entity.Entity | None] = []
 
         x_pos = self.pos.get_x()
         y_pos = self.pos.get_y()
 
         dir_mapping: dict[str, tuple[int, int]] = constants.MAPPINGS
-        cells: tuple[Optional[entity.Entity], ...] = (
+        cells: tuple[entity.Entity | None, ...] = (
             world_manager.get_cell(x_pos + dir_mapping["N"][0], y_pos + dir_mapping["N"][1]),
             world_manager.get_cell(x_pos + dir_mapping["S"][0], y_pos + dir_mapping["S"][1]),
             world_manager.get_cell(x_pos + dir_mapping["E"][0], y_pos + dir_mapping["E"][1]),

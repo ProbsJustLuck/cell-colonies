@@ -1,4 +1,6 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
+
 import classes.entity as entity
 import classes.homebase as homebase
 
@@ -22,5 +24,3 @@ class Cell(entity.Entity):
 
     def _move(self) -> None:
         pass # Moves the cell toward its target, each cell implements this differently. Uses the pathfind() method
-
-    

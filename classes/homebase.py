@@ -1,3 +1,4 @@
+from __future__ import annotations
 from typing import TYPE_CHECKING
 import pygame
 
@@ -29,7 +30,12 @@ class Homebase(entity.Entity):
     def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this homebase.
 
 
-    def tick(self, world_manager: "world_manager.WorldManager"): pass
+    def tick(self, world_manager: "world_manager.WorldManager"): 
+        if self.__health < 0:
+            self._deregister(world_manager)
+            return
+        
+
 
 
     def change_health(self, delta: int) -> None: self.__health += delta # Changes the health of this homebase
@@ -39,4 +45,7 @@ class Homebase(entity.Entity):
 
 
     def _deregister(self, world_manager: "world_manager.WorldManager"): # type: ignore
+        for cell in self.__cells:
+            cell._deregister(world_manager)
+
         world_manager.deregister(self) # Deregisters this homebase from the world manager.

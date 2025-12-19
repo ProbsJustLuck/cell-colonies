@@ -1,3 +1,4 @@
+from __future__ import annotations
 import random
 from typing import TYPE_CHECKING, Optional
 import pygame
@@ -17,7 +18,9 @@ class Attacker(cell.Cell):
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
         super().__init__(x, y, homebase_link)
 
-        self.__target: homebase.Homebase = random.choice([hb for hb in world_manager.get_homebases() if hb is not homebase_link]) # Sets a random Homebase as its target
+        choices = random.choice([hb for hb in world_manager.get_homebases() if hb is not homebase_link])
+        if not choices: self.__target = homebase_link
+        else: self.__target: homebase.Homebase = choices # Sets a random Homebase as its target
 
         self.__direction: str = self.__set_starting_dir() # The direction that this Attacker is facing.
 
