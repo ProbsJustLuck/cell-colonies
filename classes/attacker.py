@@ -10,6 +10,7 @@ class Attacker(cell.Cell):
     __type: str = "HOSTILE"
     __icon: Optional[pygame.Surface] = None
 
+
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: classes.world_manager.WorldManager):
         super().__init__(x, y, homebase_link)
 
@@ -27,11 +28,21 @@ class Attacker(cell.Cell):
         elif self.__target.get_pos().get_x() > self.get_pos().get_x(): return "E"
         else: return "W"
 
+
     def get_direction(self) -> str: return self.__direction
+
 
     def set_direction(self, target: str) -> None: self.__direction = target
 
+
     def set_rotated(self) -> None: self.__rotated = True
+
+
+    def get_type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    
+
+    def get_icon(self) -> Optional[pygame.Surface]: return self.__icon # Returns the icon for this homebase.
+
 
     def _move(self) -> None:
         pass

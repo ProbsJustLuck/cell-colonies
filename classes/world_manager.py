@@ -1,10 +1,13 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
+from classes.homebase import Homebase # type: ignore
 import classes.position as position
 
 if TYPE_CHECKING:
     import classes.entity as entity
     import classes.homebase as homebase
+    import classes.attacker as attacker
+    import classes.rotator as rotator
 
 class WorldManager:
     
@@ -38,6 +41,7 @@ class WorldManager:
                     l.append(position.Position(i, j))
         return l
     
+
     def __tick(self) -> None: # type: ignore
         self._current_tick += 1
 
@@ -50,20 +54,32 @@ class WorldManager:
         for attacker in self._attackers:
             attacker.tick()
     
+
     def run(self) -> None:
         pass # Main loop of the world manager.
+
 
     def __draw(self) -> None: # type: ignore
         pass # Draws the world map to the screen.
 
-    def get_homebases(self) -> list[homebase.Homebase]:
-        return self._homebases # Returns the alive homebases.
+
+    def get_homebases(self) -> list[homebase.Homebase]: return self._homebases # Returns the alive homebases.
     
-    def get_map(self) -> list[list[Optional[entity.Entity]]]:
-        return self._world_map # Returns the world map.
+
+    def get_map(self) -> list[list[Optional[entity.Entity]]]: return self._world_map # Returns the world map.
     
-    def get_mappings(self) -> dict[str, tuple[int, int]]:
-        return self._mappings # Returns the mappings, aka directions in the form of 2d array values
+
+    def get_mappings(self) -> dict[str, tuple[int, int]]: return self._mappings # Returns the mappings, aka directions in the form of 2d array values
     
+
     def deregister(self, cell: entity.Entity) -> None:
         self._world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = None # Sets the cell to None in the world map.
+
+
+    def add_cell(self, cell: entity.Entity):
+        if(type(cell) == homebase.Homebase):
+            self._homebases.append(cell)
+        elif(type(cell) == attacker.Attacker):
+            self._attackers.append(cell)
+        elif(type(cell) == rotator.Rotator):
+            self._rotators.append(cell)

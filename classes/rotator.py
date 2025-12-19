@@ -1,6 +1,8 @@
 import random
 from typing import Optional
 
+import pygame
+
 import classes.cell as cell
 import classes.homebase as homebase
 from classes.position import Position
@@ -10,6 +12,8 @@ import classes.entity as entity
 
 class Rotator(cell.Cell):
     __type: str = "UTILITY"
+    __icon: Optional[pygame.Surface] = None
+
 
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: classes.world_manager.WorldManager, health: int = 2):
         super().__init__(x, y, homebase_link)
@@ -21,6 +25,7 @@ class Rotator(cell.Cell):
         self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
 
         self.__stationary: bool = False
+
 
     def __set_target(self, world_manager: classes.world_manager.WorldManager) -> None:
         free_spaces: list[Position] = world_manager.get_empty_cells()
@@ -35,13 +40,23 @@ class Rotator(cell.Cell):
         num: int = random.randint(0, len(free_spaces))
         self.target = Position(free_spaces[num].get_x(), free_spaces[num].get_y())
 
+
     def change_health(self, delta: int): self.__health += delta
+
+
+    def get_type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    
+
+    def get_icon(self) -> Optional[pygame.Surface]: return self.__icon # Returns the icon for this homebase.
+
 
     def __move(self) -> None: # type: ignore
         pass
 
+
     def __rotate_target(self) -> None: # type: ignore
         pass
+
 
     def __get_surroundings(self, world_manager: classes.world_manager.WorldManager) -> list[Optiona[entity.Entity]]: # type: ignore
         l: list[Optional[entity.Entity]] = []

@@ -7,10 +7,7 @@ import classes.position as position
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
 
-class Entity:
-    _type: Optional[str] = None # What type of entity this is
-    _icon: Optional[Surface] = None # The icon that this entity uses.
-    
+class Entity:    
     def __init__(self, x: int, y: int):
         self.pos = position.Position(x, y)
 
@@ -22,7 +19,11 @@ class Entity:
     def get_pos(self) -> position.Position:
         return position.Position(self.pos.get_x(), self.pos.get_y())
     
-    def _deregister(self, world_manager: world_manager.WorldManager):
+    def get_type(self) -> str: return "" # Generic get_type function, overridden by child classes.
+
+    def get_icon(self) -> Optional[Surface]: pass # Generic get_icon function, overridden by child classes.
+    
+    def _deregister(self, world_manager: world_manager.WorldManager) -> None:
         world_manager.deregister(self) # Deregisters this entity from the world manager.
 
     def _move(self) -> None:
