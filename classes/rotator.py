@@ -1,25 +1,29 @@
 import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import pygame
 
 import classes.cell as cell
 import classes.homebase as homebase
-from classes.position import Position
-import classes.world_manager
+import classes.position as position
+import classes.attacker as attacker
 import classes.entity as entity
+import constants
+
+
+if TYPE_CHECKING:
+    import classes.world_manager as world_manager
 
 
 class Rotator(cell.Cell):
     __type: str = "UTILITY"
-    __icon: Optional[pygame.Surface] = None
+    __icon: pygame.Surface | None = None
 
 
-    def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: classes.world_manager.WorldManager, health: int = 2):
+    def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2):
         super().__init__(x, y, homebase_link)
 
         self.__health: int = health
-
         self.__homebase: homebase.Homebase = homebase_link
 
         self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
@@ -27,8 +31,8 @@ class Rotator(cell.Cell):
         self.__stationary: bool = False
 
 
-    def __set_target(self, world_manager: classes.world_manager.WorldManager) -> None:
-        free_spaces: list[Position] = world_manager.get_empty_cells()
+    def __set_target(self, world_manager: "world_manager.WorldManager") -> None:
+        free_spaces: list[position.Position] = world_manager.get_empty_cells()
         for i in range(len(free_spaces)):
             dx: int = abs(free_spaces[i].get_x() - self.__homebase.get_pos().get_x())
             dy: int = abs(free_spaces[i].get_y() - self.__homebase.get_pos().get_y())
@@ -37,14 +41,17 @@ class Rotator(cell.Cell):
             if total > 5: free_spaces.pop(i)
 
         if len(free_spaces) == 0: return
-        num: int = random.randint(0, len(free_spaces))
-        self.target = Position(free_spaces[num].get_x(), free_spaces[num].get_y())
+        self.target = random.choice(free_spaces)
 
 
     def change_health(self, delta: int): self.__health += delta
 
 
     def get_type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+
+
+    def tick(self, world_manager: "world_manager.WorldManager") -> None:
+        pass # to be implemented later
     
 
     def get_icon(self) -> Optional[pygame.Surface]: return self.__icon # Returns the icon for this homebase.
@@ -54,25 +61,38 @@ class Rotator(cell.Cell):
         pass
 
 
-    def __rotate_target(self) -> None: # type: ignore
-        pass
+    def __rotate_target(self, cell: entity.Entity) -> None: # type: ignore
+        if type(cell) != attacker.Attacker: return
+
+        dir: str = cell.get_direction()
+        opposites: dict[str, str] = { # cleaner than 4 if/elif statements
+            "N": "S",
+            "S": "N",
+            "E": "W",
+            "W": "E"
+        }
+
+        cell.set_direction(opposites[dir])
 
 
-    def __get_surroundings(self, world_manager: classes.world_manager.WorldManager) -> list[Optiona[entity.Entity]]: # type: ignore
+    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[Optional[entity.Entity]]: # type: ignore
         l: list[Optional[entity.Entity]] = []
 
         x_pos = self.pos.get_x()
         y_pos = self.pos.get_y()
 
-        dir_mapping: dict[str, tuple[int, int]] = world_manager.get_mappings()
+        dir_mapping: dict[str, tuple[int, int]] = constants.MAPPINGS
         cells: tuple[Optional[entity.Entity], ...] = (
-            world_manager.get_map()[x_pos + dir_mapping["N"][0]][y_pos + dir_mapping["N"][1]],
-            world_manager.get_map()[x_pos + dir_mapping["S"][0]][y_pos + dir_mapping["S"][1]],
-            world_manager.get_map()[x_pos + dir_mapping["E"][0]][y_pos + dir_mapping["E"][1]],
-            world_manager.get_map()[x_pos + dir_mapping["W"][0]][y_pos + dir_mapping["W"][1]]
+            world_manager.get_cell(x_pos + dir_mapping["N"][0], y_pos + dir_mapping["N"][1]),
+            world_manager.get_cell(x_pos + dir_mapping["S"][0], y_pos + dir_mapping["S"][1]),
+            world_manager.get_cell(x_pos + dir_mapping["E"][0], y_pos + dir_mapping["E"][1]),
+            world_manager.get_cell(x_pos + dir_mapping["W"][0], y_pos + dir_mapping["W"][1])
         )
 
         for cell in cells:
             if cell != None: l.append(cell)
 
         return l
+    
+
+    def set_stationary(self) -> None: self.__stationary = True # Sets this rotator to be stationary (has reached its target at least once)

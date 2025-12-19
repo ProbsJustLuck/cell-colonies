@@ -1,21 +1,25 @@
 import random
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 import pygame
 
-import classes.world_manager
 import classes.cell as cell
 import classes.homebase as homebase
+
+if TYPE_CHECKING:
+    import classes.world_manager as world_manager
+    
 
 class Attacker(cell.Cell):
     __type: str = "HOSTILE"
     __icon: Optional[pygame.Surface] = None
 
 
-    def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: classes.world_manager.WorldManager):
+    def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
         super().__init__(x, y, homebase_link)
 
         homebases: list[homebase.Homebase] = world_manager.get_homebases()
-        self.__target: homebase.Homebase = homebases[random.randint(0, len(homebases))] # Sets a random Homebase as its target
+        homebases.remove(homebase_link)
+        self.__target: homebase.Homebase = random.choice(homebases) # Sets a random Homebase as its target
 
         self.__direction: str = self.__set_starting_dir() # The direction that this Attacker is facing.
 
@@ -23,8 +27,8 @@ class Attacker(cell.Cell):
 
 
     def __set_starting_dir(self) -> str:
-        if self.__target.get_pos().get_y() > self.get_pos().get_y(): return "N"
-        elif self.__target.get_pos().get_y() < self.get_pos().get_y(): return "S"
+        if self.__target.get_pos().get_y() < self.get_pos().get_y(): return "N"
+        elif self.__target.get_pos().get_y() > self.get_pos().get_y(): return "S"
         elif self.__target.get_pos().get_x() > self.get_pos().get_x(): return "E"
         else: return "W"
 
@@ -38,10 +42,15 @@ class Attacker(cell.Cell):
     def set_rotated(self) -> None: self.__rotated = True
 
 
-    def get_type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    def tick(self, world_manager: "world_manager.WorldManager") -> None: pass
+
+
+    @property
+    def type(self) -> str: return self.__type # Returns this attacker's type
     
 
-    def get_icon(self) -> Optional[pygame.Surface]: return self.__icon # Returns the icon for this homebase.
+    @property
+    def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this attacker.
 
 
     def _move(self) -> None:

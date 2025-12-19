@@ -13,21 +13,19 @@ class Entity:
 
         self._alive: bool = True # Whether this entity is laive or not.
 
-    def tick(self) -> None:
-        return None # Generic tick function
+    def tick(self, world_manager: "world_manager.WorldManager") -> None: return None # Generic tick function
     
-    def get_pos(self) -> position.Position:
-        return position.Position(self.pos.get_x(), self.pos.get_y())
+    def get_pos(self) -> position.Position: return position.Position(self.pos.get_x(), self.pos.get_y())
     
-    def get_type(self) -> str: return "" # Generic get_type function, overridden by child classes.
+    @property
+    def type(self) -> str: return "" # Generic type property, overridden by child classes.
 
-    def get_icon(self) -> Optional[Surface]: pass # Generic get_icon function, overridden by child classes.
+    @property
+    def icon(self) -> Optional[Surface]: pass # Generic get_icon function, overridden by child classes.
     
-    def _deregister(self, world_manager: world_manager.WorldManager) -> None:
+    def _deregister(self, world_manager: "world_manager.WorldManager") -> None:
         world_manager.deregister(self) # Deregisters this entity from the world manager.
 
-    def _move(self) -> None:
-        return None # Generic move function, overridden by child classes.
+    def _move(self) -> None: return None # Generic move function, overridden by child classes.
     
-    def _get_surroundings(self) -> list[position.Position]:
-        return [] # Generic get_surroundings function, overridden by child classes.
+    def _get_surroundings(self) -> list[position.Position]: return [] # Generic get_surroundings function, overridden by child classes.

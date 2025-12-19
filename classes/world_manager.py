@@ -1,58 +1,60 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
-from classes.homebase import Homebase # type: ignore
+
+import classes.homebase as homebase
+import classes.attacker as attacker
+import classes.rotator as rotator
 import classes.position as position
+import classes.entity as entity
+import cell_registry
+
 
 if TYPE_CHECKING:
-    import classes.entity as entity
-    import classes.homebase as homebase
-    import classes.attacker as attacker
-    import classes.rotator as rotator
+    pass
+    
 
 class WorldManager:
     
+
+    
     def __init__(self, size: int = 10, homebases: int = 4, walls: int = 30):
-        self._world_map: list[list[Optional[entity.Entity]]] = [[None for _ in range(size)] for _ in range(size)]
+        self.__world_size = size
+        self.__world_map: list[list[entity.Entity | None]] = [[None for _ in range(size)] for _ in range(size)]
 
-        self._current_tick: int = 0
+        self.__current_tick: int = 0
 
-        self._homebases: list[homebase.Homebase] = []
-        self._rotators: list[entity.Entity] = []
-        self._attackers: list[entity.Entity] = []
+        self.__homebases: list[homebase.Homebase] = []
+        self.__rotators: list[rotator.Rotator] = []
+        self.__attackers: list[attacker.Attacker] = []
 
-        self._mappings: dict[str, tuple[int, int]] = {
-            "N": (0, -1),
-            "S": (0, 1),
-            "E": (1, 0),
-            "W": (-1, 0)   
-        }
+        
 
 
         # for i in range(homebases):
-        #     pass
+        #     to be implemented
         
 
     def get_empty_cells(self) -> list[position.Position]: # type: ignore
         l: list[position.Position] = []
 
-        for i in range(len(self._world_map)):
-            for j in range(len(self._world_map[i])):
-                if self._world_map[i][j] == None:
+        for i in range(len(self.__world_map)):
+            for j in range(len(self.__world_map[i])):
+                if self.__world_map[i][j] == None:
                     l.append(position.Position(i, j))
         return l
     
 
     def __tick(self) -> None: # type: ignore
-        self._current_tick += 1
+        self.__current_tick += 1
 
-        for homebase in self._homebases:
-            homebase.tick()
+        for homebase in self.__homebases:
+            homebase.tick(self)
         
-        for rotator in self._rotators:
-            rotator.tick()
+        for rotator in self.__rotators:
+            rotator.tick(self)
         
-        for attacker in self._attackers:
-            attacker.tick()
+        for attacker in self.__attackers:
+            attacker.tick(self)
     
 
     def run(self) -> None:
@@ -63,23 +65,38 @@ class WorldManager:
         pass # Draws the world map to the screen.
 
 
-    def get_homebases(self) -> list[homebase.Homebase]: return self._homebases # Returns the alive homebases.
+    def get_homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
     
 
-    def get_map(self) -> list[list[Optional[entity.Entity]]]: return self._world_map # Returns the world map.
-    
+    def get_map(self) -> list[list[Optional[entity.Entity]]]: return self.__world_map # Returns the world map.
 
-    def get_mappings(self) -> dict[str, tuple[int, int]]: return self._mappings # Returns the mappings, aka directions in the form of 2d array values
-    
+
+    def __spawn_cell(self, pos: position.Position) -> None: # type: ignore
+        types = cell_registry.CELL_TYPES # type: ignore
+
+        # to be implemented
+
+
+    def get_cell(self, x: int, y: int) -> entity.Entity | None:
+        if 0 <= x < self.__world_size and 0 <= y < self.__world_size: return self.__world_map[x][y]
+        return None
+
 
     def deregister(self, cell: entity.Entity) -> None:
-        self._world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = None # Sets the cell to None in the world map.
+        self.__world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = None # Sets the cell to None in the world map.
+
+        if isinstance(cell, homebase.Homebase):
+            self.__homebases.remove(cell)
+        elif isinstance(cell, attacker.Attacker):
+            self.__attackers.remove(cell)
+        elif isinstance(cell, rotator.Rotator):
+            self.__rotators.remove(cell)
 
 
-    def add_cell(self, cell: entity.Entity):
-        if(type(cell) == homebase.Homebase):
-            self._homebases.append(cell)
-        elif(type(cell) == attacker.Attacker):
-            self._attackers.append(cell)
-        elif(type(cell) == rotator.Rotator):
-            self._rotators.append(cell)
+    def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
+        if isinstance(cell, homebase.Homebase):
+            self.__homebases.append(cell)
+        elif isinstance(cell, attacker.Attacker):
+            self.__attackers.append(cell)
+        elif isinstance(cell, rotator.Rotator):
+            self.__rotators.append(cell)
