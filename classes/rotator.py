@@ -5,7 +5,6 @@ import pygame
 
 import classes.cell as cell
 import classes.homebase as homebase
-import classes.position as position
 import classes.attacker as attacker
 import classes.entity as entity
 import constants
@@ -31,17 +30,15 @@ class Rotator(cell.Cell):
         self.__stationary: bool = False
 
 
+    @classmethod
+    def spawn(cls, x: int, y: int, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Rotator:
+        return cls(x, y, homebase, world_manager)
+
+
     def __set_target(self, world_manager: "world_manager.WorldManager") -> None:
-        free_spaces: list[position.Position] = world_manager.get_empty_cells()
-        for i in range(len(free_spaces)):
-            dx: int = abs(free_spaces[i].get_x() - self.__homebase.get_pos().get_x())
-            dy: int = abs(free_spaces[i].get_y() - self.__homebase.get_pos().get_y())
-            total: int = dx + dy
+        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.get_x() - self.__homebase.get_pos().get_x()) + abs(pos.get_y() - self.__homebase.get_pos().get_y()) <= 5 ]
 
-            if total > 5: free_spaces.pop(i)
-
-        if len(free_spaces) == 0: return
-        self.target = random.choice(free_spaces)
+        if free_spaces: self.__target = random.choice(free_spaces)
 
 
     def change_health(self, delta: int): self.__health += delta

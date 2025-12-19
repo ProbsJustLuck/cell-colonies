@@ -38,5 +38,5 @@ class Homebase(entity.Entity):
     def reset_target_count(self) -> None: self.__ticks_since_target = 0 # Resets the target count to 0
 
 
-    def __deregister(self, world_manager: "world_manager.WorldManager"): # type: ignore
+    def _deregister(self, world_manager: "world_manager.WorldManager"): # type: ignore
         world_manager.deregister(self) # Deregisters this homebase from the world manager.

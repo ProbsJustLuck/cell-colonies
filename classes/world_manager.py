@@ -1,4 +1,5 @@
 from __future__ import annotations
+import random
 from typing import TYPE_CHECKING, Optional
 
 import classes.homebase as homebase
@@ -47,13 +48,13 @@ class WorldManager:
     def __tick(self) -> None: # type: ignore
         self.__current_tick += 1
 
-        for homebase in self.__homebases:
+        for homebase in self.__homebases[:]:
             homebase.tick(self)
         
-        for rotator in self.__rotators:
+        for rotator in self.__rotators[:]:
             rotator.tick(self)
         
-        for attacker in self.__attackers:
+        for attacker in self.__attackers[:]:
             attacker.tick(self)
     
 
@@ -71,10 +72,12 @@ class WorldManager:
     def get_map(self) -> list[list[Optional[entity.Entity]]]: return self.__world_map # Returns the world map.
 
 
-    def __spawn_cell(self, pos: position.Position) -> None: # type: ignore
-        types = cell_registry.CELL_TYPES # type: ignore
+    def __spawn_cell(self, pos: position.Position, homebase: homebase.Homebase) -> None: # type: ignore
+        choice = random.choice(cell_registry.SPAWNABLE_CELLS)
+        new_cell = choice.spawn(pos.get_x(), pos.get_y(), homebase, self)
 
-        # to be implemented
+        
+        self.register(new_cell)
 
 
     def get_cell(self, x: int, y: int) -> entity.Entity | None:
@@ -94,6 +97,8 @@ class WorldManager:
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
+        self.__world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = cell
+
         if isinstance(cell, homebase.Homebase):
             self.__homebases.append(cell)
         elif isinstance(cell, attacker.Attacker):

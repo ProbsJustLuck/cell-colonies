@@ -17,13 +17,16 @@ class Attacker(cell.Cell):
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
         super().__init__(x, y, homebase_link)
 
-        homebases: list[homebase.Homebase] = world_manager.get_homebases()
-        homebases.remove(homebase_link)
-        self.__target: homebase.Homebase = random.choice(homebases) # Sets a random Homebase as its target
+        self.__target: homebase.Homebase = random.choice([hb for hb in world_manager.get_homebases() if hb is not homebase_link]) # Sets a random Homebase as its target
 
         self.__direction: str = self.__set_starting_dir() # The direction that this Attacker is facing.
 
         self.__rotated: bool = False # Whether this attacker has been rotated recently (resets upon a wall collision)
+
+
+    @classmethod
+    def spawn(cls, x: int, y: int, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Attacker:
+        return cls(x, y, homebase, world_manager)
 
 
     def __set_starting_dir(self) -> str:

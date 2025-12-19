@@ -15,7 +15,7 @@ class Entity:
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None: return None # Generic tick function
     
-    def get_pos(self) -> position.Position: return position.Position(self.pos.get_x(), self.pos.get_y())
+    def get_pos(self) -> position.Position: return self.pos
     
     @property
     def type(self) -> str: return "" # Generic type property, overridden by child classes.
