@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-import classes.position as position 
+from classes.position import Position 
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
@@ -27,7 +27,7 @@ class Rotator(cell.Cell):
         self.__health: int = health
         self.__homebase: homebase.Homebase = homebase_link
 
-        self.__target: position.Position | None = None
+        self.__target: Position | None = None
         self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
 
         self.__stationary: bool = False
@@ -39,7 +39,7 @@ class Rotator(cell.Cell):
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> None:
-        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.get_x() - self.__homebase.get_pos().get_x()) + abs(pos.get_y() - self.__homebase.get_pos().get_y()) <= 5 ]
+        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.x - self.__homebase.get_pos().x) + abs(pos.y - self.__homebase.get_pos().y) <= 5 ]
 
         if free_spaces: self.__target = random.choice(free_spaces)
 
@@ -77,22 +77,22 @@ class Rotator(cell.Cell):
         cell.set_direction(opposites[dir])
 
 
-    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[Optional[entity.Entity]]: # type: ignore
-        l: list[entity.Entity | None] = []
+    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[entity.Entity]: # type: ignore
+        l: list[entity.Entity] = []
 
-        x_pos = self.pos.get_x()
-        y_pos = self.pos.get_y()
+        x_pos = self.pos.x
+        y_pos = self.pos.y
 
         dir_mapping: dict[str, tuple[int, int]] = constants.MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
-            world_manager.get_cell(x_pos + dir_mapping["N"][0], y_pos + dir_mapping["N"][1]),
-            world_manager.get_cell(x_pos + dir_mapping["S"][0], y_pos + dir_mapping["S"][1]),
-            world_manager.get_cell(x_pos + dir_mapping["E"][0], y_pos + dir_mapping["E"][1]),
-            world_manager.get_cell(x_pos + dir_mapping["W"][0], y_pos + dir_mapping["W"][1])
+            world_manager.get_cell(Position(x_pos + dir_mapping["N"][0], y_pos + dir_mapping["N"][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping["S"][0], y_pos + dir_mapping["S"][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping["E"][0], y_pos + dir_mapping["E"][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping["W"][0], y_pos + dir_mapping["W"][1]))
         )
 
         for cell in cells:
-            if cell != None: l.append(cell)
+            if cell is not None: l.append(cell)
 
         return l
     

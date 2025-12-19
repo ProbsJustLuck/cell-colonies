@@ -5,6 +5,7 @@ import pygame
 
 import classes.cell as cell
 import classes.homebase as homebase
+from classes.position import Position
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -18,9 +19,8 @@ class Attacker(cell.Cell):
     def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
         super().__init__(x, y, homebase_link)
 
-        choices = random.choice([hb for hb in world_manager.get_homebases() if hb is not homebase_link])
-        if not choices: self.__target = homebase_link
-        else: self.__target: homebase.Homebase = choices # Sets a random Homebase as its target
+        choices = [homebase for homebase in world_manager.get_homebases() if homebase is not homebase_link]
+        self.__target: homebase.Homebase = random.choice(choices) if choices else homebase_link # Sets a random Homebase as its target
 
         self.__direction: str = self.__set_starting_dir() # The direction that this Attacker is facing.
 
@@ -33,9 +33,12 @@ class Attacker(cell.Cell):
 
 
     def __set_starting_dir(self) -> str:
-        if self.__target.get_pos().get_y() < self.get_pos().get_y(): return "N"
-        elif self.__target.get_pos().get_y() > self.get_pos().get_y(): return "S"
-        elif self.__target.get_pos().get_x() > self.get_pos().get_x(): return "E"
+        target: Position = self.__target.get_pos()
+        attacker: Position = self.get_pos()
+
+        if target.y < attacker.y: return "N"
+        elif target.y > attacker.y: return "S"
+        elif target.x > attacker.x: return "E"
         else: return "W"
 
 

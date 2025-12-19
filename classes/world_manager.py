@@ -1,12 +1,13 @@
 from __future__ import annotations
 import random
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
 import classes.position as position
 import classes.entity as entity
+from classes.cell import Cell
 import cell_registry
 
 
@@ -15,8 +16,6 @@ if TYPE_CHECKING:
     
 
 class WorldManager:
-    
-
     
     def __init__(self, size: int = 10, homebases: int = 4, walls: int = 30):
         self.__world_size = size
@@ -40,7 +39,7 @@ class WorldManager:
 
         for i in range(len(self.__world_map)):
             for j in range(len(self.__world_map[i])):
-                if self.__world_map[i][j] == None:
+                if self.__world_map[i][j] is None:
                     l.append(position.Position(i, j))
         return l
     
@@ -49,12 +48,15 @@ class WorldManager:
         self.__current_tick += 1
 
         for homebase in self.__homebases[:]:
+            if not homebase.is_alive(): continue
             homebase.tick(self)
         
         for rotator in self.__rotators[:]:
+            if not rotator.is_alive(): continue
             rotator.tick(self)
         
         for attacker in self.__attackers[:]:
+            if not attacker.is_alive(): continue
             attacker.tick(self)
     
 
@@ -69,24 +71,27 @@ class WorldManager:
     def get_homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
     
 
-    def get_map(self) -> list[list[Optional[entity.Entity]]]: return self.__world_map # Returns the world map.
+    def get_map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
 
 
-    def __spawn_cell(self, pos: position.Position, homebase: homebase.Homebase) -> None: # type: ignore
+    def spawn_cell(self, pos: position.Position, homebase: homebase.Homebase) -> Cell: # type: ignore
         choice = random.choice(cell_registry.SPAWNABLE_CELLS)
-        new_cell = choice.spawn(pos.get_x(), pos.get_y(), homebase, self)
-
+        new_cell = choice.spawn(pos.x, pos.y, homebase, self)
         
         self.register(new_cell)
+        return new_cell
 
 
-    def get_cell(self, x: int, y: int) -> entity.Entity | None:
-        if 0 <= x < self.__world_size and 0 <= y < self.__world_size: return self.__world_map[x][y]
+    def get_cell(self, pos: position.Position) -> entity.Entity | None:
+        if self.check_in_bounds(pos): return self.__world_map[pos.x][pos.y]
         return None
+    
+
+    def check_in_bounds(self, pos: position.Position): return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size
 
 
     def deregister(self, cell: entity.Entity) -> None:
-        self.__world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = None # Sets the cell to None in the world map.
+        self.__world_map[cell.get_pos().x][cell.get_pos().y] = None # Sets the cell to None in the world map.
 
         if isinstance(cell, homebase.Homebase):
             self.__homebases.remove(cell)
@@ -97,7 +102,7 @@ class WorldManager:
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
-        self.__world_map[cell.get_pos().get_x()][cell.get_pos().get_y()] = cell
+        self.__world_map[cell.get_pos().x][cell.get_pos().y] = cell
 
         if isinstance(cell, homebase.Homebase):
             self.__homebases.append(cell)

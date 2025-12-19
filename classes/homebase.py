@@ -1,8 +1,11 @@
 from __future__ import annotations
+import random
 from typing import TYPE_CHECKING
 import pygame
 
 import classes.entity as entity
+from classes.position import Position
+import constants
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -44,8 +47,25 @@ class Homebase(entity.Entity):
     def reset_target_count(self) -> None: self.__ticks_since_target = 0 # Resets the target count to 0
 
 
-    def _deregister(self, world_manager: "world_manager.WorldManager"): # type: ignore
-        for cell in self.__cells:
+    def _deregister(self, world_manager: "world_manager.WorldManager"):
+        for cell in self.__cells[:]:
             cell._deregister(world_manager)
+        self.__cells.clear()
+        world_manager.deregister(self)
 
-        world_manager.deregister(self) # Deregisters this homebase from the world manager.
+    def __spawn_cell(self, world_manager: "world_manager.WorldManager"): # type: ignore
+        base: Position = self.get_pos()
+
+        positions: list[Position] = [
+            Position(base.x + constants.MAPPINGS["N"][0], base.y + constants.MAPPINGS["N"][1]),
+            Position(base.x + constants.MAPPINGS["S"][0], base.y + constants.MAPPINGS["S"][1]),
+            Position(base.x + constants.MAPPINGS["E"][0], base.y + constants.MAPPINGS["E"][1]),
+            Position(base.x + constants.MAPPINGS["W"][0], base.y + constants.MAPPINGS["W"][1])
+        ]
+        positions = [pos for pos in positions if world_manager.check_in_bounds(pos)]
+
+        random.shuffle(positions)
+        for pos in positions:
+            if world_manager.get_cell(pos) is None:
+                self.__cells.append(world_manager.spawn_cell(pos, self))
+                return
