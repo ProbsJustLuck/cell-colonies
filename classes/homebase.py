@@ -17,8 +17,8 @@ class Homebase(entity.Entity):
     __icon: pygame.Surface | None = None # The icon that this entity uses.
     
 
-    def __init__(self, x: int, y: int, health: int = 10):
-        super().__init__(x, y)
+    def __init__(self, pos: Position, health: int = 10):
+        super().__init__(pos)
 
         self.__health: int = health # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
@@ -63,7 +63,7 @@ class Homebase(entity.Entity):
 
 
     def __spawn_cell(self, world_manager: "world_manager.WorldManager"): # type: ignore
-        base: Position = self.get_pos()
+        base: Position = self.pos
         mapping = constants.MAPPINGS
 
         positions: list[Position] = [

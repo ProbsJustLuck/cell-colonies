@@ -7,6 +7,7 @@ import classes.attacker as attacker
 import classes.rotator as rotator
 import classes.position as position
 import classes.entity as entity
+import classes.wall as wall
 from classes.cell import Cell
 import cell_registry
 
@@ -27,14 +28,23 @@ class WorldManager:
         self.__rotators: list[rotator.Rotator] = []
         self.__attackers: list[attacker.Attacker] = []
 
+
+        spaces = self.get_empty_cells()
+        for i in range(homebases): # type: ignore
+            num = random.randrange(len(spaces))
+
+            self.register(homebase.Homebase(spaces[num]))
+            spaces.pop(num)
+
+        spaces = self.get_empty_cells()
+        for i in range(walls): # type: ignore
+            num = random.randrange(len(spaces))
+
+            self.register(wall.Wall(spaces[num]))
+            spaces.pop(num)
         
 
-
-        # for i in range(homebases):
-        #     to be implemented
-        
-
-    def get_empty_cells(self) -> list[position.Position]: # type: ignore
+    def get_empty_cells(self) -> list[position.Position]:
         l: list[position.Position] = []
 
         for i in range(len(self.__world_map)):
@@ -44,20 +54,24 @@ class WorldManager:
         return l
     
 
-    def __tick(self) -> None: # type: ignore
+    def __tick(self) -> bool: # type: ignore
         self.__current_tick += 1
 
         for homebase in self.__homebases[:]:
-            if not homebase.is_alive(): continue
+            if not homebase.alive: continue
             homebase.tick(self)
         
         for rotator in self.__rotators[:]:
-            if not rotator.is_alive(): continue
+            if not rotator.alive: continue
             rotator.tick(self)
         
         for attacker in self.__attackers[:]:
-            if not attacker.is_alive(): continue
+            if not attacker.alive: continue
             attacker.tick(self)
+
+        if(len(self.__homebases) == 1):
+            return False # TODO: end the game
+        return True
     
 
     def run(self) -> None:
@@ -65,18 +79,20 @@ class WorldManager:
 
 
     def __draw(self) -> None: # type: ignore
-        pass # Draws the world map to the screen.
+        pass # TODO: Draws the world map to the screen.
 
 
-    def get_homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
+    @property
+    def homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
     
 
-    def get_map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
+    @property
+    def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
 
 
     def spawn_cell(self, pos: position.Position, homebase: homebase.Homebase) -> Cell: # type: ignore
         choice = random.choice(cell_registry.SPAWNABLE_CELLS)
-        new_cell = choice.spawn(pos.x, pos.y, homebase, self)
+        new_cell = choice.spawn(pos, homebase, self)
         
         self.register(new_cell)
         return new_cell
@@ -91,7 +107,7 @@ class WorldManager:
 
 
     def deregister(self, cell: entity.Entity) -> None:
-        self.__world_map[cell.get_pos().x][cell.get_pos().y] = None # Sets the cell to None in the world map.
+        self.__world_map[cell.pos.x][cell.pos.y] = None # Sets the cell to None in the world map.
 
         if isinstance(cell, homebase.Homebase):
             self.__homebases.remove(cell)
@@ -102,7 +118,7 @@ class WorldManager:
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
-        self.__world_map[cell.get_pos().x][cell.get_pos().y] = cell
+        self.__world_map[cell.pos.x][cell.pos.y] = cell
 
         if isinstance(cell, homebase.Homebase):
             self.__homebases.append(cell)

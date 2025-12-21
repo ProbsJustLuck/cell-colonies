@@ -22,34 +22,33 @@ class Rotator(cell.Cell):
     __icon: pygame.Surface | None = None
 
 
-    def __init__(self, x: int, y: int, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2):
-        super().__init__(x, y, homebase_link)
+    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2):
+        super().__init__(pos, homebase_link)
 
         self.__health: int = health
         self.__homebase: homebase.Homebase = homebase_link
 
-        self.__target: Position | None = None
-        self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
+        self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
 
         self.__stationary: bool = False
 
 
     @classmethod
-    def spawn(cls, x: int, y: int, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Rotator:
-        return cls(x, y, homebase, world_manager)
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Rotator:
+        return cls(pos, homebase, world_manager)
 
 
-    def __set_target(self, world_manager: "world_manager.WorldManager") -> None:
-        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.x - self.__homebase.get_pos().x) + abs(pos.y - self.__homebase.get_pos().y) <= 5 ]
+    def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
+        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.x - self.__homebase.pos.x) + abs(pos.y - self.__homebase.pos.y) <= 5 ]
 
-        if free_spaces: self.__target = random.choice(free_spaces)
+        if free_spaces: return random.choice(free_spaces)
 
 
-    def change_health(self, delta: int): self.__health += delta
+    def change_health(self, delta: int) -> None: self.__health += delta
 
 
     @property
-    def type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    def type(self) -> str: return self.__type # Returns this homebase's type
 
 
     @property
@@ -57,24 +56,29 @@ class Rotator(cell.Cell):
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
-        if self.__health < 0:
+        if self.__health < 0: # If the health is below 0, then its dead
             self._deregister(world_manager)
             return
         
         surroundings = self.__get_surroundings(world_manager)
-        for atk in surroundings:
-            if not isinstance(atk, attacker.Attacker): continue
+        if surroundings: # Loop through all nearby attackers and rotate them
+            for atk in surroundings:
+                if not isinstance(atk, attacker.Attacker): continue
 
-            self.__health -= atk.damage
-            self.__rotate_target(atk)
-            atk.set_rotated()
+                self.__health -= atk.damage
+                self.__rotate_target(atk)
+                atk.set_rotated()
+        
+        self.__move() # Move
+
+        if self._pos == self.__target and not self.__stationary: self.__stationary = True # If it reached its target at least once, then set it as stationary
 
 
-    def __move(self) -> None: # type: ignore
+    def __move(self) -> None:
         pass
 
 
-    def __rotate_target(self, cell: attacker.Attacker) -> None: # type: ignore
+    def __rotate_target(self, cell: attacker.Attacker) -> None:
         dir: Direction = cell.direction
         opposites: dict[Direction, Direction] = { # cleaner than 4 if/elif statements
             Direction.NORTH: Direction.SOUTH,
@@ -89,8 +93,8 @@ class Rotator(cell.Cell):
     def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[entity.Entity]:
         l: list[entity.Entity] = []
 
-        x_pos = self.pos.x
-        y_pos = self.pos.y
+        x_pos = self._pos.x
+        y_pos = self._pos.y
 
         dir_mapping: dict[Direction, tuple[int, int]] = constants.MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
@@ -104,6 +108,3 @@ class Rotator(cell.Cell):
             if cell is not None: l.append(cell)
 
         return l
-    
-
-    def set_stationary(self) -> None: self.__stationary = True # Sets this rotator to be stationary (has reached its target at least once)
