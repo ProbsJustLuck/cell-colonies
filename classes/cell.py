@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 import classes.entity as entity
 import classes.homebase as homebase
@@ -13,7 +13,7 @@ class Cell(entity.Entity):
         self._homebase: homebase.Homebase = homebase_link # The homebase that this cell belongs to.
 
     @classmethod
-    def spawn(cls, x: int, y: int, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Cell:
+    def spawn(cls, x: int, y: int, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Self:
         return cls(x, y, homebase)
 
     def _get_homebase(self) -> homebase.Homebase:

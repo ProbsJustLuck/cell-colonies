@@ -1,6 +1,8 @@
-MAPPINGS: dict[str, tuple[int, int]] = {
-    "N": (0, -1),
-    "S": (0, 1),
-    "E": (1, 0),
-    "W": (-1, 0)   
+from classes.direction import Direction
+
+MAPPINGS: dict[Direction, tuple[int, int]] = {
+    Direction.NORTH: (0, -1),
+    Direction.SOUTH: (0, 1),
+    Direction.EAST: (1, 0),
+    Direction.WEST: (-1, 0)   
 }

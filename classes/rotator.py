@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from classes.position import Position 
+from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
@@ -56,39 +57,47 @@ class Rotator(cell.Cell):
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
-        pass # to be implemented later
+        if self.__health < 0:
+            self._deregister(world_manager)
+            return
+        
+        surroundings = self.__get_surroundings(world_manager)
+        for atk in surroundings:
+            if not isinstance(atk, attacker.Attacker): continue
+
+            self.__health -= atk.damage
+            self.__rotate_target(atk)
+            atk.set_rotated()
 
 
     def __move(self) -> None: # type: ignore
         pass
 
 
-    def __rotate_target(self, cell: entity.Entity) -> None: # type: ignore
-        if type(cell) != attacker.Attacker: return
-
-        dir: str = cell.get_direction()
-        opposites: dict[str, str] = { # cleaner than 4 if/elif statements
-            "N": "S",
-            "S": "N",
-            "E": "W",
-            "W": "E"
+    def __rotate_target(self, cell: attacker.Attacker) -> None: # type: ignore
+        dir: Direction = cell.direction
+        opposites: dict[Direction, Direction] = { # cleaner than 4 if/elif statements
+            Direction.NORTH: Direction.SOUTH,
+            Direction.SOUTH: Direction.NORTH,
+            Direction.EAST: Direction.WEST,
+            Direction.WEST: Direction.EAST
         }
 
-        cell.set_direction(opposites[dir])
+        cell.direction = opposites[dir]
 
 
-    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[entity.Entity]: # type: ignore
+    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[entity.Entity]:
         l: list[entity.Entity] = []
 
         x_pos = self.pos.x
         y_pos = self.pos.y
 
-        dir_mapping: dict[str, tuple[int, int]] = constants.MAPPINGS
+        dir_mapping: dict[Direction, tuple[int, int]] = constants.MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
-            world_manager.get_cell(Position(x_pos + dir_mapping["N"][0], y_pos + dir_mapping["N"][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping["S"][0], y_pos + dir_mapping["S"][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping["E"][0], y_pos + dir_mapping["E"][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping["W"][0], y_pos + dir_mapping["W"][1]))
+            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.EAST][0], y_pos + dir_mapping[Direction.EAST][1])),
+            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.WEST][0], y_pos + dir_mapping[Direction.WEST][1]))
         )
 
         for cell in cells:

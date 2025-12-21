@@ -6,6 +6,7 @@ import pygame
 import classes.cell as cell
 import classes.homebase as homebase
 from classes.position import Position
+from classes.direction import Direction
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -22,7 +23,9 @@ class Attacker(cell.Cell):
         choices = [homebase for homebase in world_manager.get_homebases() if homebase is not homebase_link]
         self.__target: homebase.Homebase = random.choice(choices) if choices else homebase_link # Sets a random Homebase as its target
 
-        self.__direction: str = self.__set_starting_dir() # The direction that this Attacker is facing.
+        self.__direction: Direction = self.__set_starting_dir() # The direction that this Attacker is facing.
+
+        self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
 
         self.__rotated: bool = False # Whether this attacker has been rotated recently (resets upon a wall collision)
 
@@ -32,20 +35,26 @@ class Attacker(cell.Cell):
         return cls(x, y, homebase, world_manager)
 
 
-    def __set_starting_dir(self) -> str:
+    def __set_starting_dir(self) -> Direction:
         target: Position = self.__target.get_pos()
         attacker: Position = self.get_pos()
 
-        if target.y < attacker.y: return "N"
-        elif target.y > attacker.y: return "S"
-        elif target.x > attacker.x: return "E"
-        else: return "W"
+        if target.y < attacker.y: return Direction.NORTH
+        elif target.y > attacker.y: return Direction.SOUTH
+        elif target.x > attacker.x: return Direction.EAST
+        else: return Direction.WEST
 
 
-    def get_direction(self) -> str: return self.__direction
+    @property
+    def damage(self) -> int: return self.__damage
 
 
-    def set_direction(self, target: str) -> None: self.__direction = target
+    @property
+    def direction(self) -> Direction: return self.__direction
+
+
+    @direction.setter
+    def direction(self, value: Direction) -> None: self.__direction = value
 
 
     def set_rotated(self) -> None: self.__rotated = True

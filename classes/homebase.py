@@ -3,6 +3,7 @@ import random
 from typing import TYPE_CHECKING
 import pygame
 
+from classes.direction import Direction
 import classes.entity as entity
 from classes.position import Position
 import constants
@@ -22,6 +23,8 @@ class Homebase(entity.Entity):
         self.__health: int = health # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
 
+        self.__spawn_ticks: int = 0
+
         self.__ticks_since_target: int = 0 # The number of ticks since this Homebase had an attacker successfully find a path to it.
 
 
@@ -38,7 +41,11 @@ class Homebase(entity.Entity):
             self._deregister(world_manager)
             return
         
-
+        self.__spawn_ticks += 1
+        
+        if self.__spawn_ticks == 3:
+            self.__spawn_cell(world_manager)
+            self.__spawn_ticks = 0
 
 
     def change_health(self, delta: int) -> None: self.__health += delta # Changes the health of this homebase
@@ -51,16 +58,19 @@ class Homebase(entity.Entity):
         for cell in self.__cells[:]:
             cell._deregister(world_manager)
         self.__cells.clear()
-        world_manager.deregister(self)
+
+        super()._deregister(world_manager)
+
 
     def __spawn_cell(self, world_manager: "world_manager.WorldManager"): # type: ignore
         base: Position = self.get_pos()
+        mapping = constants.MAPPINGS
 
         positions: list[Position] = [
-            Position(base.x + constants.MAPPINGS["N"][0], base.y + constants.MAPPINGS["N"][1]),
-            Position(base.x + constants.MAPPINGS["S"][0], base.y + constants.MAPPINGS["S"][1]),
-            Position(base.x + constants.MAPPINGS["E"][0], base.y + constants.MAPPINGS["E"][1]),
-            Position(base.x + constants.MAPPINGS["W"][0], base.y + constants.MAPPINGS["W"][1])
+            Position(base.x + mapping[Direction.NORTH][0], base.y + mapping[Direction.NORTH][1]),
+            Position(base.x + mapping[Direction.SOUTH][0], base.y + mapping[Direction.SOUTH][1]),
+            Position(base.x + mapping[Direction.EAST][0], base.y + mapping[Direction.EAST][1]),
+            Position(base.x + mapping[Direction.WEST][0], base.y + mapping[Direction.WEST][1])
         ]
         positions = [pos for pos in positions if world_manager.check_in_bounds(pos)]
 
@@ -69,3 +79,5 @@ class Homebase(entity.Entity):
             if world_manager.get_cell(pos) is None:
                 self.__cells.append(world_manager.spawn_cell(pos, self))
                 return
+            
+        # Fail the spawn attempt is no square is free.
