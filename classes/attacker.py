@@ -5,8 +5,11 @@ import pygame
 
 import classes.cell as cell
 import classes.homebase as homebase
+import classes.wall as wall
+import classes.rotator as rotator
 from classes.position import Position
 from classes.direction import Direction
+import pathfinding
 import constants
 
 if TYPE_CHECKING:
@@ -22,10 +25,21 @@ class Attacker(cell.Cell):
         super().__init__(pos, homebase_link)
 
         choices = [homebase for homebase in world_manager.homebases if homebase is not homebase_link]
-        self.__target: homebase.Homebase = random.choice(choices) if choices else homebase_link # Sets a random Homebase as its target
-        self.__target.reset_target_count()
+        self.__target: homebase.Homebase | None = random.choice(choices) if choices else None # Sets a random Homebase as its target
 
-        self.__direction: Direction = self.__set_starting_dir() # The direction that this Attacker is facing.
+        self.__direction: Direction = Direction.NORTH
+        self.__path: list[Position] = []
+        if self.__target:
+            self.__target.reset_target_count()
+            self.__direction = self.__set_starting_dir(self.__target.pos) # The direction that this Attacker is facing.
+
+            self.__path = pathfinding.pathfind(
+                pos, 
+                self.__target.pos, 
+                lambda pos: world_manager.in_bounds(pos), 
+                lambda pos: world_manager.is_blocking(pos)
+            )
+        
 
         self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
 
@@ -37,8 +51,7 @@ class Attacker(cell.Cell):
         return cls(pos, homebase, world_manager)
 
 
-    def __set_starting_dir(self) -> Direction:
-        target: Position = self.__target.pos
+    def __set_starting_dir(self, target: Position) -> Direction:
         attacker: Position = self.pos
 
         if target.y < attacker.y: return Direction.NORTH
@@ -63,7 +76,7 @@ class Attacker(cell.Cell):
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
-        mapping = constants.MAPPINGS
+        mapping = constants.DIRECTION_MAPPINGS
 
         boundsX = self.pos.x + mapping[self.direction][0]
         boundsY = self.pos.y + mapping[self.direction][1]
@@ -73,6 +86,15 @@ class Attacker(cell.Cell):
             cell.change_health(self.__damage)
             self._deregister(world_manager)
             return
+        
+        if not self.__path and self.__target: self.__path = pathfinding.pathfind(
+            self.pos,
+            self.__target.pos,
+            lambda pos: world_manager.in_bounds(pos),
+            lambda pos: world_manager.is_blocking(pos)
+        )
+            
+        self.__rotate_to_target()
 
         self.__move(world_manager)
 
@@ -85,5 +107,14 @@ class Attacker(cell.Cell):
     def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this attacker.
 
 
+    def __rotate_to_target(self) -> None:
+        delta: tuple[int, int] = (abs(self.pos.x - self.__target.pos.x), abs(self.pos.y - self.__target.pos.y))
+        self.direction = constants.POSITION_MAPPINGS[delta]
+
+
     def __move(self, world_manager: "world_manager.WorldManager") -> None:
-        pass # TODO
+        next_pos = self.__path[0]
+
+        if type(world_manager.get_cell(next_pos)) in [wall.Wall, rotator.Rotator] or not world_manager.in_bounds(next_pos): return
+
+

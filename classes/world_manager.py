@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
-import classes.position as position
+from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
@@ -44,13 +44,13 @@ class WorldManager:
             spaces.pop(num)
         
 
-    def get_empty_cells(self) -> list[position.Position]:
-        l: list[position.Position] = []
+    def get_empty_cells(self) -> list[Position]:
+        l: list[Position] = []
 
         for i in range(len(self.__world_map)):
             for j in range(len(self.__world_map[i])):
                 if self.__world_map[i][j] is None:
-                    l.append(position.Position(i, j))
+                    l.append(Position(i, j))
         return l
     
 
@@ -90,7 +90,7 @@ class WorldManager:
     def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
 
 
-    def spawn_cell(self, pos: position.Position, homebase: homebase.Homebase) -> Cell: # type: ignore
+    def spawn_cell(self, pos: Position, homebase: homebase.Homebase) -> Cell: # type: ignore
         choice = random.choice(cell_registry.SPAWNABLE_CELLS)
         new_cell = choice.spawn(pos, homebase, self)
         
@@ -98,12 +98,15 @@ class WorldManager:
         return new_cell
 
 
-    def get_cell(self, pos: position.Position) -> entity.Entity | None:
-        if self.check_in_bounds(pos): return self.__world_map[pos.x][pos.y]
+    def get_cell(self, pos: Position) -> entity.Entity | None:
+        if self.in_bounds(pos): return self.__world_map[pos.x][pos.y]
         return None
     
 
-    def check_in_bounds(self, pos: position.Position): return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size
+    def in_bounds(self, pos: Position) -> bool: return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size
+
+
+    def is_blocking(self, pos: Position) -> bool: return isinstance(self.__world_map[pos.x][pos.y], wall.Wall)
 
 
     def deregister(self, cell: entity.Entity) -> None:

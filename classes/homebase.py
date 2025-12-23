@@ -72,7 +72,7 @@ class Homebase(entity.Entity):
             Position(base.x + mapping[Direction.EAST][0], base.y + mapping[Direction.EAST][1]),
             Position(base.x + mapping[Direction.WEST][0], base.y + mapping[Direction.WEST][1])
         ]
-        positions = [pos for pos in positions if world_manager.check_in_bounds(pos)]
+        positions = [pos for pos in positions if world_manager.in_bounds(pos)]
 
         random.shuffle(positions)
         for pos in positions:
