@@ -96,7 +96,7 @@ class Rotator(cell.Cell):
         x_pos = self._pos.x
         y_pos = self._pos.y
 
-        dir_mapping: dict[Direction, tuple[int, int]] = constants.MAPPINGS
+        dir_mapping: dict[Direction, tuple[int, int]] = constants.DIRECTION_MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
             world_manager.get_cell(Position(x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1])),
             world_manager.get_cell(Position(x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1])),

@@ -87,16 +87,24 @@ class Attacker(cell.Cell):
             self._deregister(world_manager)
             return
         
+        if not self.__target:
+            self.__rotated = False
+            return
+        
         if not self.__path and self.__target: self.__path = pathfinding.pathfind(
             self.pos,
             self.__target.pos,
             lambda pos: world_manager.in_bounds(pos),
             lambda pos: world_manager.is_blocking(pos)
         )
-            
-        self.__rotate_to_target()
+        if not self.__path:
+            if not self.__rotated: return
+            else: next_pos = self.pos
+        else: next_pos = self.__path[0]
 
-        self.__move(world_manager)
+        if self.__target and not self.__rotated: self.__rotate_to_target(next_pos)
+
+        self.__move(next_pos, world_manager)
 
 
     @property
@@ -107,14 +115,33 @@ class Attacker(cell.Cell):
     def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this attacker.
 
 
-    def __rotate_to_target(self) -> None:
-        delta: tuple[int, int] = (abs(self.pos.x - self.__target.pos.x), abs(self.pos.y - self.__target.pos.y))
+    def __rotate_to_target(self, target: Position) -> None:
+        delta: tuple[int, int] = (target.x - self.pos.x, target.y - self.pos.y)
         self.direction = constants.POSITION_MAPPINGS[delta]
 
 
-    def __move(self, world_manager: "world_manager.WorldManager") -> None:
-        next_pos = self.__path[0]
+    def __move(self, next_pos: Position, world_manager: "world_manager.WorldManager") -> None:
+        used_path = True
+        if self.__rotated: # if we're rotated, make the next pos the place we're looking
+            dx, dy = constants.DIRECTION_MAPPINGS[self.__direction]
+            next_pos = Position(self.pos.x + dx, self.pos.y + dy)
+            used_path = False
 
-        if type(world_manager.get_cell(next_pos)) in [wall.Wall, rotator.Rotator] or not world_manager.in_bounds(next_pos): return
+        cell = world_manager.get_cell(next_pos) 
+        if isinstance(cell, rotator.Rotator): return
+        elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):
+            assert self.__target is not None # type checker was buggy, the tick code solves this already tho
 
+            self.__rotated = False
+            self.__path = pathfinding.pathfind(
+                self.pos,
+                self.__target.pos, 
+                lambda pos: world_manager.in_bounds(pos), 
+                lambda pos: world_manager.is_blocking(pos)
+            )
+            return
 
+        world_manager.map[self.pos.x][self.pos.y] = None
+        world_manager.map[next_pos.x][next_pos.y] = self
+        self._pos = next_pos
+        if used_path: self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)
