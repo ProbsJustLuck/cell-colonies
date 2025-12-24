@@ -11,6 +11,7 @@ import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.entity as entity
 import constants
+import pathfinding
 
 
 if TYPE_CHECKING:
@@ -29,6 +30,14 @@ class Rotator(cell.Cell):
         self.__homebase: homebase.Homebase = homebase_link
 
         self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
+
+        self.__path: list[Position] = []
+        if self.__target: self.__path = pathfinding.pathfind(
+                self.pos,
+                self.__target, 
+                lambda pos: world_manager.in_bounds(pos), 
+                lambda pos: world_manager.is_blocking(pos)
+            )
 
         self.__stationary: bool = False
 
@@ -65,17 +74,33 @@ class Rotator(cell.Cell):
             for atk in surroundings:
                 if not isinstance(atk, attacker.Attacker): continue
 
-                self.__health -= atk.damage
+                self.change_health(-atk.damage)
                 self.__rotate_target(atk)
                 atk.set_rotated()
         
-        self.__move() # Move
+        if self.__target and not self.__stationary and not self.__path: self.__path = pathfinding.pathfind(
+                self.pos,
+                self.__target,
+                lambda pos: world_manager.in_bounds(pos), 
+                lambda pos: world_manager.is_blocking(pos)
+            )
+        if self.__path and not self.__stationary:
+            next_pos = self.__path[0]
+            self.__move(next_pos, world_manager) # Move
 
-        if self._pos == self.__target and not self.__stationary: self.__stationary = True # If it reached its target at least once, then set it as stationary
+        if self.pos == self.__target and not self.__stationary: self.__stationary = True # If it reached its target at least once, then set it as stationary
 
 
-    def __move(self) -> None:
-        pass
+    def __move(self, next_pos: Position, world_manager: "world_manager.WorldManager") -> None:
+        if not world_manager.in_bounds(next_pos): return
+        if world_manager.get_cell(next_pos): 
+            self.__path.clear()
+            return
+
+        world_manager.map[self.pos.x][self.pos.y] = None
+        world_manager.map[next_pos.x][next_pos.y] = self
+        self.pos = next_pos
+        self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)
 
 
     def __rotate_target(self, cell: attacker.Attacker) -> None:

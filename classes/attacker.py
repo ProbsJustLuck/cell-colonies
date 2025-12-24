@@ -83,7 +83,7 @@ class Attacker(cell.Cell):
 
         cell = world_manager.get_cell(Position(boundsX, boundsY))
         if isinstance(cell, homebase.Homebase): # If the cell in front of it is a Homebase, deal damage and kill this attacker 
-            cell.change_health(self.__damage)
+            cell.change_health(-self.__damage)
             self._deregister(world_manager)
             return
         
@@ -129,6 +129,10 @@ class Attacker(cell.Cell):
 
         cell = world_manager.get_cell(next_pos) 
         if isinstance(cell, rotator.Rotator): return
+        if isinstance(cell, Attacker):
+            cell._deregister(world_manager)
+            self._deregister(world_manager)
+            return
         elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):
             assert self.__target is not None # type checker was buggy, the tick code solves this already tho
 
@@ -143,5 +147,5 @@ class Attacker(cell.Cell):
 
         world_manager.map[self.pos.x][self.pos.y] = None
         world_manager.map[next_pos.x][next_pos.y] = self
-        self._pos = next_pos
+        self.pos = next_pos
         if used_path: self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)

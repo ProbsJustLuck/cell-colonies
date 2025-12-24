@@ -22,9 +22,11 @@ class Cell(entity.Entity):
     def homebase(self) -> homebase.Homebase:
         return self._homebase # Returns the homebase that this cell belongs to.
     
-
-    def _pathfind(self) -> None:
-        pass # Pathfinding logic for the cell, A* algorithm later
+    
+    def _deregister(self, world_manager: "world_manager.WorldManager") -> None:
+        self._alive = False
+        self._homebase.remove_cell(self)
+        world_manager.deregister(self) # Deregisters this entity from the world manager.
 
 
     def _move(self) -> None:

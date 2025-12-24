@@ -70,12 +70,15 @@ class WorldManager:
             attacker.tick(self)
 
         if(len(self.__homebases) == 1):
-            return False # TODO: end the game
-        return True
+            return True # TODO: end the game, will be 
+        return False
     
 
-    def run(self) -> None:
-        pass # Main loop of the world manager.
+    def run(self) -> bool:
+        ended = False
+        while not ended:
+            ended = self.__tick()
+        return True
 
 
     def __draw(self) -> None: # type: ignore

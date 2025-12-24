@@ -21,6 +21,10 @@ class Entity:
     def pos(self) -> Position: return self._pos
 
 
+    @pos.setter
+    def pos(self, pos: Position): self._pos = pos
+
+
     @property
     def alive(self) -> bool: return self._alive
 

@@ -62,9 +62,12 @@ class Homebase(entity.Entity):
         super()._deregister(world_manager)
 
 
+    def remove_cell(self, cell: entity.Entity) -> None: self.__cells.remove(cell)
+
+
     def __spawn_cell(self, world_manager: "world_manager.WorldManager"): # type: ignore
         base: Position = self.pos
-        mapping = constants.MAPPINGS
+        mapping = constants.DIRECTION_MAPPINGS
 
         positions: list[Position] = [
             Position(base.x + mapping[Direction.NORTH][0], base.y + mapping[Direction.NORTH][1]),
