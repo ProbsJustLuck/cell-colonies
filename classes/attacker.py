@@ -22,7 +22,7 @@ class Attacker(cell.Cell):
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
-        super().__init__(pos, homebase_link)
+        super().__init__(pos, homebase_link, world_manager)
 
         self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
 

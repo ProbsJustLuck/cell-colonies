@@ -22,7 +22,7 @@ class Rotator(cell.Cell):
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
-        super().__init__(pos, homebase_link)
+        super().__init__(pos, homebase_link, world_manager)
 
         self.__health: int = health
         self.__homebase: homebase.Homebase = homebase_link

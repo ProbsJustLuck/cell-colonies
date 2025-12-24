@@ -31,7 +31,7 @@ def render(world: WorldManager) -> None:
     print("\n")
 
 def main():
-    world = WorldManager(size=35, homebases=10, walls=500)
+    world = WorldManager(size=35, homebases=10, walls=50)
 
     tick = 0
     while True:

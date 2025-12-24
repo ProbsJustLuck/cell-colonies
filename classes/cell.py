@@ -11,14 +11,14 @@ if TYPE_CHECKING:
     import classes.world_manager as world_manager
 
 class Cell(entity.Entity):
-    def __init__(self, pos: Position, homebase_link: homebase.Homebase):
-        super().__init__(pos)
+    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
+        super().__init__(pos, world_manager)
         self._homebase: homebase.Homebase = homebase_link # The homebase that this cell belongs to
         self._spawned = True # If this entity just spawned, prevents moving on first tick alive.
 
     @classmethod
     def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Self:
-        return cls(pos, homebase)
+        return cls(pos, homebase, world_manager)
 
 
     @property

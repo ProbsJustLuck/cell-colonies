@@ -34,14 +34,14 @@ class WorldManager:
         for i in range(homebases): # type: ignore
             num = random.randrange(len(spaces))
 
-            self.register(homebase.Homebase(spaces[num]))
+            homebase.Homebase(spaces[num], self, health = 1)
             spaces.pop(num)
 
         spaces = self.get_empty_cells()
         for i in range(walls): # type: ignore
             num = random.randrange(len(spaces))
 
-            self.register(wall.Wall(spaces[num]))
+            wall.Wall(spaces[num], self)
             spaces.pop(num)
         
 
@@ -96,7 +96,7 @@ class WorldManager:
     def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
 
 
-    def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> Cell: # type: ignore
+    def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> entity.Entity: # type: ignore
         if not type:
             choice = random.choices(
                 population= [val for val in cell_registry.SPAWNABLE_CELLS],
@@ -106,9 +106,7 @@ class WorldManager:
             new_cell: entity.Entity = choice.spawn(pos, homebase, self, target)
         else:
             new_cell: entity.Entity = type.spawn(pos, homebase, self, target)
-
         
-        self.register(new_cell)
         return new_cell
 
 
@@ -120,21 +118,25 @@ class WorldManager:
     def in_bounds(self, pos: Position) -> bool: return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size
 
 
-    def is_blocking(self, pos: Position) -> bool: return isinstance(self.__world_map[pos.x][pos.y], wall.Wall) or isinstance(self.__world_map[pos.x][pos.y], homebase.Homebase)
+    def is_blocking(self, pos: Position) -> bool: 
+        if not self.in_bounds(pos): return True
+        return isinstance(self.__world_map[pos.x][pos.y], (homebase.Homebase, wall.Wall))
 
 
     def deregister(self, cell: entity.Entity) -> None:
         self.__world_map[cell.pos.x][cell.pos.y] = None # Sets the cell to None in the world map.
 
         if isinstance(cell, homebase.Homebase):
-            self.__homebases.remove(cell)
+            if cell in self.__homebases: self.__homebases.remove(cell)
         elif isinstance(cell, attacker.Attacker):
-            self.__attackers.remove(cell)
+            if cell in self.__attackers: self.__attackers.remove(cell)
         elif isinstance(cell, rotator.Rotator):
-            self.__rotators.remove(cell)
+            if cell in self.__rotators: self.__rotators.remove(cell)
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
+        if self.__world_map[cell.pos.x][cell.pos.y] is not None:
+            raise ValueError(f"Space is occupied at {cell.pos}")
         self.__world_map[cell.pos.x][cell.pos.y] = cell
 
         if isinstance(cell, homebase.Homebase):

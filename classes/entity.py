@@ -8,10 +8,11 @@ if TYPE_CHECKING:
     import classes.world_manager as world_manager
 
 class Entity:    
-    def __init__(self, pos: Position):
+    def __init__(self, pos: Position, world_manager: "world_manager.WorldManager"):
         self._pos = pos
 
-        self._alive: bool = True # Whether this entity is laive or not.
+        self._alive: bool = True # Whether this entity is alive or not.
+        world_manager.register(self)
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None: return None # Generic tick function

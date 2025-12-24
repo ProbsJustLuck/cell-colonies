@@ -18,8 +18,8 @@ class Homebase(entity.Entity):
     __icon: pygame.Surface | None = None # The icon that this entity uses.
     
 
-    def __init__(self, pos: Position, health: int = 1):
-        super().__init__(pos)
+    def __init__(self, pos: Position, world_manager: "world_manager.WorldManager", health: int = 10):
+        super().__init__(pos, world_manager)
 
         self.__health: int = health # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
@@ -77,9 +77,10 @@ class Homebase(entity.Entity):
 
     def _deregister(self, world_manager: "world_manager.WorldManager"):
         for cell in self.__cells[:]:
-            cell._deregister(world_manager)
+            if cell.alive:
+                cell._deregister(world_manager)
+                
         self.__cells.clear()
-
         super()._deregister(world_manager)
 
 
@@ -87,7 +88,7 @@ class Homebase(entity.Entity):
         if cell in self.__cells: self.__cells.remove(cell)
 
 
-    def spawn_cell(self, world_manager: "world_manager.WorldManager", type: Cell | None = None, target: Position | Homebase | None = None) -> Cell | None:
+    def spawn_cell(self, world_manager: "world_manager.WorldManager", type: Cell | None = None, target: Position | Homebase | None = None) -> entity.Entity | None:
         base: Position = self.pos
         mapping = constants.DIRECTION_MAPPINGS
 
