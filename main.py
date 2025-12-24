@@ -1,5 +1,6 @@
 import time
 import os
+from classes.game_state import GameState
 from classes.world_manager import WorldManager
 import classes.homebase as homebase
 import classes.attacker as attacker
@@ -30,7 +31,7 @@ def render(world: WorldManager) -> None:
     print("\n")
 
 def main():
-    world = WorldManager(size=30, homebases=2, walls=30)
+    world = WorldManager(size=35, homebases=10, walls=500)
 
     tick = 0
     while True:
@@ -38,8 +39,12 @@ def main():
         print(f"Tick: {tick}")
 
         ended = world._WorldManager__tick() # type: ignore
-        if ended:
-            print("Game ended!")
+        if ended is GameState.WIN:
+            print("Game ended in a win!")
+            render(world)
+            break
+        if ended is GameState.LOSS:
+            print("Game ended in a loss!")
             render(world)
             break
         render(world)
@@ -50,7 +55,7 @@ def main():
             count += 1
 
         tick += 1
-        time.sleep(1.5)
+        time.sleep(0.5)
 
 if __name__ == "__main__":
     main()

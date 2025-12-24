@@ -2,6 +2,7 @@ from __future__ import annotations
 import random
 from typing import TYPE_CHECKING
 
+from classes.game_state import GameState
 import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
@@ -54,7 +55,7 @@ class WorldManager:
         return l
     
 
-    def __tick(self) -> bool: # type: ignore
+    def __tick(self) -> GameState: # type: ignore
         self.__current_tick += 1
 
         for homebase in self.__homebases[:]:
@@ -70,13 +71,15 @@ class WorldManager:
             attacker.tick(self)
 
         if(len(self.__homebases) == 1):
-            return True # TODO: end the game, will be 
-        return False
+            return GameState.WIN # TODO: end the game, will be 
+        elif(len(self.__homebases) == 0):
+            return GameState.LOSS
+        return GameState.CONTINUE
     
 
     def run(self) -> bool:
-        ended = False
-        while not ended:
+        ended: GameState = GameState.CONTINUE
+        while ended is GameState.CONTINUE:
             ended = self.__tick()
         return True
 

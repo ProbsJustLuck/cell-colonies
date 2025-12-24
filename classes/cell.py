@@ -22,8 +22,7 @@ class Cell(entity.Entity):
 
 
     @property
-    def homebase(self) -> homebase.Homebase:
-        return self._homebase # Returns the homebase that this cell belongs to.
+    def homebase(self) -> homebase.Homebase: return self._homebase # Returns the homebase that this cell belongs to.
     
     @property
     def spawned(self) -> bool: return self._spawned

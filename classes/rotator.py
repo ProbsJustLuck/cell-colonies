@@ -45,13 +45,11 @@ class Rotator(cell.Cell):
 
 
     @classmethod
-    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Rotator:
-        return cls(pos, homebase, world_manager)
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Rotator: return cls(pos, homebase, world_manager)
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
         free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.x - self.__homebase.pos.x) + abs(pos.y - self.__homebase.pos.y) <= 5 ]
-
         if free_spaces: return random.choice(free_spaces)
 
 
@@ -64,6 +62,10 @@ class Rotator(cell.Cell):
 
     @property
     def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this homebase.
+
+
+    @property
+    def stationary(self) -> bool: return self.__stationary
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
