@@ -9,8 +9,6 @@ from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
-import classes.entity as entity
-import constants
 import pathfinding
 
 
@@ -23,13 +21,17 @@ class Rotator(cell.Cell):
     __icon: pygame.Surface | None = None
 
 
-    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2):
+    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link)
 
         self.__health: int = health
         self.__homebase: homebase.Homebase = homebase_link
 
-        self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
+        if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
+        elif isinstance(target, Position):
+            self.__target = target
+        else:
+            raise TypeError("How did we get here?")
 
         self.__path: list[Position] = []
         if self.__target: self.__path = pathfinding.pathfind(
@@ -43,7 +45,7 @@ class Rotator(cell.Cell):
 
 
     @classmethod
-    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Rotator:
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Rotator:
         return cls(pos, homebase, world_manager)
 
 
@@ -65,14 +67,18 @@ class Rotator(cell.Cell):
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
+        if self.spawned:
+            self.spawned = False
+            return
+
         if self.__health < 0: # If the health is below 0, then its dead
             self._deregister(world_manager)
             return
         
-        surroundings = self.__get_surroundings(world_manager)
+        surroundings = self._get_surroundings(world_manager)
         if surroundings: # Loop through all nearby attackers and rotate them
             for atk in surroundings:
-                if not isinstance(atk, attacker.Attacker): continue
+                if not isinstance(atk, attacker.Attacker) or atk.homebase == self.homebase: continue
 
                 self.change_health(-atk.damage)
                 self.__rotate_target(atk)
@@ -113,23 +119,3 @@ class Rotator(cell.Cell):
         }
 
         cell.direction = opposites[dir]
-
-
-    def __get_surroundings(self, world_manager: "world_manager.WorldManager") -> list[entity.Entity]:
-        l: list[entity.Entity] = []
-
-        x_pos = self._pos.x
-        y_pos = self._pos.y
-
-        dir_mapping: dict[Direction, tuple[int, int]] = constants.DIRECTION_MAPPINGS
-        cells: tuple[entity.Entity | None, ...] = (
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.EAST][0], y_pos + dir_mapping[Direction.EAST][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.WEST][0], y_pos + dir_mapping[Direction.WEST][1]))
-        )
-
-        for cell in cells:
-            if cell is not None: l.append(cell)
-
-        return l

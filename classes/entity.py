@@ -43,6 +43,3 @@ class Entity:
 
 
     def _move(self) -> None: return None # Generic move function, overridden by child classes.
-
-
-    def _get_surroundings(self) -> list[Position]: return [] # Generic get_surroundings function, overridden by child classes.

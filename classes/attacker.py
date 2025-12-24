@@ -21,11 +21,17 @@ class Attacker(cell.Cell):
     __icon: Optional[pygame.Surface] = None
 
 
-    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager"):
+    def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link)
 
-        choices = [homebase for homebase in world_manager.homebases if homebase is not homebase_link]
-        self.__target: homebase.Homebase | None = random.choice(choices) if choices else None # Sets a random Homebase as its target
+        self.__target: homebase.Homebase | None
+        if not target:
+            choices = [homebase for homebase in world_manager.homebases if homebase is not homebase_link]
+            self.__target = random.choice(choices) if choices else None # Sets a random Homebase as its target
+        elif isinstance(target, homebase.Homebase):
+            self.__target = target
+        else:
+            raise TypeError("How did we get here?")
 
         self.__direction: Direction = Direction.NORTH
         self.__path: list[Position] = []
@@ -39,16 +45,14 @@ class Attacker(cell.Cell):
                 lambda pos: world_manager.in_bounds(pos), 
                 lambda pos: world_manager.is_blocking(pos)
             )
-        
-
         self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
 
         self.__rotated: bool = False # Whether this attacker has been rotated recently (resets upon a wall collision)
 
 
     @classmethod
-    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager") -> Attacker:
-        return cls(pos, homebase, world_manager)
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Attacker:
+        return cls(pos, homebase, world_manager, target)
 
 
     def __set_starting_dir(self, target: Position) -> Direction:
@@ -76,16 +80,19 @@ class Attacker(cell.Cell):
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
-        mapping = constants.DIRECTION_MAPPINGS
-
-        boundsX = self.pos.x + mapping[self.direction][0]
-        boundsY = self.pos.y + mapping[self.direction][1]
-
-        cell = world_manager.get_cell(Position(boundsX, boundsY))
-        if isinstance(cell, homebase.Homebase): # If the cell in front of it is a Homebase, deal damage and kill this attacker 
-            cell.change_health(-self.__damage)
-            self._deregister(world_manager)
+        if self.spawned:
+            self.spawned = False
             return
+
+        surroundings = self._get_surroundings(world_manager)
+        if surroundings: # Loop through all nearby homebases and rotate them
+            for hb in surroundings:
+                if not isinstance(hb, homebase.Homebase) or self.homebase == hb: continue
+
+                hb.change_health(-self.__damage)
+                self._deregister(world_manager)
+                return
+
         
         if not self.__target:
             self.__rotated = False
@@ -123,12 +130,12 @@ class Attacker(cell.Cell):
     def __move(self, next_pos: Position, world_manager: "world_manager.WorldManager") -> None:
         used_path = True
         if self.__rotated: # if we're rotated, make the next pos the place we're looking
-            dx, dy = constants.DIRECTION_MAPPINGS[self.__direction]
+            dx, dy = constants.DIRECTION_MAPPINGS[self.direction]
             next_pos = Position(self.pos.x + dx, self.pos.y + dy)
             used_path = False
 
         cell = world_manager.get_cell(next_pos) 
-        if isinstance(cell, rotator.Rotator): return
+        if isinstance(cell, (rotator.Rotator, homebase.Homebase)): return
         if isinstance(cell, Attacker):
             cell._deregister(world_manager)
             self._deregister(world_manager)

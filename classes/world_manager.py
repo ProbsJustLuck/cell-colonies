@@ -93,9 +93,17 @@ class WorldManager:
     def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
 
 
-    def spawn_cell(self, pos: Position, homebase: homebase.Homebase) -> Cell: # type: ignore
-        choice = random.choice(cell_registry.SPAWNABLE_CELLS)
-        new_cell = choice.spawn(pos, homebase, self)
+    def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> Cell: # type: ignore
+        if not type:
+            choice = random.choices(
+                population= [val for val in cell_registry.SPAWNABLE_CELLS],
+                weights=[85, 15],   # attacker, rotator
+                k=1
+            )[0]
+            new_cell: entity.Entity = choice.spawn(pos, homebase, self, target)
+        else:
+            new_cell: entity.Entity = type.spawn(pos, homebase, self, target)
+
         
         self.register(new_cell)
         return new_cell
@@ -109,7 +117,7 @@ class WorldManager:
     def in_bounds(self, pos: Position) -> bool: return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size
 
 
-    def is_blocking(self, pos: Position) -> bool: return isinstance(self.__world_map[pos.x][pos.y], wall.Wall)
+    def is_blocking(self, pos: Position) -> bool: return isinstance(self.__world_map[pos.x][pos.y], wall.Wall) or isinstance(self.__world_map[pos.x][pos.y], homebase.Homebase)
 
 
     def deregister(self, cell: entity.Entity) -> None:
