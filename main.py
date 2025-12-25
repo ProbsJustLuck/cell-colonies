@@ -4,8 +4,9 @@ start_time = time.time()
 import pygame
 
 import util.assets as assets # type: ignore
-import util.game_states as states
+from util.game_states import States as states
 from util.event_handler import event_handler
+from util.render import render_start_screen
 from classes.world_manager import WorldManager # type: ignore
 
 pygame.init()
@@ -16,6 +17,10 @@ print(f"Load took {time.time() - start_time: .4f}s")
 
 while states.running:
     for event in pygame.event.get(): event_handler(event)
+
+    if states.in_main_menu:
+        render_start_screen()
+
 
     # flip the display to put your work on screen
     pygame.display.flip()

@@ -7,7 +7,7 @@ from classes.cell import Cell
 from classes.direction import Direction
 import classes.entity as entity
 from classes.position import Position
-import constants
+from constants import Constants
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -90,7 +90,7 @@ class Homebase(entity.Entity):
 
     def spawn_cell(self, world_manager: "world_manager.WorldManager", type: Cell | None = None, target: Position | Homebase | None = None) -> entity.Entity | None:
         base: Position = self.pos
-        mapping = constants.DIRECTION_MAPPINGS
+        mapping = Constants.DIRECTION_MAPPINGS
 
         positions: list[Position] = [
             Position(base.x + mapping[Direction.NORTH][0], base.y + mapping[Direction.NORTH][1]),

@@ -10,7 +10,7 @@ import classes.rotator as rotator
 from classes.position import Position
 from classes.direction import Direction
 import util.pathfinding as pathfinding
-import constants
+from constants import Constants
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -169,13 +169,13 @@ class Attacker(cell.Cell):
 
     def __rotate_to_target(self, target: Position) -> None:
         delta: tuple[int, int] = (target.x - self.pos.x, target.y - self.pos.y)
-        self.direction = constants.POSITION_MAPPINGS[delta]
+        self.direction = Constants.POSITION_MAPPINGS[delta]
 
 
     def __move(self, next_pos: Position, world_manager: "world_manager.WorldManager") -> None:
         used_path = True
         if self.__rotated: # if we're rotated, make the next pos the place we're looking
-            dx, dy = constants.DIRECTION_MAPPINGS[self.direction]
+            dx, dy = Constants.DIRECTION_MAPPINGS[self.direction]
             next_pos = Position(self.pos.x + dx, self.pos.y + dy)
             used_path = False
 

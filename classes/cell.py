@@ -5,7 +5,7 @@ from classes.direction import Direction
 import classes.entity as entity
 import classes.homebase as homebase
 from classes.position import Position
-import constants
+from constants import Constants
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -46,7 +46,7 @@ class Cell(entity.Entity):
         x_pos = self._pos.x
         y_pos = self._pos.y
 
-        dir_mapping: dict[Direction, tuple[int, int]] = constants.DIRECTION_MAPPINGS
+        dir_mapping: dict[Direction, tuple[int, int]] = Constants.DIRECTION_MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
             world_manager.get_cell(Position(x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1])),
             world_manager.get_cell(Position(x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1])),

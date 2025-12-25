@@ -3,12 +3,18 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class ColorInfo:
+    """
+    Holds color information for a team color.
+    """
     name: str
     primary: tuple[int, int, int]
     border: tuple[int, int, int]
     highlight: tuple[int, int, int]
 
 class TeamColor(Enum):
+    """
+    Represents different team colors with their associated color information. Hardedcoded colors for every team.
+    """
     RED = ColorInfo(
         name="Red",
         primary=(220, 40, 40),
