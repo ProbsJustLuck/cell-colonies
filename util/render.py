@@ -3,20 +3,62 @@ import pygame
 import util.assets as assets
 from util.game_states import States as state
 from classes.position import Position
+from classes.lerp import Lerp
 from constants import Constants
 
+STARTING_SIZE = 300
+ENDING_SIZE = 160
+
+_base1: pygame.Surface | None = None
+_base2: pygame.Surface | None = None
+
+_title_scale_lerp: Lerp | None = None
+_title_offset_lerp: Lerp | None = None
+
 def render_start_screen() -> None:
+    global _base1, _base2
+    if _base1 is None or _base2 is None:
+        _base1 = add_outline_to_image(create_text("Cell", "#b7b7b7", STARTING_SIZE), 3, (0, 0, 0))
+        _base2 = add_outline_to_image(create_text("Colonies", "#b7b7b7", STARTING_SIZE), 3, (0, 0, 0))
+
     assets.screen.blit(assets.background, assets.background.get_rect(topleft = (0, 0)))
 
-    if state.starting_opacity < 255: state.starting_opacity += 3
+    if state.starting_opacity < 255:
+        state.starting_opacity += 2
 
-    text = add_outline_to_image(create_text("Cell", "#b7b7b7", 240), thickness=3, outline_color=(0, 0, 0))
-    text.set_alpha(state.starting_opacity)
-    assets.screen.blit(text, text.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 - 120)))
+        _base1.set_alpha(state.starting_opacity)
+        _base2.set_alpha(state.starting_opacity)
+        assets.screen.blit(_base1, _base1.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 - _base1.get_height() / 2)))
+        assets.screen.blit(_base2, _base2.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 + (STARTING_SIZE / 6))))
+        return
+    
+    global _title_scale_lerp, _title_offset_lerp
+    if not _title_scale_lerp or not _title_offset_lerp:
+        _title_scale_lerp = Lerp(STARTING_SIZE, ENDING_SIZE, 2000, lambda t: 4*t*t*t if t < 0.5 else 1 - ((-2*t + 2)**3.5) / 2)
+        _title_offset_lerp = Lerp(0, 160, 2000, lambda t: 4*t*t*t if t < 0.5 else 1 - ((-2*t + 2)**3.5) / 2)
 
-    text = add_outline_to_image(create_text("Colonies", "#b7b7b7", 240), thickness=3, outline_color=(0, 0, 0))
-    text.set_alpha(state.starting_opacity)
-    assets.screen.blit(text, text.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 + 0)))
+
+    now = pygame.time.get_ticks()
+    scale = _title_scale_lerp.value(now) / STARTING_SIZE
+    offset = _title_offset_lerp.value(now)
+
+    # scale once per frame based on the base sizes
+    text1 = pygame.transform.smoothscale(
+        _base1,
+        (int(_base1.get_width() * scale), int(_base1.get_height() * scale))
+    )
+    text2 = pygame.transform.smoothscale(
+        _base2,
+        (int(_base2.get_width() * scale), int(_base2.get_height() * scale))
+    )
+
+    mid_y = Constants.SCREEN_HEIGHT // 2
+    gap = (_base1.get_height() * scale) / 2  # keeps spacing relative to text scales
+
+    assets.screen.blit(text1, text1.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - gap - offset)))
+    assets.screen.blit(text2, text2.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - offset + (STARTING_SIZE / 6) * scale)))
+
+    if not _title_scale_lerp.done: return
 
     # START GAME
     # state.start_game_rect = create_button(400, 200, "START GAME", state.starting_opacity)
@@ -56,7 +98,7 @@ def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool
         None
     """
 
-    font = pygame.font.Font("assets/font/Pixeltype.ttf", size)
+    font = get_font(size)
     font.set_bold(bold)
     font.set_bold(italic)
 
@@ -81,7 +123,7 @@ def create_text(string: str, color: str, size: int = 20, bold: bool=False, itali
         pygame.Surface
     """
 
-    font = pygame.font.Font("assets/font/Pixeltype.ttf", size)
+    font = get_font(size)
     font.set_bold(bold)
     font.set_italic(italic)
     text = font.render(string, False, color)

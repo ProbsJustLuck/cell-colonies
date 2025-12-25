@@ -29,11 +29,9 @@ class Lerp:
         self.end = end
         self.duration = max(1, duration_ms)
         self.ease = ease
-        self._start_time: int | None = None
+        self._start_time: int = pygame.time.get_ticks()
 
     def value(self, now: int) -> float:
-        if self._start_time is None:
-            self._start_time = now
         t = (now - self._start_time) / self.duration
 
         # Clamping
@@ -47,7 +45,7 @@ class Lerp:
 
     @property
     def done(self) -> bool:
-        return self._start_time is not None and pygame.time.get_ticks() - self._start_time >= self.duration
+        return pygame.time.get_ticks() - self._start_time >= self.duration
 
     def reset(self, now_ms: int) -> None:
         self._start_time = now_ms
