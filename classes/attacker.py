@@ -9,7 +9,7 @@ import classes.wall as wall
 import classes.rotator as rotator
 from classes.position import Position
 from classes.direction import Direction
-import pathfinding
+import util.pathfinding as pathfinding
 import constants
 
 if TYPE_CHECKING:
@@ -204,7 +204,5 @@ class Attacker(cell.Cell):
             )
             return
 
-        world_manager.map[self.pos.x][self.pos.y] = None
-        world_manager.map[next_pos.x][next_pos.y] = self
-        self.pos = next_pos
+        world_manager.move_entity(self, next_pos)
         if used_path: self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)

@@ -9,7 +9,7 @@ from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
-import pathfinding
+import util.pathfinding as pathfinding
 
 
 if TYPE_CHECKING:
@@ -49,8 +49,19 @@ class Rotator(cell.Cell):
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
-        free_spaces = [ pos for pos in world_manager.get_empty_cells() if abs(pos.x - self.__homebase.pos.x) + abs(pos.y - self.__homebase.pos.y) <= 5 ]
-        if free_spaces: return random.choice(free_spaces)
+        hb = self.__homebase.pos
+        empties = world_manager.get_empty_spaces()
+        positions: list[Position] = []
+
+        radius = 5
+        for dx in range(-radius, radius + 1): # Iterates from -5 to positive 6 (excluding 6)
+            rem = radius - abs(dx) # scales from 0 to 5
+            for dy in range(-rem, rem + 1): # same deal, from -rem to position rem +1
+                pos = Position(hb.x + dx, hb.y + dy)
+                if world_manager.in_bounds(pos) and pos in empties: positions.append(pos)
+
+        if positions: return random.choice(positions)
+        return None
 
 
     def change_health(self, delta: int) -> None: self.__health += delta
@@ -105,9 +116,7 @@ class Rotator(cell.Cell):
             self.__path.clear()
             return
 
-        world_manager.map[self.pos.x][self.pos.y] = None
-        world_manager.map[next_pos.x][next_pos.y] = self
-        self.pos = next_pos
+        world_manager.move_entity(self, next_pos)
         self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)
 
 

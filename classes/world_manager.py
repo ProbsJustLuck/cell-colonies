@@ -10,7 +10,7 @@ from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
-import cell_registry
+import util.cell_registry as cell_registry
 
 
 if TYPE_CHECKING:
@@ -24,39 +24,67 @@ class WorldManager:
         self.__world_map: list[list[entity.Entity | None]] = [[None for _ in range(size)] for _ in range(size)]
 
         self.__current_tick: int = 0
+        self.__debug = True # Whether or not to check if the empty set is empty (im paranoid but want efficiency)
 
         self.__homebases: list[homebase.Homebase] = []
         self.__rotators: list[rotator.Rotator] = []
         self.__attackers: list[attacker.Attacker] = []
 
-
-        spaces = self.get_empty_cells()
-        for i in range(homebases): # type: ignore
-            num = random.randrange(len(spaces))
-
-            homebase.Homebase(spaces[num], self, health = 1)
-            spaces.pop(num)
-
-        spaces = self.get_empty_cells()
-        for i in range(walls): # type: ignore
-            num = random.randrange(len(spaces))
-
-            wall.Wall(spaces[num], self)
-            spaces.pop(num)
+        self.__empty_spaces: set[Position] = {
+            Position(i, j)
+            for i in range(size)
+            for j in range(size)
+        }
         
+        for _ in range(homebases): # Randomly spawn homebases
+            homebase.Homebase(self.__random_empty(), self, health=1)
 
-    def get_empty_cells(self) -> list[Position]:
-        l: list[Position] = []
+        for _ in range(walls): # Randomly spawn walls
+            wall.Wall(self.__random_empty(), self)        
 
-        for i in range(len(self.__world_map)):
-            for j in range(len(self.__world_map[i])):
-                if self.__world_map[i][j] is None:
-                    l.append(Position(i, j))
-        return l
+
+    def get_empty_spaces(self) -> frozenset[Position]: return frozenset(self.__empty_spaces)
+
+
+    def __assert_empty(self) -> None: # Testing to make sure the empty set is synced
+        empty_spaces = {
+            Position(i, j)
+            for i in range(self.__world_size)
+            for j in range(self.__world_size)
+            if self.__world_map[i][j] is None
+        }
+        assert empty_spaces == self.__empty_spaces, "Empty-space set was desynced! Something is making ghost spaces..."
+
+
+
+    def __random_empty(self) -> Position:
+        if not self.__empty_spaces: raise RuntimeError("Uh oh. No more empty spaces remaining!")
+
+        pos = random.choice(tuple(self.__empty_spaces))
+        self.__empty_spaces.remove(pos)
+        return pos
+    
+
+    def move_entity(self, entity: entity.Entity, pos: Position) -> None:
+        if not self.in_bounds(pos): raise ValueError(f"Move was out of bounds! At {pos}")
+        if self.__world_map[pos.x][pos.y]: raise ValueError(f"Destination was occupied! At {pos}")
+
+        if pos == entity.pos: return
+
+        self.__world_map[entity.pos.x][entity.pos.y] = None
+        self.__empty_spaces.add(entity.pos)
+
+        self.__world_map[pos.x][pos.y] = entity
+        self.__empty_spaces.discard(pos)
+
+        entity.pos = pos
     
 
     def __tick(self) -> GameState: # type: ignore
         self.__current_tick += 1
+
+        if self.__debug and self.__current_tick % 20 == 0: self.__assert_empty()
+
 
         for homebase in self.__homebases[:]:
             if not homebase.alive: continue
@@ -82,10 +110,6 @@ class WorldManager:
         while ended is GameState.CONTINUE:
             ended = self.__tick()
         return True
-
-
-    def __draw(self) -> None: # type: ignore
-        pass # TODO: Draws the world map to the screen.
 
 
     @property
@@ -125,6 +149,7 @@ class WorldManager:
 
     def deregister(self, cell: entity.Entity) -> None:
         self.__world_map[cell.pos.x][cell.pos.y] = None # Sets the cell to None in the world map.
+        self.__empty_spaces.add(cell.pos)
 
         if isinstance(cell, homebase.Homebase):
             if cell in self.__homebases: self.__homebases.remove(cell)
@@ -137,7 +162,9 @@ class WorldManager:
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
         if self.__world_map[cell.pos.x][cell.pos.y] is not None:
             raise ValueError(f"Space is occupied at {cell.pos}")
+        
         self.__world_map[cell.pos.x][cell.pos.y] = cell
+        self.__empty_spaces.discard(cell.pos)
 
         if isinstance(cell, homebase.Homebase):
             self.__homebases.append(cell)
