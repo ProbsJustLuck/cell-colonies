@@ -1,0 +1,116 @@
+from dataclasses import dataclass, field
+from enum import Enum, auto
+from typing import Callable
+import pygame
+
+from util.ui_helpers import create_text, add_bg_to_text_dimensions, add_background_to_text, add_outline_to_image
+from util import assets
+
+
+class ButtonType(Enum):
+    NORMAL = auto()
+    TOGGLE = auto()
+
+
+@dataclass
+class ButtonStyle:
+    font_size: int = 35
+    padding: int = 9
+    border: int = 3
+    opacity: int = 255
+
+    # Transformations
+    width: int | None = None
+    height: int | None = None
+    scale: float = 1.0
+
+    # Colors
+    base: str = "#a5a5a5"
+    hover: str = "#707070"
+    selected: str = "#515151"
+    text: str = "black"
+    
+    tooltip_scale: float = 0.8
+
+    def make_surface(self, label: str, color: tuple[int, int, int] | str):
+        font_size = max(1, int(self.font_size * self.scale))
+        padding = max(1, int(self.padding * self.scale))
+        text = create_text(label, self.text, font_size)
+
+        # background sizing: override width/height if provided
+        bg_width = self.width or text.get_width() + 2 * padding
+        bg_height = self.height or text.get_height() + 2 * padding
+
+        base = add_bg_to_text_dimensions(text, color, bg_width, bg_height, padding)
+        surf = add_outline_to_image(base, self.border, (0, 0, 0))
+        surf.set_alpha(self.opacity)
+
+        return surf
+    
+    def make_tooltip(self, msg: str) -> pygame.Surface:
+        font = max(1, int(self.font_size * self.scale * self.tooltip_scale))
+        padding = max(1, int((self.padding + 6) * self.scale * self.tooltip_scale)) 
+        text = create_text(msg, self.text, font)
+        bg = add_background_to_text(text, "#C5C5C5", padding)
+
+        return add_outline_to_image(bg, self.border, (0, 0, 0))
+
+@dataclass
+class Button:
+    label: str
+    center: tuple[int, int]
+    tooltip: str = ""
+    type: ButtonType = ButtonType.NORMAL
+    style: ButtonStyle = field(default_factory=ButtonStyle)
+
+    clicked: bool = False
+
+    is_selected: Callable[[], bool] | None = None # Override
+    on_enter: Callable[[], None] | None = None # Run once when the button was first clicked.
+    on_leave: Callable[[], None] | None = None # Run once when the button stops being clicked.
+
+    _surfaces: dict[str, pygame.Surface] = field(default_factory=dict[str, pygame.Surface])
+    rect: pygame.Rect | None = None
+
+    def initialize(self):  
+        self._surfaces = {
+            "base": self.style.make_surface(self.label, self.style.base),
+            "hover": self.style.make_surface(self.label, self.style.hover),
+            "selected": self.style.make_surface(self.label, self.style.selected),
+        }
+        self.rect = self._surfaces["base"].get_rect(center=self.center)
+
+
+    def click(self):
+        if self.type is ButtonType.TOGGLE:
+            self.clicked = not self.clicked
+            if self.clicked and self.on_enter:
+                self.on_enter()
+            if not self.clicked and self.on_leave:
+                self.on_leave()
+        else: # normal
+            if self.on_enter: self.on_enter()
+
+    def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
+        if self.is_selected() if self.is_selected else self.clicked:
+            state = "selected"
+        elif self.rect and self.rect.collidepoint(mouse_pos):
+            state = "hover"
+        else:
+            state = "base"
+        surf = self._surfaces[state]
+
+        surf.set_alpha(self.style.opacity)
+        self.rect = surf.get_rect(center=self.center)
+
+        screen.blit(surf, self.rect)
+        if self.tooltip and state == "hover":
+            render_tooltip(self.tooltip, self.rect, mouse_pos, self.style)
+
+def render_tooltip(msg: str, rect: pygame.Rect, mouse_pos: tuple[int, int], style: ButtonStyle):
+    tooltip = style.make_tooltip(msg)
+
+    size = max(1, int(style.font_size * 0.5 * style.scale * style.tooltip_scale))
+    tooltip.blit(create_text(">>", "#000000", size), (5, 4))
+
+    assets.screen.blit(tooltip, tooltip.get_rect(bottomleft=mouse_pos))

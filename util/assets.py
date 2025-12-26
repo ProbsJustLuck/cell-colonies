@@ -11,7 +11,3 @@ background = pygame.transform.smoothscale(
 pygame.mixer.init()
 pygame.font.init()
 game_font = pygame.font.Font("assets/font/Pixeltype.ttf", 20)
-scaling_font = pygame.font.Font("assets/font/Pixeltype.ttf", 25)
-bold_font = pygame.font.Font("assets/font/Pixeltype.ttf", 29)
-bold_font.bold = True
-small_font = pygame.font.Font("assets/font/Pixeltype.ttf", 15)
