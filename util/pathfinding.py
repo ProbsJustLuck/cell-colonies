@@ -3,7 +3,7 @@ import heapq
 from typing import Callable
 
 from classes.position import Position
-import constants
+from constants import Constants
 
 def __h(a: Position, b: Position) -> int: return abs(a.x - b.x) + abs(a.y - b.y) # uses manhatten distance
 
@@ -36,7 +36,7 @@ def pathfind(start: Position, goal: Position, in_bounds: Callable[[Position], bo
 
         if current == goal: return __reconstruct(current, came_from)
 
-        for _, (dx, dy) in constants.DIRECTION_MAPPINGS.items():
+        for _, (dx, dy) in Constants.DIRECTION_MAPPINGS.items():
             neighbor = Position(current.x + dx, current.y + dy)
 
             if not in_bounds(neighbor):

@@ -7,6 +7,9 @@ from util.ui_helpers import create_text, add_bg_to_text_dimensions, add_backgrou
 from util import assets
 
 
+pending_tooltip: Callable[[], None] | None = None
+
+
 class ButtonType(Enum):
     NORMAL = auto()
     TOGGLE = auto()
@@ -17,7 +20,10 @@ class ButtonStyle:
     font_size: int = 35
     padding: int = 9
     border: int = 3
+
     opacity: int = 255
+    disabled_opacity: int = 120
+    overwrite_opacity: int = -1 # bandaid solution but it WORKS
 
     # Transformations
     width: int | None = None
@@ -28,11 +34,12 @@ class ButtonStyle:
     base: str = "#a5a5a5"
     hover: str = "#707070"
     selected: str = "#515151"
+    disabled: str = "#8b8b8b"
     text: str = "black"
     
     tooltip_scale: float = 0.8
 
-    def make_surface(self, label: str, color: tuple[int, int, int] | str):
+    def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False):
         font_size = max(1, int(self.font_size * self.scale))
         padding = max(1, int(self.padding * self.scale))
         text = create_text(label, self.text, font_size)
@@ -43,7 +50,13 @@ class ButtonStyle:
 
         base = add_bg_to_text_dimensions(text, color, bg_width, bg_height, padding)
         surf = add_outline_to_image(base, self.border, (0, 0, 0))
-        surf.set_alpha(self.opacity)
+
+        if self.overwrite_opacity >= 0:
+            surf.set_alpha(self.overwrite_opacity)
+        elif self.disabled:
+            surf.set_alpha(self.disabled_opacity)
+        else:
+            surf.set_alpha(self.opacity)
 
         return surf
     
@@ -64,6 +77,7 @@ class Button:
     style: ButtonStyle = field(default_factory=ButtonStyle)
 
     clicked: bool = False
+    disabled: bool = False
 
     is_selected: Callable[[], bool] | None = None # Override
     on_enter: Callable[[], None] | None = None # Run once when the button was first clicked.
@@ -77,11 +91,16 @@ class Button:
             "base": self.style.make_surface(self.label, self.style.base),
             "hover": self.style.make_surface(self.label, self.style.hover),
             "selected": self.style.make_surface(self.label, self.style.selected),
+            "disabled": self.style.make_surface(self.label, self.style.disabled, True)
         }
         self.rect = self._surfaces["base"].get_rect(center=self.center)
 
 
+    def toggle(self): self.disabled = not self.disabled
+
+
     def click(self):
+        if self.disabled: return
         if self.type is ButtonType.TOGGLE:
             self.clicked = not self.clicked
             if self.clicked and self.on_enter:
@@ -92,20 +111,28 @@ class Button:
             if self.on_enter: self.on_enter()
 
     def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
-        if self.is_selected() if self.is_selected else self.clicked:
-            state = "selected"
-        elif self.rect and self.rect.collidepoint(mouse_pos):
-            state = "hover"
-        else:
-            state = "base"
-        surf = self._surfaces[state]
+        if self.disabled: button_state = "disabled"
 
-        surf.set_alpha(self.style.opacity)
+        elif self.is_selected() if self.is_selected else self.clicked: button_state = "selected"
+
+        elif self.rect and self.rect.collidepoint(mouse_pos): button_state = "hover"
+
+        else: button_state = "base"
+        surf = self._surfaces[button_state]
+
+        if self.style.overwrite_opacity >= 0:
+            surf.set_alpha(self.style.overwrite_opacity)
+        elif self.disabled:
+            surf.set_alpha(self.style.disabled_opacity)
+        else:
+            surf.set_alpha(self.style.opacity)
+
         self.rect = surf.get_rect(center=self.center)
 
         screen.blit(surf, self.rect)
-        if self.tooltip and state == "hover":
-            render_tooltip(self.tooltip, self.rect, mouse_pos, self.style)
+        if self.tooltip and (button_state == "hover" or (button_state == "selected" and self.rect and self.rect.collidepoint(mouse_pos))):
+            global pending_tooltip
+            pending_tooltip = lambda tooltip=self.tooltip, rect=self.rect.copy(), pos=mouse_pos, style=self.style: render_tooltip(tooltip, rect, pos, style)
 
 def render_tooltip(msg: str, rect: pygame.Rect, mouse_pos: tuple[int, int], style: ButtonStyle):
     tooltip = style.make_tooltip(msg)

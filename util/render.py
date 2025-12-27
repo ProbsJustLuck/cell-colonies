@@ -3,10 +3,11 @@ import pygame
 
 from constants import Constants
 from classes.lerp import Lerp
+import classes.ui.button as b
 from util import assets
 from util.game_states import States as state
 from util.ui_helpers import create_text, add_outline_to_image
-from util.menu_assets import main_menu_buttons
+from util import menu_assets
 
 STARTING_SIZE = 300
 ENDING_SIZE = 160
@@ -18,64 +19,69 @@ _base2: pygame.Surface = add_outline_to_image(create_text("Colonies", "#b7b7b7",
 
 _title_scale_lerp: Lerp | None = None
 _title_offset_lerp: Lerp | None = None
+_button_opacity_lerp: Lerp | None = None
 _centers: tuple[tuple[int,int], tuple[int,int]] | None = None
-
-def draw_buttons():
-    mouse_pos = pygame.mouse.get_pos()
-    for b in main_menu_buttons:
-        b.draw(assets.screen, mouse_pos)
 
 
 def render_start_screen() -> None:
-    global _base1, _base2, _title_scale_lerp, _title_offset_lerp
+    global _base1, _base2, _title_scale_lerp, _title_offset_lerp, _button_opacity_lerp
 
     # Background
-    assets.screen.blit(assets.background, assets.background.get_rect(topleft = (0, 0)))
+    assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
 
-    # Fade in title text
-    if state.starting_opacity < 255 and not _title_scale_lerp:
-        state.starting_opacity += 2
+    if not state.skipped_animation:
 
-        _base1.set_alpha(state.starting_opacity)
-        _base2.set_alpha(state.starting_opacity)
-        assets.screen.blit(_base1, _base1.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 - _base1.get_height() / 2)))
-        assets.screen.blit(_base2, _base2.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 + (STARTING_SIZE / 6))))
-        return
-    
-    # Initialize lerps
-    if not _title_scale_lerp or not _title_offset_lerp:
-        ease_func: Callable[[float], float] = lambda t: 4*t*t*t if t < 0.5 else 1 - ((-2*t + 2)**3.5) / 2
+        # Fade in title text
+        if state.starting_opacity < 255 and not _title_scale_lerp:
+            state.starting_opacity += 2
 
-        _title_scale_lerp = Lerp(STARTING_SIZE, ENDING_SIZE, 2000, ease_func)
-        _title_offset_lerp = Lerp(0, ENDING_DISPLACEMENT, 2000, ease_func)
+            _base1.set_alpha(state.starting_opacity)
+            _base2.set_alpha(state.starting_opacity)
+            assets.screen.blit(_base1, _base1.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 - _base1.get_height() / 2)))
+            assets.screen.blit(_base2, _base2.get_rect(center = (Constants.SCREEN_WIDTH // 2, Constants.SCREEN_HEIGHT // 2 + (STARTING_SIZE / 6))))
+            return
+        
+        # Initialize lerps
+        if not _title_scale_lerp or not _title_offset_lerp:
+            ease_func: Callable[[float], float] = lambda t: 4*t*t*t if t < 0.5 else 1 - ((-2*t + 2)**3.5) / 2
 
-    # Smooth animation
-    if not _title_scale_lerp.done:
-        now = pygame.time.get_ticks()
-        scale = _title_scale_lerp.value(now) / STARTING_SIZE
-        offset = _title_offset_lerp.value(now)
+            _title_scale_lerp = Lerp(STARTING_SIZE, ENDING_SIZE, 2000, ease_func)
+            _title_offset_lerp = Lerp(0, ENDING_DISPLACEMENT, 2000, ease_func)
 
-        # scale once per frame based on the base sizes
-        text1 = pygame.transform.smoothscale(
-            _base1,
-            (int(_base1.get_width() * scale), int(_base1.get_height() * scale))
-        )
-        text2 = pygame.transform.smoothscale(
-            _base2,
-            (int(_base2.get_width() * scale), int(_base2.get_height() * scale))
-        )
+        # Smooth animation
+        if not _title_scale_lerp.done:
+            now = pygame.time.get_ticks()
+            scale = _title_scale_lerp.value(now) / STARTING_SIZE
+            offset = _title_offset_lerp.value(now)
 
-        mid_y = Constants.SCREEN_HEIGHT // 2
-        gap = (_base1.get_height() * scale) / 2  # keeps spacing relative to text scales
+            # scale once per frame based on the base sizes
+            text1 = pygame.transform.smoothscale(
+                _base1,
+                (int(_base1.get_width() * scale), int(_base1.get_height() * scale))
+            )
+            text2 = pygame.transform.smoothscale(
+                _base2,
+                (int(_base2.get_width() * scale), int(_base2.get_height() * scale))
+            )
 
-        assets.screen.blit(text1, text1.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - gap - offset)))
-        assets.screen.blit(text2, text2.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - offset + (STARTING_SIZE / 6) * scale)))
-        return
+            mid_y = Constants.SCREEN_HEIGHT // 2
+            gap = (_base1.get_height() * scale) / 2  # keeps spacing relative to text scales
+
+            assets.screen.blit(text1, text1.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - gap - offset)))
+            assets.screen.blit(text2, text2.get_rect(center=(Constants.SCREEN_WIDTH // 2, mid_y - offset + (STARTING_SIZE / 6) * scale)))
+
+            state.starting_opacity = 0
+            return
     
     global _centers
 
     # Recompute the surfaces for the text to be in their final position (less laggy/math to do)
-    if not _centers:    
+    if not _centers:
+        state.loaded_menu = True
+
+        _base1.set_alpha(255)
+        _base2.set_alpha(255)
+
         scale = ENDING_SIZE / STARTING_SIZE
         offset = ENDING_DISPLACEMENT
         mid_y = Constants.SCREEN_HEIGHT // 2
@@ -92,12 +98,33 @@ def render_start_screen() -> None:
 
         _centers = ((Constants.SCREEN_WIDTH // 2, int(mid_y - gap - offset)), (Constants.SCREEN_WIDTH // 2, int(mid_y - offset + (STARTING_SIZE / 6) * scale))) # math wasn't mathing
 
+        _button_opacity_lerp = Lerp(0, 255, 2000)
+
     # Display main title and fade in other text
     assets.screen.blit(_base1, _base1.get_rect(center=(_centers[0])))
     assets.screen.blit(_base2, _base2.get_rect(center=(_centers[1])))
 
     # Fade in other text text
     mouse_pos = pygame.mouse.get_pos()
-    for button in main_menu_buttons:
-        if button.style.opacity < 255: button.style.opacity = min(button.style.opacity + 2, 255)
+    for button in menu_assets.buttons.get(state.current_area, []):
+        if not state.skipped_animation:
+            if not button.disabled and _button_opacity_lerp:
+                button.style.opacity = int(_button_opacity_lerp.value(pygame.time.get_ticks()))
+            elif _button_opacity_lerp: 
+                button.style.overwrite_opacity = min(int(_button_opacity_lerp.value(pygame.time.get_ticks())), button.style.disabled_opacity)
+        else:
+            button.style.opacity = 255
+            button.style.overwrite_opacity = -1
+
         button.draw(assets.screen, mouse_pos)
+    if b.pending_tooltip:
+        b.pending_tooltip()
+        b.pending_tooltip = None
+
+
+def render_game_screen():
+    # Background
+    assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
+
+    pygame.draw.rect(assets.screen, "#000000", (50, 50, 600, 600), border_radius=4)
+    pygame.draw.rect(assets.screen, "#919191", (55, 55, 590, 590), border_radius=-1)

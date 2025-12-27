@@ -36,7 +36,7 @@ def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool
     font.set_bold(italic)
 
     text = font.render(string, False, color)
-    textbox = text.get_rect(center = (pos.x, pos.y))
+    textbox = text.get_rect(topleft = (pos.x, pos.y))
 
     assets.screen.blit(text, textbox)
 
