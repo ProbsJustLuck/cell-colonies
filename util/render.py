@@ -3,11 +3,13 @@ import pygame
 
 from constants import Constants
 from classes.lerp import Lerp
-import classes.ui.button as b
+import classes.ui.button as Button
 import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
 import classes.wall as wall
+from classes.position import Position
+
 from util import assets
 from util.game_states import States as state
 from util.ui_helpers import create_text, add_outline_to_image
@@ -122,33 +124,33 @@ def render_start_screen() -> None:
             button.style.overwrite_opacity = -1
 
         button.draw(assets.screen, mouse_pos)
-    if b.pending_tooltip:
-        b.pending_tooltip()
-        b.pending_tooltip = None
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None
 
 
 def render_game_screen():
     # Background
     assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
 
-    if state.world is None: create_world(homebases=2, size=50)
-    assert state.world is not None
+    if not state.world: create_world(homebases=2, size=50)
+    assert state.world
 
-    world_size = state.world.get_size()
+    world_size = state.world.size
 
-    # Make the viewport
+    # Viewport
     pygame.draw.rect(assets.screen, "#283c50", state.SIM_RECT)
     pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)
 
-    # Get the cell sizes
+    # Get cell sizes
     base_cell = state.SIM_RECT.width / world_size
     cell_size = max(2, int(base_cell * state.zoom))
     origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
 
-    # Draw gridlines
+    # Gridlines
     line_color = (70, 90, 110)
     world_rect = pygame.Rect(origin.x, origin.y, world_size * cell_size, world_size * cell_size)
-    clipped_rect = state.SIM_RECT.clip(world_rect) # stops rendering gridlines and cells offscreen
+    clipped_rect = state.SIM_RECT.clip(world_rect) # stop rendering gridlines and cells offscreen
 
     for i in range(world_size + 1):
         x = origin.x + i * cell_size
@@ -162,7 +164,7 @@ def render_game_screen():
     # Draw cells
     for row in range(world_size):
         for col in range(world_size):
-            cell = state.world.map[col][row]
+            cell = state.world.get_cell(Position(row, col))
             if cell is None:
                 continue
             if isinstance(cell, homebase.Homebase):
@@ -186,3 +188,10 @@ def render_game_screen():
 
     # makes the top edge cleaner
     pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)
+
+    pos = pygame.mouse.get_pos()
+    for button in menu_assets.buttons.get(state.current_area, []):
+        button.draw(assets.screen, pos)
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None

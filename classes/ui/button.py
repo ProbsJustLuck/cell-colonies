@@ -80,8 +80,8 @@ class Button:
     disabled: bool = False
 
     is_selected: Callable[[], bool] | None = None # Override
-    on_enter: Callable[[], None] | None = None # Run once when the button was first clicked.
-    on_leave: Callable[[], None] | None = None # Run once when the button stops being clicked.
+    on_enter: Callable[[Button], None] | None = None # Run once when the button was first clicked.
+    on_leave: Callable[[Button], None] | None = None # Run once when the button stops being clicked.
 
     _surfaces: dict[str, pygame.Surface] = field(default_factory=dict[str, pygame.Surface])
     rect: pygame.Rect | None = None
@@ -104,11 +104,11 @@ class Button:
         if self.type is ButtonType.TOGGLE:
             self.clicked = not self.clicked
             if self.clicked and self.on_enter:
-                self.on_enter()
+                self.on_enter(self)
             if not self.clicked and self.on_leave:
-                self.on_leave()
+                self.on_leave(self)
         else: # normal
-            if self.on_enter: self.on_enter()
+            if self.on_enter: self.on_enter(self)
 
     def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
         if self.disabled: button_state = "disabled"
@@ -130,7 +130,7 @@ class Button:
         self.rect = surf.get_rect(center=self.center)
 
         screen.blit(surf, self.rect)
-        if self.tooltip and (button_state == "hover" or (button_state == "selected" and self.rect and self.rect.collidepoint(mouse_pos))):
+        if self.tooltip and (button_state == "hover" or (button_state == "selected" and self.rect and self.rect.collidepoint(mouse_pos))) and self.tooltip:
             global pending_tooltip
             pending_tooltip = lambda tooltip=self.tooltip, rect=self.rect.copy(), pos=mouse_pos, style=self.style: render_tooltip(tooltip, rect, pos, style)
 

@@ -38,7 +38,7 @@ def main():
         os.system("cls")
         print(f"Tick: {tick}")
 
-        ended = world._WorldManager__tick() # type: ignore
+        ended = world.tick()
         if ended is GameState.WIN:
             print("Game ended in a win!")
             render(world)

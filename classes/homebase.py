@@ -1,5 +1,4 @@
 from __future__ import annotations
-import random
 from typing import TYPE_CHECKING
 import pygame
 
@@ -10,7 +9,7 @@ from classes.position import Position
 from constants import Constants
 
 if TYPE_CHECKING:
-    import classes.world_manager as world_manager
+    from classes.world_manager import WorldManager
 
 
 class Homebase(entity.Entity):
@@ -18,7 +17,7 @@ class Homebase(entity.Entity):
     __icon: pygame.Surface | None = None # The icon that this entity uses.
     
 
-    def __init__(self, pos: Position, world_manager: "world_manager.WorldManager", health: int = 10):
+    def __init__(self, pos: Position, world_manager: "WorldManager", health: int = 10):
         super().__init__(pos, world_manager)
 
         self.__health: int = health # The health of the homebase.
@@ -41,7 +40,7 @@ class Homebase(entity.Entity):
     def health(self) -> int: return self.__health # Returns the health for this homebase
 
 
-    def tick(self, world_manager: "world_manager.WorldManager"): 
+    def tick(self, world_manager: "WorldManager"): 
         if self.__health < 0:
             self._deregister(world_manager)
             print("A HOMEBASE DIED!")
@@ -57,7 +56,7 @@ class Homebase(entity.Entity):
             self.__waiting_for_attacker = True
 
             choices = [homebase for homebase in world_manager.homebases if homebase is not self]
-            if choices: random.choice(choices).spawn_cell(world_manager, target=self)
+            if choices: world_manager.rng.choice(choices).spawn_cell(world_manager, target=self)
         if self.__ticks_since_target > 10 and self.__waiting_for_attacker:
             self._deregister(world_manager)
             return            
@@ -75,7 +74,7 @@ class Homebase(entity.Entity):
         self.__waiting_for_attacker = False
 
 
-    def _deregister(self, world_manager: "world_manager.WorldManager"):
+    def _deregister(self, world_manager: "WorldManager"):
         for cell in self.__cells[:]:
             if cell.alive:
                 cell._deregister(world_manager)
@@ -88,7 +87,7 @@ class Homebase(entity.Entity):
         if cell in self.__cells: self.__cells.remove(cell)
 
 
-    def spawn_cell(self, world_manager: "world_manager.WorldManager", type: Cell | None = None, target: Position | Homebase | None = None) -> entity.Entity | None:
+    def spawn_cell(self, world_manager: "WorldManager", type: Cell | None = None, target: Position | Homebase | None = None) -> entity.Entity | None:
         base: Position = self.pos
         mapping = Constants.DIRECTION_MAPPINGS
 
@@ -100,7 +99,7 @@ class Homebase(entity.Entity):
         ]
         positions = [pos for pos in positions if world_manager.in_bounds(pos)]
 
-        random.shuffle(positions)
+        world_manager.rng.shuffle(positions)
         for pos in positions:
             if world_manager.get_cell(pos) is None:
                 cell = world_manager.spawn_cell(pos, self, type, target)

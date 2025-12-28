@@ -1,5 +1,4 @@
 from __future__ import annotations
-import random
 from typing import TYPE_CHECKING, Optional
 import pygame
 
@@ -55,7 +54,7 @@ class Attacker(cell.Cell):
 
         choices = [homebase for homebase in world_manager.homebases if homebase is not self.homebase]
         while choices: # Sets a random Homebase as its target, if it can't find a valid path to any homebase then kill it
-            self.__target = random.choice(choices)
+            self.__target = world_manager.rng.choice(choices)
 
             self.__path = pathfinding.pathfind(
                 pos, 

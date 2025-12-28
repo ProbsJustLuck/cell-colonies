@@ -1,5 +1,4 @@
 from __future__ import annotations
-import random
 from typing import TYPE_CHECKING
 
 import pygame
@@ -10,7 +9,6 @@ import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
 import util.pathfinding as pathfinding
-
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -50,7 +48,7 @@ class Rotator(cell.Cell):
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
         hb = self.__homebase.pos
-        empties = world_manager.get_empty_spaces()
+        empties = world_manager.empty_spaces
         positions: list[Position] = []
 
         radius = 5
@@ -60,7 +58,7 @@ class Rotator(cell.Cell):
                 pos = Position(hb.x + dx, hb.y + dy)
                 if world_manager.in_bounds(pos) and pos in empties: positions.append(pos)
 
-        if positions: return random.choice(positions)
+        if positions: return world_manager.rng.choice(positions)
         return None
 
 

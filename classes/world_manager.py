@@ -1,6 +1,8 @@
 from __future__ import annotations
+import collections
+import copy
 import random
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from classes.game_state import GameState
 import classes.homebase as homebase
@@ -18,10 +20,15 @@ if TYPE_CHECKING:
     
 
 class WorldManager:
-    
-    def __init__(self, size: int = 10, homebases: int = 4, walls: int = 30):
+    def __init__(self, size: int = 10, homebases: int = 4, walls: int = 30, seed: int | None = None):
         self.__world_size = size
         self.__world_map: list[list[entity.Entity | None]] = [[None for _ in range(size)] for _ in range(size)]
+
+        # Deterministic rng
+        if not seed: seed = random.randrange(2**63)
+        self.__rng = random.Random(seed)
+
+        self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=10)
 
         self.__current_tick: int = 0
         self.__debug = True # Whether or not to check if the empty set is empty (im paranoid but want efficiency)
@@ -40,29 +47,86 @@ class WorldManager:
             homebase.Homebase(self.__random_empty(), self, health=1)
 
         for _ in range(walls): # Randomly spawn walls
-            wall.Wall(self.__random_empty(), self)        
+            wall.Wall(self.__random_empty(), self)
 
 
-    def get_empty_spaces(self) -> frozenset[Position]: return frozenset(self.__empty_spaces)
+    @property
+    def rng(self) -> random.Random: return self.__rng
 
 
-    def __assert_empty(self) -> None: # Testing to make sure the empty set is synced
+    @property
+    def empty_spaces(self) -> frozenset[Position]: return frozenset(self.__empty_spaces)
+
+
+    @property
+    def size(self) -> int: return self.__world_size
+
+
+    @property
+    def homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
+    
+
+    @property
+    def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
+
+
+    def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
+        return {
+            "map": copy.deepcopy(self.__world_map),
+            "tick": self.__current_tick,
+            "rng_state": self.rng.getstate(),
+        }
+    
+
+    def restore_snapshot(self, steps: int) -> bool:
+        snapshot = self.get_snapshot(steps)
+        if not snapshot: return False
+
+        for _ in range(steps):
+            self.__tick_history.pop()
+
+        self.__world_map = snapshot["map"]
+        self.__current_tick = snapshot["tick"]
+        self.rng.setstate(snapshot["rng_state"])
+
+        self.__homebases = []
+        self.__rotators = []
+        self.__attackers = []
+        self.__empty_spaces = set()
+        for x in range(self.__world_size):
+            for y in range(self.__world_size):
+                entity = self.__world_map[x][y]
+                if entity is None:
+                    self.__empty_spaces.add(Position(x, y))
+                elif isinstance(entity, homebase.Homebase):
+                    self.__homebases.append(entity)
+                elif isinstance(entity, rotator.Rotator):
+                    self.__rotators.append(entity)
+                elif isinstance(entity, attacker.Attacker):
+                    self.__attackers.append(entity)
+
+        return True
+
+
+    def get_snapshot(self, step: int) -> dict[str, Any] | None:
+        if step <= 0 or step > len(self.__tick_history): return None
+        return self.__tick_history[-step]
+
+
+    def __check_empty(self) -> None: # Testing to make sure the empty set is synced
         empty_spaces = {
             Position(i, j)
             for i in range(self.__world_size)
             for j in range(self.__world_size)
             if self.__world_map[i][j] is None
         }
-        assert empty_spaces == self.__empty_spaces, "Empty-space set was desynced! Something is making ghost spaces..."
-
-
-    def get_size(self) -> int: return self.__world_size
+        assert empty_spaces == self.__empty_spaces, "The empty space set was desynced! Something is wrong..."
 
 
     def __random_empty(self) -> Position:
         if not self.__empty_spaces: raise RuntimeError("Uh oh. No more empty spaces remaining!")
 
-        pos = random.choice(tuple(self.__empty_spaces))
+        pos = self.rng.choice(tuple(self.__empty_spaces))
         self.__empty_spaces.remove(pos)
         return pos
     
@@ -82,10 +146,11 @@ class WorldManager:
         entity.pos = pos
     
 
-    def __tick(self) -> GameState: # type: ignore
+    def tick(self) -> GameState:
+        self.__tick_history.append(self.__snapshot())
         self.__current_tick += 1
 
-        if self.__debug and self.__current_tick % 20 == 0: self.__assert_empty()
+        if self.__debug and self.__current_tick % 20 == 0: self.__check_empty()
 
 
         for homebase in self.__homebases[:]:
@@ -105,26 +170,11 @@ class WorldManager:
         elif(len(self.__homebases) == 0):
             return GameState.LOSS
         return GameState.CONTINUE
-    
-
-    def run(self) -> bool:
-        ended: GameState = GameState.CONTINUE
-        while ended is GameState.CONTINUE:
-            ended = self.__tick()
-        return True
 
 
-    @property
-    def homebases(self) -> list[homebase.Homebase]: return self.__homebases # Returns the alive homebases.
-    
-
-    @property
-    def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
-
-
-    def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> entity.Entity: # type: ignore
+    def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> entity.Entity: 
         if not type:
-            choice = random.choices(
+            choice = self.rng.choices(
                 population= [val for val in cell_registry.SPAWNABLE_CELLS],
                 weights=[85, 15],   # attacker, rotator
                 k=1

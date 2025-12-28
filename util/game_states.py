@@ -5,6 +5,7 @@ from constants import Constants
 
 if TYPE_CHECKING:
     from classes.world_manager import WorldManager
+    from classes.ui.button import Button
 
 class States:
     running: bool = True
@@ -18,16 +19,24 @@ class States:
     starting_opacity: int = 0
 
     # Simulation
+    game_end: bool = False
     panning: bool = False
-    world: "WorldManager | None" = None 
+    world: "WorldManager | None" = None
+    target_tps: int = 2
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)
-    SIM_RECT = pygame.Rect(55, 55, 590, 590)
+    SIM_RECT = pygame.Rect(55, 70, 590, 520)
     zoom: float = Constants.DEFAULT_ZOOM
     zoom_levels: list[float] = []
     zoom_index: int = 0
     panning: bool = False
     old_cursor_pos: tuple[int, int] = (0, 0)
+
+    ## Rewind/forward
+    fast_forward: "Button | None" = None
+    forward: "Button | None" = None
+    rewind: "Button | None" = None
+    fast_rewind: "Button | None" = None
 
     font_cache: dict[int, pygame.font.Font] = {}

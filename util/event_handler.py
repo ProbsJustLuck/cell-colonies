@@ -46,7 +46,7 @@ def event_handler(event: pygame.Event):
             dx, dy = pygame.mouse.get_rel()
             state.offset += (dx, dy)
 
-            world_px = state.world.get_size() * (state.SIM_RECT.width / state.world.get_size()) * state.zoom  # simplifies to SIM_RECT.width * zoom
+            world_px = state.world.size * (state.SIM_RECT.width / state.world.size) * state.zoom  # simplifies to SIM_RECT.width * zoom
             margin = (3 * state.SIM_RECT.width) / 7
             limit_x = world_px + margin
             limit_y = world_px + margin
@@ -69,7 +69,7 @@ def event_handler(event: pygame.Event):
 
                 # anchor to
                 mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
-                base_cell = state.SIM_RECT.width / state.world.get_size()
+                base_cell = state.SIM_RECT.width / state.world.size
                 origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
                 world_pt = (mouse_pos - origin) / (base_cell * old_zoom)
                 state.offset = mouse_pos - pygame.Vector2(state.SIM_RECT.topleft) - world_pt * (base_cell * new_zoom)
@@ -83,7 +83,7 @@ def event_handler(event: pygame.Event):
 
                 # anchor to
                 mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
-                base_cell = state.SIM_RECT.width / state.world.get_size()
+                base_cell = state.SIM_RECT.width / state.world.size
                 origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
                 world_pt = (mouse_pos - origin) / (base_cell * old_zoom)
                 state.offset = mouse_pos - pygame.Vector2(state.SIM_RECT.topleft) - world_pt * (base_cell * new_zoom)

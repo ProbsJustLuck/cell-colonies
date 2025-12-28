@@ -32,7 +32,7 @@ while state.running:
     
     draw_text(Position(3, 3), f"FPS: {round(clock.get_fps(), 2)}", "#000000", 20)
     draw_text(Position(3, 13), f"Area: {state.current_area}", "#000000", 20)
-    draw_text(Position(3, 23), f"Zoom: {state.zoom}", "#000000", 20)
+    draw_text(Position(3, 23), f"Pause: {state.sim_pause}", "#000000", 20)
     draw_text(Position(3, 33), f"Offset: {state.offset}", "#000000", 20)
 
 
