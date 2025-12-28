@@ -56,6 +56,8 @@ class WorldManager:
         assert empty_spaces == self.__empty_spaces, "Empty-space set was desynced! Something is making ghost spaces..."
 
 
+    def get_size(self) -> int: return self.__world_size
+
 
     def __random_empty(self) -> Position:
         if not self.__empty_spaces: raise RuntimeError("Uh oh. No more empty spaces remaining!")

@@ -3,7 +3,27 @@
 import pygame
 from util.game_states import States as state
 from util import assets
+from constants import Constants
 from classes.position import Position
+
+
+def fit_view(world_size: int):
+    w, h = state.SIM_RECT.width, state.SIM_RECT.height
+    base_cell = w / world_size          # pixels per cell at zoom=1.0
+    cell_pix = int(min(w / world_size, h / world_size))  # integer cell size that fits
+    state.zoom = cell_pix / base_cell   # so cell_size = cell_pix in render
+
+    factor = Constants.ZOOM_FACTOR
+    state.zoom_levels = [state.zoom * (factor ** i) for i in range(-5, 20)]
+    state.zoom_index = state.zoom_levels.index(state.zoom)
+
+    world_px_w = world_size * cell_pix
+    world_px_h = world_size * cell_pix
+    state.offset = pygame.Vector2(
+        (w - world_px_w) / 2,
+        (h - world_px_h) / 2,
+    )
+
 
 
 def get_font(size: int) -> pygame.font.Font:

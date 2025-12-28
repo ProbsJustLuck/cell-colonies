@@ -4,9 +4,14 @@ import pygame
 from constants import Constants
 from classes.lerp import Lerp
 import classes.ui.button as b
+import classes.homebase as homebase
+import classes.attacker as attacker
+import classes.rotator as rotator
+import classes.wall as wall
 from util import assets
 from util.game_states import States as state
 from util.ui_helpers import create_text, add_outline_to_image
+from util.game_actions import create_world
 from util import menu_assets
 
 STARTING_SIZE = 300
@@ -126,5 +131,58 @@ def render_game_screen():
     # Background
     assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
 
-    pygame.draw.rect(assets.screen, "#000000", (50, 50, 600, 600), border_radius=4)
-    pygame.draw.rect(assets.screen, "#919191", (55, 55, 590, 590), border_radius=-1)
+    if state.world is None: create_world(homebases=2, size=50)
+    assert state.world is not None
+
+    world_size = state.world.get_size()
+
+    # Make the viewport
+    pygame.draw.rect(assets.screen, "#283c50", state.SIM_RECT)
+    pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)
+
+    # Get the cell sizes
+    base_cell = state.SIM_RECT.width / world_size
+    cell_size = max(2, int(base_cell * state.zoom))
+    origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+
+    # Draw gridlines
+    line_color = (70, 90, 110)
+    world_rect = pygame.Rect(origin.x, origin.y, world_size * cell_size, world_size * cell_size)
+    clipped_rect = state.SIM_RECT.clip(world_rect) # stops rendering gridlines and cells offscreen
+
+    for i in range(world_size + 1):
+        x = origin.x + i * cell_size
+        y = origin.y + i * cell_size
+
+        # ver
+        if state.SIM_RECT.left <= x <= state.SIM_RECT.right: pygame.draw.line(assets.screen, line_color, (x, clipped_rect.top), (x, clipped_rect.bottom))
+        # hor
+        if state.SIM_RECT.top <= y <= state.SIM_RECT.bottom: pygame.draw.line(assets.screen, line_color, (clipped_rect.left, y), (clipped_rect.right, y))
+
+    # Draw cells
+    for row in range(world_size):
+        for col in range(world_size):
+            cell = state.world.map[col][row]
+            if cell is None:
+                continue
+            if isinstance(cell, homebase.Homebase):
+                color = (200, 60, 60)
+            elif isinstance(cell, attacker.Attacker):
+                color = (60, 60, 200)
+            elif isinstance(cell, rotator.Rotator):
+                color = (60, 180, 180)
+            elif isinstance(cell, wall.Wall):
+                color = (100, 100, 100)
+            else:
+                color = (160, 160, 160)
+
+            x = int(origin.x + col * cell_size)
+            y = int(origin.y + row * cell_size)
+
+            rect = pygame.Rect(x, y, cell_size, cell_size)
+            rect = rect.clip(state.SIM_RECT)
+            if rect.width > 0 and rect.height > 0:
+                pygame.draw.rect(assets.screen, color, rect)
+
+    # makes the top edge cleaner
+    pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)

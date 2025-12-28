@@ -30,9 +30,10 @@ while state.running:
         case _: pass
 
     
-    draw_text(Position(3, 3), f"Current Area: {state.current_area}", "#000000", 20)
-
-    
+    draw_text(Position(3, 3), f"FPS: {round(clock.get_fps(), 2)}", "#000000", 20)
+    draw_text(Position(3, 13), f"Area: {state.current_area}", "#000000", 20)
+    draw_text(Position(3, 23), f"Zoom: {state.zoom}", "#000000", 20)
+    draw_text(Position(3, 33), f"Offset: {state.offset}", "#000000", 20)
 
 
     # flip the display to put your work on screen
