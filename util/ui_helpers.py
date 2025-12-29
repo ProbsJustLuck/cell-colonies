@@ -32,7 +32,7 @@ def get_font(size: int) -> pygame.font.Font:
     return state.font_cache[size]
 
 
-def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool=False, italic: bool=False) -> None:
+def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool=False, italic: bool=False, mode: str = "topleft") -> None:
     """
     Draws text at a specific location on screen.
 
@@ -56,7 +56,8 @@ def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool
     font.set_bold(italic)
 
     text = font.render(string, False, color)
-    textbox = text.get_rect(topleft = (pos.x, pos.y))
+    if mode == "topleft": textbox = text.get_rect(topleft = (pos.x, pos.y))
+    else: textbox = text.get_rect(center = (pos.x, pos.y))
 
     assets.screen.blit(text, textbox)
 

@@ -12,6 +12,8 @@ from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
+
+from util.game_states import States
 import util.cell_registry as cell_registry
 
 
@@ -28,7 +30,7 @@ class WorldManager:
         if not seed: seed = random.randrange(2**63)
         self.__rng = random.Random(seed)
 
-        self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=10)
+        self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=States.max_history)
 
         self.__current_tick: int = 0
         self.__debug = True # Whether or not to check if the empty set is empty (im paranoid but want efficiency)

@@ -84,7 +84,7 @@ class Button:
     on_leave: Callable[[Button], None] | None = None # Run once when the button stops being clicked.
 
     _surfaces: dict[str, pygame.Surface] = field(default_factory=dict[str, pygame.Surface])
-    rect: pygame.Rect | None = None
+    rect: pygame.Rect = field(default_factory=pygame.Rect)
 
     def initialize(self):  
         self._surfaces = {

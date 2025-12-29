@@ -12,7 +12,7 @@ from classes.position import Position
 
 from util import assets
 from util.game_states import States as state
-from util.ui_helpers import create_text, add_outline_to_image
+from util.ui_helpers import create_text, add_outline_to_image, draw_text
 from util.game_actions import create_world
 from util import menu_assets
 
@@ -35,6 +35,9 @@ def render_start_screen() -> None:
 
     # Background
     assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
+
+    for slider in menu_assets.sliders.get(state.current_area, []):
+        slider.draw(assets.screen)
 
     if not state.skipped_animation:
 
@@ -195,3 +198,16 @@ def render_game_screen():
     if Button.pending_tooltip:
         Button.pending_tooltip()
         Button.pending_tooltip = None
+
+    if state.show_tps:
+        rect = pygame.Rect(647, 378, 40, 255)
+        pygame.draw.rect(assets.screen, "#000000", rect)
+
+        rect = pygame.Rect(650, 381, 34, 249)
+        pygame.draw.rect(assets.screen, "#a5a5a5", rect)
+
+        draw_text(Position(667, 398), f"{state.target_tps:.1f}", "#000000", 27, mode="center")
+
+        for slider in menu_assets.sliders.get(state.current_area, []):
+            slider.draw(assets.screen)
+        

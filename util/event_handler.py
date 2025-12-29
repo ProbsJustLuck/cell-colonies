@@ -14,16 +14,22 @@ def event_handler(event: pygame.Event):
             state.skipped_animation = True
             state.starting_opacity = 255
         return
+    
+    for slider in menu_assets.sliders.get(state.current_area, []):
+        slider.handle_event(event)
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #lc
+        assert state.tps_button
+
+        if state.show_tps and not (menu_assets.sliders[MenuArea.SIMULATION][0].rect.collidepoint(event.pos) or state.tps_button.rect.collidepoint(event.pos)):
+            state.tps_button.click()
+            return
+        
         for button in menu_assets.buttons.get(state.current_area, []):
             if not button.rect: continue
             if button.rect.collidepoint(event.pos):
                 button.click()
                 break
-        
-        if state.SIM_RECT.collidepoint(event.pos):
-            pass
         return
     
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2: #mc

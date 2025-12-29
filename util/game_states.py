@@ -22,7 +22,10 @@ class States:
     game_end: bool = False
     panning: bool = False
     world: "WorldManager | None" = None
-    target_tps: int = 2
+    target_tps: float = 2
+    max_catchup: int = 5
+    max_history: int = 20
+    show_tps: bool = False
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)
@@ -36,7 +39,9 @@ class States:
     ## Rewind/forward
     fast_forward: "Button | None" = None
     forward: "Button | None" = None
+    pause: "Button | None" = None
     rewind: "Button | None" = None
     fast_rewind: "Button | None" = None
+    tps_button: "Button | None" = None
 
     font_cache: dict[int, pygame.font.Font] = {}
