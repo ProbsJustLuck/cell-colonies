@@ -3,7 +3,6 @@ start_time = time.time()
 
 import pygame
 
-import util.assets as assets # type: ignore
 from util.game_states import States as state
 from util.event_handler import event_handler
 from util.render import render_start_screen, render_game_screen
@@ -13,7 +12,6 @@ from util.game_actions import toggle_pause_simulation
 from classes.position import Position
 from classes.game_state import GameState
 from classes.ui.menu_area import MenuArea
-from classes.world_manager import WorldManager # type: ignore
 
 pygame.init()
 pygame.display.set_caption("What's up danger")
@@ -54,7 +52,7 @@ while state.running:
     
     draw_text(Position(3, 3), f"FPS: {round(fps_clock.get_fps(), 2)}", "#000000", 20)
     draw_text(Position(3, 13), f"Area: {state.current_area}", "#000000", 20)
-    draw_text(Position(3, 23), f"Pause: {state.show_tps}", "#000000", 20)
+    draw_text(Position(3, 23), f"Cell: {state.selected_cell}", "#000000", 20)
     draw_text(Position(3, 33), f"Offset: {state.offset}", "#000000", 20)
 
 

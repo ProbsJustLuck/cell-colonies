@@ -1,5 +1,6 @@
 import pygame
 
+from classes.position import Position
 from classes.ui.menu_area import MenuArea
 
 from util.game_states import States as state
@@ -30,6 +31,20 @@ def event_handler(event: pygame.Event):
             if button.rect.collidepoint(event.pos):
                 button.click()
                 break
+        
+        if state.current_area is MenuArea.SIMULATION and state.world:
+            origin = state.SIM_RECT.topleft + state.offset
+
+            cell_size = int((state.SIM_RECT.width / state.sim_size) * state.zoom)
+            world_rect = pygame.Rect(origin.x, origin.y, state.sim_size * cell_size, state.sim_size * cell_size)
+
+            if world_rect.collidepoint(event.pos):
+                col = int((event.pos[0] - origin.x) / cell_size)
+                row = int((event.pos[1] - origin.y) / cell_size)
+                state.selected_cell = state.world.get_cell(Position(row, col))
+            else:
+                state.selected_cell = None
+        
         return
     
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2: #mc

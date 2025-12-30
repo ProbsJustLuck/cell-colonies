@@ -12,7 +12,7 @@ from classes.position import Position
 
 from util import assets
 from util.game_states import States as state
-from util.ui_helpers import create_text, add_outline_to_image, draw_text
+from util.ui_helpers import create_text, add_outline_to_image, draw_text, fit_view
 from util.game_actions import create_world
 from util import menu_assets
 
@@ -136,7 +136,8 @@ def render_game_screen():
     # Background
     assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
 
-    if not state.world: create_world(homebases=2, size=50)
+    if not state.world: create_world()
+    fit_view(state.sim_size)
     assert state.world
 
     world_size = state.world.size
@@ -189,8 +190,10 @@ def render_game_screen():
             if rect.width > 0 and rect.height > 0:
                 pygame.draw.rect(assets.screen, color, rect)
 
+
     # makes the top edge cleaner
     pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)
+
 
     pos = pygame.mouse.get_pos()
     for button in menu_assets.buttons.get(state.current_area, []):
@@ -199,7 +202,9 @@ def render_game_screen():
         Button.pending_tooltip()
         Button.pending_tooltip = None
 
-    if state.show_tps:
+    assets.screen.blit(assets.rotation_arrow, (124, 602))
+
+    if state.show_tps: # tps slider
         rect = pygame.Rect(647, 378, 40, 255)
         pygame.draw.rect(assets.screen, "#000000", rect)
 

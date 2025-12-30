@@ -13,6 +13,11 @@ simulation_background = pygame.transform.smoothscale(
     screen.get_size()
 )
 
+rotation_arrow = pygame.transform.smoothscale(
+    pygame.image.load("assets/menu/rotation_arrow.png").convert_alpha(),
+    (25, 25)
+)
+
 pygame.mixer.init()
 pygame.font.init()
 game_font = pygame.font.Font("assets/font/Pixeltype.ttf", 20)

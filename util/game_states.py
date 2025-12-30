@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import pygame
+from classes.entity import Entity
 from classes.ui.menu_area import MenuArea
 from constants import Constants
 
@@ -18,6 +19,11 @@ class States:
     current_area = MenuArea.MAIN_MENU
     starting_opacity: int = 0
 
+    # Sim options
+    sim_size: int = 20
+    sim_homebases: int = 2
+    sim_walls: int = 30
+
     # Simulation
     game_end: bool = False
     panning: bool = False
@@ -26,6 +32,7 @@ class States:
     max_catchup: int = 5
     max_history: int = 20
     show_tps: bool = False
+    selected_cell: Entity | None = None
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)

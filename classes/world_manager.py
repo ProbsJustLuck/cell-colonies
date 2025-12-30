@@ -27,8 +27,9 @@ class WorldManager:
         self.__world_map: list[list[entity.Entity | None]] = [[None for _ in range(size)] for _ in range(size)]
 
         # Deterministic rng
-        if not seed: seed = random.randrange(2**63)
-        self.__rng = random.Random(seed)
+        self.__seed = random.randrange(2**32)
+        if seed: self.__seed = seed
+        self.__rng = random.Random(self.__seed)
 
         self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=States.max_history)
 
@@ -191,6 +192,9 @@ class WorldManager:
     def get_cell(self, pos: Position) -> entity.Entity | None:
         if self.in_bounds(pos): return self.__world_map[pos.x][pos.y]
         return None
+    
+
+    def get_seed(self) -> int: return self.__seed
     
 
     def in_bounds(self, pos: Position) -> bool: return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size

@@ -21,10 +21,15 @@ def _check_win(gamestate: GameState):
         if state.pause and not state.pause.disabled: state.pause.toggle()
 
 
+def create_world(seed: int | None = None):
+    state.game_end = False
+    state.world = WorldManager(state.sim_size, state.sim_homebases, state.sim_walls, seed)
 
-def create_world(size: int = 20, homebases: int = 4, walls: int = 30):
-    state.world = WorldManager(size, homebases, walls)
-    fit_view(size)
+    if state.rewind and not state.rewind.disabled: state.rewind.toggle()
+    if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
+    if state.pause and state.pause.disabled: state.pause.toggle()
+    if state.forward and state.forward.disabled: state.forward.toggle()
+    if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
 
 
 def quit(button: "Button | None" = None):
@@ -33,7 +38,8 @@ def quit(button: "Button | None" = None):
 
 def start_game(button: "Button"):
     state.current_area = MenuArea.SIMULATION
-    create_world(homebases=2, size=30)
+    create_world()
+    fit_view(state.sim_size)
 
 
 def go_to_main_menu(button: "Button"):
