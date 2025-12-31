@@ -6,22 +6,40 @@ from classes.cell import Cell
 from classes.direction import Direction
 import classes.entity as entity
 from classes.position import Position
+
+from util import assets
 from constants import Constants
 
 if TYPE_CHECKING:
     from classes.world_manager import WorldManager
+    from classes.ui.colors import ColorInfo
 
 
 class Homebase(entity.Entity):
     __type: str = "CORE"
-    __icon: pygame.Surface | None = None # The icon that this entity uses.
     
 
-    def __init__(self, pos: Position, world_manager: "WorldManager", health: int = 10):
+    def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 10):
         super().__init__(pos, world_manager)
 
         self.__health: int = health # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
+
+        self.__color = color
+        self.__icon = assets.base_homebase.copy()
+        self.__icon.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+
+        self.__attacker_icon = {
+            Direction.NORTH: assets.base_attacker_up.copy(),
+            Direction.EAST: assets.base_attacker_right.copy(),
+            Direction.SOUTH: assets.base_attacker_down.copy(),
+            Direction.WEST: assets.base_attacker_left.copy()
+        }
+        for surf in self.__attacker_icon.values():
+            surf.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+
+        self.__rotator_icon = assets.base_rotator.copy()
+        self.__rotator_icon.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
 
         self.__spawn_ticks: int = 0
 
@@ -33,11 +51,23 @@ class Homebase(entity.Entity):
 
 
     @property
-    def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this homebase.
+    def icon(self) -> pygame.Surface: return self.__icon # Returns the icon for this homebase.
+
+
+    @property
+    def attacker_icon(self) -> dict[Direction, pygame.Surface]: return self.__attacker_icon
+
+
+    @property
+    def rotator_icon(self) -> pygame.Surface: return self.__rotator_icon
 
 
     @property
     def health(self) -> int: return self.__health # Returns the health for this homebase
+
+
+    @property
+    def color(self) -> ColorInfo: return self.__color
 
 
     def tick(self, world_manager: "WorldManager"): 

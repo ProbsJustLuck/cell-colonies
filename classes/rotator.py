@@ -8,22 +8,25 @@ from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
+
 import util.pathfinding as pathfinding
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
 
 
+
 class Rotator(cell.Cell):
     __type: str = "UTILITY"
-    __icon: pygame.Surface | None = None
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
 
         self.__health: int = health
-        self.__homebase: homebase.Homebase = homebase_link
+
+        self.__color = homebase_link.color
+        self.__icon = self.homebase.rotator_icon
 
         if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
         elif isinstance(target, Position):
@@ -47,7 +50,7 @@ class Rotator(cell.Cell):
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
-        hb = self.__homebase.pos
+        hb = self.homebase.pos
         empties = world_manager.empty_spaces
         positions: list[Position] = []
 
@@ -70,7 +73,7 @@ class Rotator(cell.Cell):
 
 
     @property
-    def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this homebase.
+    def icon(self) -> pygame.Surface: return self.__icon # Returns the icon for this homebase.
 
 
     @property

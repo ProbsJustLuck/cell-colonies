@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 from pygame import Surface
 
 from classes.position import Position
@@ -35,7 +35,7 @@ class Entity:
 
 
     @property
-    def icon(self) -> Optional[Surface]: pass # Generic get_icon function, overridden by child classes.
+    def icon(self) -> Surface: raise NotImplementedError # Generic get_icon function, overridden by child classes.
 
 
     def _deregister(self, world_manager: "world_manager.WorldManager") -> None:

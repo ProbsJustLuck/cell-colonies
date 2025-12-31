@@ -2,7 +2,7 @@ from __future__ import annotations
 import collections
 import copy
 import random
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from classes.game_state import GameState
 import classes.homebase as homebase
@@ -12,14 +12,11 @@ from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
+from classes.ui.colors import TeamColor
 
 from util.game_states import States
 import util.cell_registry as cell_registry
 
-
-if TYPE_CHECKING:
-    pass
-    
 
 class WorldManager:
     def __init__(self, size: int = 10, homebases: int = 4, walls: int = 30, seed: int | None = None):
@@ -45,9 +42,14 @@ class WorldManager:
             for i in range(size)
             for j in range(size)
         }
+
+        colors = list(TeamColor)
+        self.rng.shuffle(colors)
+        colors = colors[:homebases] # limit
         
-        for _ in range(homebases): # Randomly spawn homebases
-            homebase.Homebase(self.__random_empty(), self, health=1)
+        for i in range(homebases): # Randomly spawn homebases
+            color = colors[i].value
+            homebase.Homebase(self.__random_empty(), self, color, health=1)
 
         for _ in range(walls): # Randomly spawn walls
             wall.Wall(self.__random_empty(), self)

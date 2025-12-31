@@ -1,6 +1,8 @@
 # Guess what, ANOTHER FILE!
 from typing import TYPE_CHECKING
+import pygame
 
+from util import assets
 from util.ui_helpers import fit_view
 from util.game_states import States as state
 
@@ -40,6 +42,8 @@ def start_game(button: "Button"):
     state.current_area = MenuArea.SIMULATION
     create_world()
     fit_view(state.sim_size)
+
+    state.target_tps = 2.0
 
 
 def go_to_main_menu(button: "Button"):
@@ -143,4 +147,42 @@ def show_tps(button: "Button"): state.show_tps = True
 def hide_tps(button: "Button"): state.show_tps = False
 
 
-def set_tps(value: float): state.target_tps = round(value, 1)
+def set_tps(value: float): 
+    state.target_tps = round(value, 1)
+
+    if state.target_tps >= 20.0 and state.tps_up: state.tps_up.toggle()
+    elif state.target_tps <= 0.1 and state.tps_down: state.tps_down.toggle()
+
+
+def tps_up(button: "Button"):
+    assert state.tps_slider and state.tps_button
+    state.target_tps = round(state.target_tps + 0.1, 1)
+    
+    state.tps_slider.value = state.target_tps
+
+    if state.tps_down and state.tps_down.disabled: state.tps_down.toggle()
+    if state.target_tps >= 20.0 and not button.disabled: button.toggle()
+
+    state.tps_button.label = f"{state.target_tps}"
+    state.tps_button.initialize()
+    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
+
+    state.tps_change = 1
+
+
+def tps_down(button: "Button"):
+    assert state.tps_slider and state.tps_button
+    state.target_tps = round(state.target_tps - 0.1, 1)
+
+    state.tps_slider.value = state.target_tps
+
+    if state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
+    if state.target_tps <= 0.1 and not button.disabled: button.toggle()
+
+    state.tps_button.label = f"{state.target_tps}"
+    state.tps_button.initialize()
+    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
+
+    state.tps_change = 1

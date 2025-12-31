@@ -36,7 +36,7 @@ class Slider:
         if span == 0: return 0.0
         else: return(self.value - self.min_value) / span
 
-    def __set_value(self, progress: float, on_change: bool) -> None:
+    def set_value(self, progress: float, on_change: bool) -> None:
         progress = max(0.0, min(1.0, progress))
 
         if self.steps and self.snap_on_release and not self.__dragging: progress = round(progress * (self.steps-1)) / (self.steps-1) # snap to steps
@@ -62,15 +62,15 @@ class Slider:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.rect.collidepoint(event.pos):
                 self.__dragging = True
-                self.__set_value(self.__pos_to_progress(event.pos), on_change=True)
+                self.set_value(self.__pos_to_progress(event.pos), on_change=True)
 
         elif event.type == pygame.MOUSEMOTION and self.__dragging:
-            self.__set_value(self.__pos_to_progress(event.pos), on_change=True)
+            self.set_value(self.__pos_to_progress(event.pos), on_change=True)
 
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.__dragging:
             self.__dragging = False
             if self.steps and self.snap_on_release:
-                self.__set_value(self.__pos_to_progress(event.pos), on_change=True)
+                self.set_value(self.__pos_to_progress(event.pos), on_change=True)
 
 
     def draw(self, surface: pygame.Surface) -> None:

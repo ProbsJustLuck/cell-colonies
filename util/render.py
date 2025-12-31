@@ -4,10 +4,6 @@ import pygame
 from constants import Constants
 from classes.lerp import Lerp
 import classes.ui.button as Button
-import classes.homebase as homebase
-import classes.attacker as attacker
-import classes.rotator as rotator
-import classes.wall as wall
 from classes.position import Position
 
 from util import assets
@@ -21,6 +17,7 @@ ENDING_SIZE = 160
 
 ENDING_DISPLACEMENT = 160
 
+# Bunch of caches
 _base1: pygame.Surface = add_outline_to_image(create_text("Cell", "#b7b7b7", STARTING_SIZE), 3, (0, 0, 0))
 _base2: pygame.Surface = add_outline_to_image(create_text("Colonies", "#b7b7b7", STARTING_SIZE), 3, (0, 0, 0))
 
@@ -28,6 +25,20 @@ _title_scale_lerp: Lerp | None = None
 _title_offset_lerp: Lerp | None = None
 _button_opacity_lerp: Lerp | None = None
 _centers: tuple[tuple[int,int], tuple[int,int]] | None = None
+
+_icons: dict[tuple[int, int], pygame.Surface] = {}
+_cell_size: int | None = None
+
+
+def get_icon(surf: pygame.Surface, cell_size: int) -> pygame.Surface:
+    key = (id(surf), cell_size)
+
+    icon = _icons.get(key)
+    if icon: return icon
+
+    scaled = pygame.transform.smoothscale(surf, (cell_size, cell_size))
+    _icons[key] = scaled
+    return scaled
 
 
 def render_start_screen() -> None:
@@ -136,8 +147,9 @@ def render_game_screen():
     # Background
     assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
 
-    if not state.world: create_world()
-    fit_view(state.sim_size)
+    if not state.world: 
+        create_world()
+        fit_view(state.sim_size)
     assert state.world
 
     world_size = state.world.size
@@ -166,33 +178,39 @@ def render_game_screen():
         if state.SIM_RECT.top <= y <= state.SIM_RECT.bottom: pygame.draw.line(assets.screen, line_color, (clipped_rect.left, y), (clipped_rect.right, y))
 
     # Draw cells
+    global _icons, _cell_size
+    cell_size = int((state.SIM_RECT.width / world_size) * state.zoom)
+
+    if cell_size != _cell_size:
+        _icons.clear()
+        _cell_size = cell_size
+
     for row in range(world_size):
         for col in range(world_size):
             cell = state.world.get_cell(Position(row, col))
-            if cell is None:
-                continue
-            if isinstance(cell, homebase.Homebase):
-                color = (200, 60, 60)
-            elif isinstance(cell, attacker.Attacker):
-                color = (60, 60, 200)
-            elif isinstance(cell, rotator.Rotator):
-                color = (60, 180, 180)
-            elif isinstance(cell, wall.Wall):
-                color = (100, 100, 100)
-            else:
-                color = (160, 160, 160)
+            if not cell: continue
 
             x = int(origin.x + col * cell_size)
             y = int(origin.y + row * cell_size)
 
             rect = pygame.Rect(x, y, cell_size, cell_size)
-            rect = rect.clip(state.SIM_RECT)
-            if rect.width > 0 and rect.height > 0:
-                pygame.draw.rect(assets.screen, color, rect)
+            visible = rect.clip(state.SIM_RECT)
+            if rect.width <= 0 or rect.height <= 0: continue
+
+            src = pygame.Rect(visible.x - rect.x, visible.y - rect.y, visible.width, visible.height)
+            icon = get_icon(cell.icon, cell_size)
+            assets.screen.blit(icon, visible.topleft, area=src)
 
 
-    # makes the top edge cleaner
-    pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=3, border_radius=4)
+    # makes the edges cleaner
+    pygame.draw.rect(assets.screen, "#000000", state.SIM_RECT, width=2, border_radius=4)
+
+
+    # Selected cell
+    if state.selected_cell:
+        rect = pygame.Rect(660, 70, 500, 300)
+        pygame.draw.rect(assets.screen, "#a5a5a5", rect)
+        pygame.draw.rect(assets.screen, "#000000", rect, width=4, border_radius=4)
 
 
     pos = pygame.mouse.get_pos()

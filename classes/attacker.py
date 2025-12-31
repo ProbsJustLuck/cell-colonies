@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 import pygame
 
 import classes.cell as cell
@@ -17,11 +17,13 @@ if TYPE_CHECKING:
 
 class Attacker(cell.Cell):
     __type: str = "HOSTILE"
-    __icon: Optional[pygame.Surface] = None
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
+
+        self.__color = self.homebase.color
+        self.__icon = self.homebase.attacker_icon
 
         self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
 
@@ -76,6 +78,26 @@ class Attacker(cell.Cell):
     def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Attacker: return cls(pos, homebase, world_manager, target)
 
 
+    @property
+    def damage(self) -> int: return self.__damage
+
+
+    @property
+    def direction(self) -> Direction: return self.__direction
+
+
+    @direction.setter
+    def direction(self, value: Direction) -> None: self.__direction = value
+
+
+    @property
+    def type(self) -> str: return self.__type # Returns this attacker's type
+    
+
+    @property
+    def icon(self) -> pygame.Surface: return self.__icon[self.direction] # Returns the icon for this attacker.
+
+
     def __set_starting_dir(self, target: Position) -> Direction:
         attacker: Position = self.pos
 
@@ -88,19 +110,6 @@ class Attacker(cell.Cell):
     def __reset_target_count(self) -> None:
         self.__target.reset_target_count()
         self.homebase.reset_target_count()
-
-
-
-    @property
-    def damage(self) -> int: return self.__damage
-
-
-    @property
-    def direction(self) -> Direction: return self.__direction
-
-
-    @direction.setter
-    def direction(self, value: Direction) -> None: self.__direction = value
 
 
     def set_rotated(self) -> None: self.__rotated = True
@@ -144,14 +153,6 @@ class Attacker(cell.Cell):
         if self.__target and not self.__rotated: self.__rotate_to_target(next_pos)
 
         self.__move(next_pos, world_manager)
-
-
-    @property
-    def type(self) -> str: return self.__type # Returns this attacker's type
-    
-
-    @property
-    def icon(self) -> pygame.Surface | None: return self.__icon # Returns the icon for this attacker.
 
 
     def __is_blocking(self, pos: Position, world_manager: "world_manager.WorldManager") -> bool:

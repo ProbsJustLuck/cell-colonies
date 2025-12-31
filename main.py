@@ -1,4 +1,6 @@
 import time
+
+from util import assets
 start_time = time.time()
 
 import pygame
@@ -22,6 +24,7 @@ print(f"Load took {time.time() - start_time: .4f}s")
 
 while state.running:
     downtime = fps_clock.tick(60)  # Limits game loop to 60 FPS
+    pressed_keys = pygame.key.get_pressed()
 
     for event in pygame.event.get(): event_handler(event)
 
@@ -31,7 +34,7 @@ while state.running:
         case MenuArea.SIMULATION:
             render_game_screen()
 
-            if state.world and not state.sim_pause and not state.full_pause and not state.game_end:
+            if state.world and not state.sim_pause and not state.full_pause and not state.game_end: # tick logic
                 accum += downtime
                 target = 1000.0 / state.target_tps
 
@@ -46,6 +49,32 @@ while state.running:
                         break
 
                     accum -= target
+
+            if pygame.mouse.get_pressed()[0] and state.tps_up and state.tps_up.rect.collidepoint(pygame.mouse.get_pos()) and state.tps_slider and state.tps_button: # tps up
+                state.tps_change += 1
+                if state.tps_change > 40 and state.target_tps < 20.0: 
+                    state.target_tps = round(min(20.0, state.target_tps + 0.2), 1)
+                    state.tps_slider.value = state.target_tps
+
+                    state.tps_button.label = f"{state.target_tps}"
+                    state.tps_button.initialize()
+                    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 0)
+                    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
+
+                    if state.target_tps >= 20.0 and not state.tps_up.disabled: state.tps_up.toggle()
+
+            if pygame.mouse.get_pressed()[0] and state.tps_down and state.tps_down.rect.collidepoint(pygame.mouse.get_pos()) and state.tps_slider and state.tps_button: # tps down
+                state.tps_change += 1
+                if state.tps_change > 40 and state.target_tps > 0.1: 
+                    state.target_tps = round(max(0.1, state.target_tps - 0.2), 1)
+                    state.tps_slider.value = state.target_tps
+
+                    state.tps_button.label = f"{state.target_tps}"
+                    state.tps_button.initialize()
+                    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 0)
+                    pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
+                    
+                    if state.target_tps <= 0.1 and not state.tps_down.disabled: state.tps_down.toggle()
                     
         case _: pass
 

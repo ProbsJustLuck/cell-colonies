@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 import pygame
+
 from classes.entity import Entity
 from classes.ui.menu_area import MenuArea
 from constants import Constants
@@ -7,6 +8,7 @@ from constants import Constants
 if TYPE_CHECKING:
     from classes.world_manager import WorldManager
     from classes.ui.button import Button
+    from classes.ui.slider import Slider
 
 class States:
     running: bool = True
@@ -28,10 +30,8 @@ class States:
     game_end: bool = False
     panning: bool = False
     world: "WorldManager | None" = None
-    target_tps: float = 2
     max_catchup: int = 5
     max_history: int = 20
-    show_tps: bool = False
     selected_cell: Entity | None = None
     
     ## Zooming + panning
@@ -43,12 +43,22 @@ class States:
     panning: bool = False
     old_cursor_pos: tuple[int, int] = (0, 0)
 
-    ## Rewind/forward
+    ## Sim buttons
     fast_forward: "Button | None" = None
     forward: "Button | None" = None
     pause: "Button | None" = None
     rewind: "Button | None" = None
     fast_rewind: "Button | None" = None
     tps_button: "Button | None" = None
+    tps_up: "Button | None" = None
+    tps_down: "Button | None" = None
+    tps_slider: "Slider | None" = None
 
+    # tps control
+    target_tps: float = 2
+    show_tps: bool = False
+    tps_change: int = 0
+
+
+    # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

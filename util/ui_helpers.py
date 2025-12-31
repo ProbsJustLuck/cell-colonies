@@ -9,21 +9,20 @@ from classes.position import Position
 
 def fit_view(world_size: int):
     w, h = state.SIM_RECT.width, state.SIM_RECT.height
-    base_cell = w / world_size          # pixels per cell at zoom=1.0
-    cell_pix = int(min(w / world_size, h / world_size))  # integer cell size that fits
-    state.zoom = cell_pix / base_cell   # so cell_size = cell_pix in render
+    base_cell = w / world_size
+    padding = 10
+
+    cell_pix = int(min((w - 2*padding) / world_size, (h - 2*padding) / world_size))
+    state.zoom = cell_pix / base_cell
 
     factor = Constants.ZOOM_FACTOR
     state.zoom_levels = [state.zoom * (factor ** i) for i in range(-5, 20)]
     state.zoom_index = state.zoom_levels.index(state.zoom)
 
-    world_px_w = world_size * cell_pix
-    world_px_h = world_size * cell_pix
     state.offset = pygame.Vector2(
-        (w - world_px_w) / 2,
-        (h - world_px_h) / 2,
+        (w - world_size * cell_pix) / 2,
+        (h - world_size * cell_pix) / 2,
     )
-
 
 
 def get_font(size: int) -> pygame.font.Font:
@@ -160,8 +159,9 @@ def add_bg_to_text_dimensions(text: pygame.Surface, bg_color: tuple[int, int ,in
 
     padding_width = width - 2 * padding
     padding_height = height - 2 * padding
-    x = padding + (padding_width - bounds_width) // 2    # allow negative to truly center
-    y = padding + (padding_height - bounds_height) // 2    # allow negative to truly center
+    x = padding + (padding_width - bounds_width) // 2
+    y = padding + (padding_height - bounds_height) // 2
 
     surf.blit(text, (x, y), area=bounds)
     return surf
+

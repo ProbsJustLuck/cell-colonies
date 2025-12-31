@@ -2,10 +2,10 @@ from classes.direction import Direction
 
 class Constants:
     DIRECTION_MAPPINGS: dict[Direction, tuple[int, int]] = {
-        Direction.NORTH: (0, -1),
-        Direction.SOUTH: (0, 1),
-        Direction.EAST: (1, 0),
-        Direction.WEST: (-1, 0)   
+        Direction.NORTH: (-1, 0),
+        Direction.SOUTH: (1, 0),
+        Direction.EAST:  (0, 1),
+        Direction.WEST:  (0, -1), 
     }
 
     POSITION_MAPPINGS: dict[tuple[int, int], Direction] = {
