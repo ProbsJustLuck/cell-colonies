@@ -16,6 +16,8 @@ class Cell(entity.Entity):
         self._homebase: homebase.Homebase = homebase_link # The homebase that this cell belongs to
         self._spawned = True # If this entity just spawned, prevents moving on first tick alive.
 
+        self.homebase.last_cell_spawned = self
+
     @classmethod
     def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Self:
         return cls(pos, homebase, world_manager)

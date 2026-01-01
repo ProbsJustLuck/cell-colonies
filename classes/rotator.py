@@ -9,6 +9,7 @@ import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
 
+from classes.ui.colors import ColorInfo
 import util.pathfinding as pathfinding
 
 if TYPE_CHECKING:
@@ -17,12 +18,14 @@ if TYPE_CHECKING:
 
 
 class Rotator(cell.Cell):
-    __type: str = "UTILITY"
+    __TYPE: str = "UTILITY"
+    __NAME: str = "Rotator"
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
 
+        self.__max_health: int = health
         self.__health: int = health
 
         self.__color = homebase_link.color
@@ -69,7 +72,11 @@ class Rotator(cell.Cell):
 
 
     @property
-    def type(self) -> str: return self.__type # Returns this homebase's type
+    def name(self) -> str: return self.__NAME
+
+
+    @property
+    def type(self) -> str: return self.__TYPE # Returns this homebase's type
 
 
     @property
@@ -80,12 +87,32 @@ class Rotator(cell.Cell):
     def stationary(self) -> bool: return self.__stationary
 
 
+    @property
+    def color(self) -> ColorInfo: return self.__color
+
+
+    @property
+    def health(self) -> int: return self.__health
+
+
+    @property
+    def max_health(self) -> int: return self.__max_health
+
+
+    @property
+    def target(self) -> Position | None: return self.__target
+
+
+    @property
+    def path(self) -> list[Position]: return self.__path
+
+
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
         if self.spawned:
             self.spawned = False
             return
 
-        if self.__health < 0: # If the health is below 0, then its dead
+        if self.__health <= 0: # If the health is below 0, then its dead
             self._deregister(world_manager)
             return
         

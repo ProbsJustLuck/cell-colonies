@@ -39,6 +39,7 @@ class ButtonStyle:
     
     tooltip_scale: float = 0.8
 
+
     def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False):
         font_size = max(1, int(self.font_size * self.scale))
         padding = max(1, int(self.padding * self.scale))
@@ -60,6 +61,7 @@ class ButtonStyle:
 
         return surf
     
+
     def make_tooltip(self, msg: str) -> pygame.Surface:
         font = max(1, int(self.font_size * self.scale * self.tooltip_scale))
         padding = max(1, int((self.padding + 6) * self.scale * self.tooltip_scale)) 
@@ -79,6 +81,7 @@ class Button:
     clicked: bool = False
     disabled: bool = False
 
+    id: str | None = None
     is_selected: Callable[[], bool] | None = None # Override
     on_enter: Callable[[Button], None] | None = None # Run once when the button was first clicked.
     on_leave: Callable[[Button], None] | None = None # Run once when the button stops being clicked.

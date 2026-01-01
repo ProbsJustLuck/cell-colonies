@@ -4,6 +4,7 @@ import pygame
 
 import classes.cell as cell
 import classes.homebase as homebase
+from classes.ui.colors import ColorInfo
 import classes.wall as wall
 import classes.rotator as rotator
 from classes.position import Position
@@ -16,7 +17,8 @@ if TYPE_CHECKING:
     
 
 class Attacker(cell.Cell):
-    __type: str = "HOSTILE"
+    __TYPE: str = "HOSTILE"
+    __NAME: str = "Attacker"
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
@@ -79,6 +81,10 @@ class Attacker(cell.Cell):
 
 
     @property
+    def name(self) -> str: return self.__NAME
+
+
+    @property
     def damage(self) -> int: return self.__damage
 
 
@@ -91,11 +97,31 @@ class Attacker(cell.Cell):
 
 
     @property
-    def type(self) -> str: return self.__type # Returns this attacker's type
+    def type(self) -> str: return self.__TYPE # Returns this attacker's type
     
 
     @property
     def icon(self) -> pygame.Surface: return self.__icon[self.direction] # Returns the icon for this attacker.
+
+
+    @property
+    def color(self) -> ColorInfo: return self.__color
+
+
+    @property
+    def target(self) -> homebase.Homebase: return self.__target
+
+
+    @property
+    def rotated(self) -> bool: return self.__rotated
+
+
+    @property
+    def ticks_since_valid_path(self) -> int: return self.__ticks_since_valid_path
+
+
+    @property
+    def path(self) -> list[Position]: return self.__path
 
 
     def __set_starting_dir(self, target: Position) -> Direction:
@@ -120,15 +146,13 @@ class Attacker(cell.Cell):
             self.spawned = False
             return
 
-        surroundings = self._get_surroundings(world_manager)
-        if surroundings: # Loop through all nearby homebases and damage them
-            for hb in surroundings:
-                if not isinstance(hb, homebase.Homebase) or hb is self.homebase: continue
-
-                hb.change_health(-self.__damage)
-                self._deregister(world_manager)
-                return
-
+        pos = Constants.DIRECTION_MAPPINGS[self.direction]
+        cell = world_manager.get_cell(Position(self.pos.x + pos[0], self.pos.y + pos[1]))
+        if cell is self.__target:
+            assert isinstance(cell, homebase.Homebase)
+            cell.change_health(-self.__damage)
+            self._deregister(world_manager)
+            return
 
         if not self.__path: # gets rid of stuck attackers
             self.__ticks_since_valid_path += 1
@@ -150,7 +174,21 @@ class Attacker(cell.Cell):
             next_pos = self.pos # "placeholder" because move() overrides it         
         else: next_pos = self.__path[0]
 
-        if self.__target and not self.__rotated: self.__rotate_to_target(next_pos)
+        delta = (next_pos.x - self.pos.x, next_pos.y - self.pos.y)
+        if delta == (0, 0):
+            # we're at the homebase, or it bugged out
+            surroundings = self._get_surroundings(world_manager)
+            for hb in surroundings:
+                if hb is not self.__target: continue
+
+                delta = (hb.pos.x - self.pos.x, hb.pos.y - self.pos.y)
+                if delta not in Constants.DIRECTION_MAPPINGS.values(): raise RuntimeError("Uh oh, attacker couldn't find a delta!")
+
+        if not self.__rotated:
+            dir = Constants.POSITION_MAPPINGS[delta]
+            if self.__direction != dir:
+                self.__direction = dir
+                return
 
         self.__move(next_pos, world_manager)
 
@@ -165,11 +203,6 @@ class Attacker(cell.Cell):
             return True
 
         return False
-
-
-    def __rotate_to_target(self, target: Position) -> None:
-        delta: tuple[int, int] = (target.x - self.pos.x, target.y - self.pos.y)
-        self.direction = Constants.POSITION_MAPPINGS[delta]
 
 
     def __move(self, next_pos: Position, world_manager: "world_manager.WorldManager") -> None:

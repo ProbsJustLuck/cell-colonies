@@ -24,15 +24,19 @@ class States:
     # Sim options
     sim_size: int = 20
     sim_homebases: int = 2
-    sim_walls: int = 30
+    sim_walls: int = 40
 
     # Simulation
     game_end: bool = False
     panning: bool = False
+    second_render_page: bool = False
     world: "WorldManager | None" = None
     max_catchup: int = 5
     max_history: int = 20
+
     selected_cell: Entity | None = None
+    selected_id: int | None = None
+    disabled_cells: list[str] = []
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)
@@ -53,12 +57,27 @@ class States:
     tps_up: "Button | None" = None
     tps_down: "Button | None" = None
     tps_slider: "Slider | None" = None
+    prev_render_page: "Button | None" = None
+    next_render_page: "Button | None" = None
+
+    ## Special buttons
+    special_buttons: dict[int, "Button"] = {}
 
     # tps control
     target_tps: float = 2
+    tps: float = 0
     show_tps: bool = False
     tps_change: int = 0
 
+    # Seed controls
+    changing_seed: bool = False
+    seed_button: "Button | None" = None
+    seed_box: pygame.Rect | None = None
+    typing_box: pygame.Rect | None = None
+    typing_seed: bool = False
+    seed_string: str = ""
+    backspace_repeat: int = 0
+    caret_timer: int = 0
 
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

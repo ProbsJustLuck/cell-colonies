@@ -16,14 +16,19 @@ if TYPE_CHECKING:
 
 
 class Homebase(entity.Entity):
-    __type: str = "CORE"
+    __TYPE: str = "CORE"
+    __NAME: str = "Homebase"
     
 
     def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 10):
         super().__init__(pos, world_manager)
 
+        self.__max_health: int = health
         self.__health: int = health # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
+        self.__max_cells_alive: int = 0
+
+        self.__last_cell_spawned: entity.Entity | None = None
 
         self.__color = color
         self.__icon = assets.base_homebase.copy()
@@ -47,7 +52,11 @@ class Homebase(entity.Entity):
         self.__waiting_for_attacker = False
 
     @property
-    def type(self) -> str: return self.__type # Returns this homebase's type (always CORE)
+    def type(self) -> str: return self.__TYPE # Returns this homebase's type (always CORE)
+
+
+    @property
+    def name(self) -> str: return self.__NAME
 
 
     @property
@@ -59,6 +68,16 @@ class Homebase(entity.Entity):
 
 
     @property
+    def cells_amount(self) -> int: return len(self.__cells)
+
+
+    @property
+    def max_cells_alive(self) -> int:
+        if self.cells_amount > self.__max_cells_alive: self.__max_cells_alive = self.cells_amount
+        return self.__max_cells_alive
+
+
+    @property
     def rotator_icon(self) -> pygame.Surface: return self.__rotator_icon
 
 
@@ -67,18 +86,40 @@ class Homebase(entity.Entity):
 
 
     @property
+    def max_health(self) -> int: return self.__max_health
+
+
+    @property
     def color(self) -> ColorInfo: return self.__color
 
 
-    def tick(self, world_manager: "WorldManager"): 
-        if self.__health < 0:
-            self._deregister(world_manager)
-            print("A HOMEBASE DIED!")
+    @property
+    def last_cell_spawned(self) -> entity.Entity | None: return self.__last_cell_spawned
+
+
+    @last_cell_spawned.setter
+    def last_cell_spawned(self, cell: entity.Entity): self.__last_cell_spawned = cell
+
+
+    @property
+    def spawn_ticks(self) -> int: return self.__spawn_ticks
+
+
+    @property
+    def ticks_since_targeted(self) -> int: return self.__ticks_since_target
+
+
+
+    def tick(self, world_manager: "WorldManager"):
+        if self.cells_amount > self.__max_cells_alive: self.__max_cells_alive = self.cells_amount
+
+        if self.__health <= 0:
+            self.deregister(world_manager)
             return
         
         self.__spawn_ticks += 1
         
-        if self.__spawn_ticks == 3:
+        if self.__spawn_ticks >= Constants.SPAWN_TICKS:
             self.spawn_cell(world_manager)
             self.__spawn_ticks = 0
 
@@ -88,7 +129,7 @@ class Homebase(entity.Entity):
             choices = [homebase for homebase in world_manager.homebases if homebase is not self]
             if choices: world_manager.rng.choice(choices).spawn_cell(world_manager, target=self)
         if self.__ticks_since_target > 10 and self.__waiting_for_attacker:
-            self._deregister(world_manager)
+            self.deregister(world_manager)
             return            
 
         self.__ticks_since_target += 1
@@ -104,7 +145,7 @@ class Homebase(entity.Entity):
         self.__waiting_for_attacker = False
 
 
-    def _deregister(self, world_manager: "WorldManager"):
+    def deregister(self, world_manager: "WorldManager"):
         for cell in self.__cells[:]:
             if cell.alive:
                 cell._deregister(world_manager)

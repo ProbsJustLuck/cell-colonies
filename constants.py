@@ -21,3 +21,4 @@ class Constants:
     MIN_ZOOM: float = 0.1
     ZOOM_FACTOR: float = 1.1
     WORLD_OOB_FACTOR: int = 20
+    SPAWN_TICKS = 3

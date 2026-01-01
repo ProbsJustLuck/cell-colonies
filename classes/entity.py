@@ -3,6 +3,7 @@ from typing import TYPE_CHECKING
 from pygame import Surface
 
 from classes.position import Position
+from classes.ui.colors import ColorInfo
 
 if TYPE_CHECKING:
     import classes.world_manager as world_manager
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
 class Entity:    
     def __init__(self, pos: Position, world_manager: "world_manager.WorldManager"):
         self._pos = pos
+        self._id = world_manager.new_id()
 
         self._alive: bool = True # Whether this entity is alive or not.
         world_manager.register(self)
@@ -20,6 +22,10 @@ class Entity:
 
     @property
     def pos(self) -> Position: return self._pos
+
+
+    @property
+    def name(self) -> str: raise NotImplementedError
 
 
     @pos.setter
@@ -36,6 +42,14 @@ class Entity:
 
     @property
     def icon(self) -> Surface: raise NotImplementedError # Generic get_icon function, overridden by child classes.
+
+
+    @property
+    def color(self) -> ColorInfo: raise NotImplementedError
+
+
+    @property
+    def id(self) -> int: return self._id
 
 
     def _deregister(self, world_manager: "world_manager.WorldManager") -> None:

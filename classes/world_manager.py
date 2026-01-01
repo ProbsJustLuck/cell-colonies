@@ -25,17 +25,19 @@ class WorldManager:
 
         # Deterministic rng
         self.__seed = random.randrange(2**32)
-        if seed: self.__seed = seed
+        if seed is not None: self.__seed = seed
         self.__rng = random.Random(self.__seed)
 
         self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=States.max_history)
 
         self.__current_tick: int = 0
+        self.__id_counter: int = 0
         self.__debug = True # Whether or not to check if the empty set is empty (im paranoid but want efficiency)
 
         self.__homebases: list[homebase.Homebase] = []
         self.__rotators: list[rotator.Rotator] = []
         self.__attackers: list[attacker.Attacker] = []
+
 
         self.__empty_spaces: set[Position] = {
             Position(i, j)
@@ -49,7 +51,7 @@ class WorldManager:
         
         for i in range(homebases): # Randomly spawn homebases
             color = colors[i].value
-            homebase.Homebase(self.__random_empty(), self, color, health=1)
+            homebase.Homebase(self.__random_empty(), self, color, health=3)
 
         for _ in range(walls): # Randomly spawn walls
             wall.Wall(self.__random_empty(), self)
@@ -73,6 +75,14 @@ class WorldManager:
 
     @property
     def map(self) -> list[list[entity.Entity | None]]: return self.__world_map # Returns the world map.
+
+
+    @property
+    def current_tick(self) -> int: return self.__current_tick
+
+
+    @property
+    def seed(self) -> int: return self.__seed
 
 
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
@@ -128,10 +138,15 @@ class WorldManager:
         assert empty_spaces == self.__empty_spaces, "The empty space set was desynced! Something is wrong..."
 
 
+    def new_id(self) -> int:
+        self.__id_counter += 1
+        return self.__id_counter
+
+
     def __random_empty(self) -> Position:
         if not self.__empty_spaces: raise RuntimeError("Uh oh. No more empty spaces remaining!")
 
-        pos = self.rng.choice(tuple(self.__empty_spaces))
+        pos = self.rng.choice(sorted(self.__empty_spaces, key=lambda pos: (pos.x, pos.y)))
         self.__empty_spaces.remove(pos)
         return pos
     
@@ -157,21 +172,24 @@ class WorldManager:
 
         if self.__debug and self.__current_tick % 20 == 0: self.__check_empty()
 
-
-        for homebase in self.__homebases[:]:
+        for homebase in sorted(self.__homebases, key=lambda hb: (hb.pos.x, hb.pos.y)):
             if not homebase.alive: continue
             homebase.tick(self)
         
-        for rotator in self.__rotators[:]:
+        for rotator in sorted(self.__rotators, key=lambda rot: (rot.pos.x, rot.pos.y)):
             if not rotator.alive: continue
             rotator.tick(self)
         
-        for attacker in self.__attackers[:]:
+        for attacker in sorted(self.__attackers, key=lambda atk: (atk.pos.x, atk.pos.y)):
             if not attacker.alive: continue
             attacker.tick(self)
 
+
+        for homebase in self.__homebases[:]:
+            if homebase.health <= 0: homebase.deregister(self)
+
         if(len(self.__homebases) == 1):
-            return GameState.WIN # TODO: end the game, will be 
+            return GameState.WIN
         elif(len(self.__homebases) == 0):
             return GameState.LOSS
         return GameState.CONTINUE
@@ -196,7 +214,11 @@ class WorldManager:
         return None
     
 
-    def get_seed(self) -> int: return self.__seed
+    def get_id(self, pos: Position) -> int | None:
+        entity = self.__world_map[pos.x][pos.y]
+
+        if self.in_bounds(pos) and entity: return entity.id
+        return None
     
 
     def in_bounds(self, pos: Position) -> bool: return 0 <= pos.x < self.__world_size and 0 <= pos.y < self.__world_size

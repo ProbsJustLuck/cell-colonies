@@ -21,6 +21,7 @@ rotation_arrow = pygame.transform.smoothscale(
 pygame.mixer.init()
 pygame.font.init()
 game_font = pygame.font.Font("assets/font/Pixeltype.ttf", 20)
+big_font = pygame.font.Font("assets/font/Pixeltype.ttf", 50)
 
 # Cursors
 mouse_grab = pygame.image.load("assets/menu/cursor_grab.png").convert_alpha()
@@ -32,7 +33,7 @@ arrow_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_ARROW)
 crosshair_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
 
 # Cells
-cell_scale_sizes= (32, 32)
+cell_scale_sizes= (64, 64)
 ## Homebases
 base_homebase = pygame.image.load("assets/cells/homebase.png").convert_alpha()
 base_homebase = pygame.transform.scale(base_homebase, cell_scale_sizes)
@@ -57,6 +58,12 @@ base_rotator = pygame.transform.scale(base_rotator, cell_scale_sizes)
 ## Walls
 wall = pygame.image.load("assets/cells/wall.png").convert_alpha()
 wall = pygame.transform.scale(wall, cell_scale_sizes)
+
+# Icons
+COPY_ICON = pygame.transform.scale(pygame.image.load("assets/menu/copy_icon.png").convert_alpha(), (52, 52))
+PASTE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/paste_icon.png").convert_alpha(), (48, 48))
+REGENERATE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/regenerate_icon.png").convert_alpha(), (32, 32))
+
 
 # Events
 CLEAR_TPS_TEXT = pygame.USEREVENT + 1

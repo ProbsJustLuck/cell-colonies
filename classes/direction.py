@@ -8,3 +8,5 @@ class Direction(Enum):
     SOUTH = "S"
     EAST = "E"
     WEST = "W"
+
+    def __str__(self) -> str: return self.name.title()

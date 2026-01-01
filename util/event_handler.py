@@ -17,28 +17,76 @@ def event_handler(event: pygame.Event):
         state.tps_button.initialize()
         return
 
+
+    if event.type == pygame.KEYDOWN and state.typing_seed:
+        if event.key == pygame.K_BACKSPACE and state.seed_string:
+            state.seed_string = state.seed_string[:-1]
+            if ((state.seed_string.startswith("-") and len(state.seed_string) < 2) or (not state.seed_string.startswith("-") and len(state.seed_string) < 1)) and not state.special_buttons[0].disabled: state.special_buttons[0].toggle()
+            return
+        elif event.key == pygame.K_RETURN:
+            state.typing_seed = False
+            return
+        elif event.key == pygame.K_ESCAPE:
+            state.typing_seed = False
+            state.seed_string = ""
+            return
+        else:
+            if (
+                not event.unicode.isdigit() and not (not state.seed_string and event.unicode == "-")
+                ) or (
+                    state.seed_string.startswith('-') and len(state.seed_string) > 10
+                ) or (
+                    not state.seed_string.startswith('-') and len(state.seed_string) > 9
+            ): return
+
+            state.seed_string += event.unicode
+            if ((state.seed_string.startswith("-") and len(state.seed_string) > 1) or (not state.seed_string.startswith("-") and len(state.seed_string) > 0)) and state.special_buttons[0].disabled: state.special_buttons[0].toggle()
+            return
+    if event.type == pygame.KEYUP and event.key == pygame.K_BACKSPACE and state.typing_seed: state.backspace_repeat = 0
+
+
     if not state.loaded_menu:
         if not state.skipped_animation and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
             state.skipped_animation = True
             state.starting_opacity = 255
         return
-    
-    for slider in menu_assets.sliders.get(state.current_area, []):
-        slider.handle_event(event)
+
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #lc
         assert state.tps_button and state.tps_up and state.tps_down
+
+
+        if state.changing_seed:
+            if state.typing_box and not state.typing_seed and state.typing_box.collidepoint(event.pos):
+                state.typing_seed = True
+                return
+            elif state.typing_seed and state.typing_box and not state.typing_box.collidepoint(event.pos):
+                state.typing_seed = False
+                return
+            
+            for i in range(4):
+                if state.special_buttons[i].rect.collidepoint(event.pos):
+                    state.special_buttons[i].click()
+            
+
+            if state.seed_box and state.seed_button and not state.seed_box.collidepoint(event.pos): state.seed_button.click()
+
+            return
+
 
         if state.show_tps and not (menu_assets.sliders[MenuArea.SIMULATION][0].rect.collidepoint(event.pos) or state.tps_button.rect.collidepoint(event.pos) or state.tps_up.rect.collidepoint(event.pos) or state.tps_down.rect.collidepoint(event.pos)):
             state.tps_button.click()
             return
         
         for button in menu_assets.buttons.get(state.current_area, []):
+            if (button.id in ["walls_toggle", "homebase_toggle", "rotator_toggle"] and not state.second_render_page) or (button.id in ["attackers_toggle", "gridlines_toggle", "fit_view"] and state.second_render_page): continue
+
             if not button.rect: continue
             if button.rect.collidepoint(event.pos):
                 button.click()
-                break
+                return
         
+
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
 
@@ -48,16 +96,28 @@ def event_handler(event: pygame.Event):
             if world_rect.collidepoint(event.pos):
                 col = int((event.pos[0] - origin.x) / cell_size)
                 row = int((event.pos[1] - origin.y) / cell_size)
-                state.selected_cell = state.world.get_cell(Position(row, col))
+
+                pos = Position(row, col)
+                cell = state.world.get_cell(pos)
+
+                if cell and ((cell.name in state.disabled_cells and state.second_render_page) or (cell.name in state.disabled_cells and not state.second_render_page)): return
+
+                state.selected_cell = state.world.get_cell(pos)
+                state.selected_id = state.world.get_id(pos)
             else:
                 state.selected_cell = None
         
         return
 
+
+    for slider in menu_assets.sliders.get(state.current_area, []):
+        slider.handle_event(event)
+
+
     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
         if state.tps_change > 0: state.tps_change = 0
-
     
+
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2: #mc
         if state.current_area is MenuArea.SIMULATION and state.SIM_RECT.collidepoint(event.pos):
             pygame.event.set_grab(True); 
@@ -96,7 +156,9 @@ def event_handler(event: pygame.Event):
 
                 return
             
-            if state.SIM_RECT.collidepoint(pygame.mouse.get_pos()): pygame.mouse.set_cursor(assets.crosshair_cursor)
+            mouse_pos = pygame.mouse.get_pos()
+            if state.SIM_RECT.collidepoint(mouse_pos) and not state.changing_seed: pygame.mouse.set_cursor(assets.crosshair_cursor)
+            elif state.typing_box and state.typing_box.collidepoint(mouse_pos): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
             else: pygame.mouse.set_cursor(assets.arrow_cursor)
         
     elif event.type == pygame.MOUSEWHEEL: 
@@ -131,7 +193,7 @@ def event_handler(event: pygame.Event):
             
         elif state.current_area is MenuArea.SIMULATION and state.tps_button and state.tps_slider and (state.tps_button.rect.collidepoint(pygame.mouse.get_pos()) or state.tps_slider.rect.collidepoint(pygame.mouse.get_pos())) and state.tps_button:
             if event.y > 0 and state.target_tps < 20.0: # Up
-                state.target_tps = round(min(state.target_tps + (event.y / 10), 20.0), 1)
+                state.target_tps = round(min(state.target_tps + (event.y / 5), 20.0), 1)
 
                 state.tps_slider.value = state.target_tps
 
@@ -146,7 +208,7 @@ def event_handler(event: pygame.Event):
                 return
 
             if event.y < 0 and state.target_tps > 0.1: # Down
-                state.target_tps = round(max(state.target_tps + (event.y / 10), 0.1), 1)
+                state.target_tps = round(max(state.target_tps + (event.y / 5), 0.1), 1)
 
                 state.tps_slider.value = state.target_tps
 
