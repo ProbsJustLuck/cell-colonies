@@ -37,6 +37,7 @@ class WorldManager:
         self.__homebases: list[homebase.Homebase] = []
         self.__rotators: list[rotator.Rotator] = []
         self.__attackers: list[attacker.Attacker] = []
+        self.__walls: list[wall.Wall] = []
 
 
         self.__empty_spaces: set[Position] = {
@@ -85,6 +86,10 @@ class WorldManager:
     def seed(self) -> int: return self.__seed
 
 
+    @property
+    def walls_amount(self) -> int: return len(self.__walls)
+
+
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
         return {
             "map": copy.deepcopy(self.__world_map),
@@ -107,6 +112,7 @@ class WorldManager:
         self.__homebases = []
         self.__rotators = []
         self.__attackers = []
+        self.__walls = []
         self.__empty_spaces = set()
         for x in range(self.__world_size):
             for y in range(self.__world_size):
@@ -119,6 +125,8 @@ class WorldManager:
                     self.__rotators.append(entity)
                 elif isinstance(entity, attacker.Attacker):
                     self.__attackers.append(entity)
+                elif isinstance(entity, wall.Wall):
+                    self.__walls.append(entity)
 
         return True
 
@@ -172,19 +180,34 @@ class WorldManager:
 
         if self.__debug and self.__current_tick % 20 == 0: self.__check_empty()
 
+        # Kill dead cells
+        for atk in sorted(self.__attackers, key=lambda cell: (cell.pos.x, cell.pos.y)):
+            if atk.health < 1: atk.deregister(self)
+            if atk.hurt: atk.hurt = False
+
+        for rot in sorted(self.__rotators, key=lambda cell: (cell.pos.x, cell.pos.y)):
+            if rot.health < 1: rot.deregister(self)
+
+        # Tick normally
         for homebase in sorted(self.__homebases, key=lambda hb: (hb.pos.x, hb.pos.y)):
             if not homebase.alive: continue
+            homebase.age += 1
             homebase.tick(self)
         
         for rotator in sorted(self.__rotators, key=lambda rot: (rot.pos.x, rot.pos.y)):
             if not rotator.alive: continue
+            rotator.age += 1
             rotator.tick(self)
         
         for attacker in sorted(self.__attackers, key=lambda atk: (atk.pos.x, atk.pos.y)):
             if not attacker.alive: continue
+            attacker.age += 1
             attacker.tick(self)
 
+        for wall in sorted(self.__walls, key=lambda wall: (wall.pos.x, wall.pos.y)):
+            wall.age += 1
 
+        # Kill dead homebases
         for homebase in self.__homebases[:]:
             if homebase.health <= 0: homebase.deregister(self)
 
@@ -239,6 +262,8 @@ class WorldManager:
             if cell in self.__attackers: self.__attackers.remove(cell)
         elif isinstance(cell, rotator.Rotator):
             if cell in self.__rotators: self.__rotators.remove(cell)
+        elif isinstance(cell, wall.Wall):
+            if cell in self.__walls: self.__walls.remove(cell)
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
@@ -254,3 +279,5 @@ class WorldManager:
             self.__attackers.append(cell)
         elif isinstance(cell, rotator.Rotator):
             self.__rotators.append(cell)
+        elif isinstance(cell, wall.Wall):
+            self.__walls.append(cell)

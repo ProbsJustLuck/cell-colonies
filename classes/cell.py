@@ -33,7 +33,7 @@ class Cell(entity.Entity):
     def spawned(self, value: bool) -> None: self._spawned = value
     
     
-    def _deregister(self, world_manager: "world_manager.WorldManager") -> None:
+    def deregister(self, world_manager: "world_manager.WorldManager") -> None:
         self._alive = False
         self._homebase.remove_cell(self)
         world_manager.deregister(self) # Deregisters this entity from the world manager.

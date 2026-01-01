@@ -1,8 +1,10 @@
 # Guess what, ANOTHER FILE!
+import math
 from typing import TYPE_CHECKING
 import pygame
 import random
 
+from classes.ui.colors import TeamColor
 from util import assets
 from util.ui_helpers import fit_view
 from util.game_states import States as state
@@ -24,6 +26,63 @@ def _check_win(gamestate: GameState):
         if state.pause and not state.pause.disabled: state.pause.toggle()
 
 
+def check_walls():
+    if state.sim_walls > state.sim_size**2 - state.sim_homebases:
+        state.sim_walls = max(min(state.sim_size**2 - state.sim_homebases, state.sim_walls), 0)
+
+        state.special_buttons[7].label = f"{state.sim_walls}"
+        state.special_buttons[7].initialize()
+        pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 0)
+        pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 1000, loops=1)
+
+
+    button = state.special_buttons[15]
+    if state.sim_walls >= state.sim_size**2 - state.sim_homebases and not button.disabled: button.toggle()
+    if state.sim_walls < state.sim_size**2 - state.sim_homebases and button.disabled: button.toggle()
+
+    button = state.special_buttons[16]
+    if state.sim_walls <= 0 and not button.disabled: button.toggle()
+    if state.sim_walls > 0 and button.disabled: button.toggle()
+
+
+def check_homebases():
+    _team_color_length = len(list(TeamColor))
+    if state.sim_homebases > state.sim_size**2 - state.sim_walls or state.sim_homebases > _team_color_length:
+        state.sim_homebases = max(min(state.sim_size**2 - state.sim_walls, state.sim_homebases, _team_color_length), 2)
+
+        state.special_buttons[4].label = f"{state.sim_homebases}"
+        state.special_buttons[4].initialize()
+        pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 0)
+        pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 1000, loops=1)
+
+    button = state.special_buttons[9]
+    if (state.sim_homebases >= state.sim_size**2 - state.sim_walls or state.sim_homebases >= _team_color_length) and not button.disabled: button.toggle()
+    if state.sim_homebases < state.sim_size**2 - state.sim_walls and state.sim_homebases < _team_color_length and button.disabled: button.toggle()
+
+    button = state.special_buttons[10]
+    if state.sim_homebases <= 2 and not button.disabled: button.toggle()
+    if state.sim_homebases > 2 and button.disabled: button.toggle()
+
+
+def _check_size():
+    if state.sim_size < math.ceil(math.sqrt(state.sim_walls + state.sim_homebases)):
+        state.sim_size = min(max(math.ceil(math.sqrt(state.sim_walls + state.sim_homebases)), state.sim_size, 2), 100)
+
+        state.special_buttons[8].label = f"{state.sim_size}"
+        state.special_buttons[8].initialize()
+        pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 0)
+        pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 1000, loops=1)
+
+
+    button = state.special_buttons[17]
+    if state.sim_size >= 100 and not button.disabled: button.toggle()
+    if state.sim_size < 100 and button.disabled: button.toggle()
+
+    button = state.special_buttons[18]
+    if state.sim_size <= 2 and not button.disabled: button.toggle()
+    if state.sim_size > 2 and button.disabled: button.toggle()
+
+
 def create_world(seed: int | None = None):
     if not state.sim_pause: toggle_pause_simulation(None)
     state.game_end = False
@@ -34,6 +93,11 @@ def create_world(seed: int | None = None):
     if state.pause and state.pause.disabled: state.pause.toggle()
     if state.forward and state.forward.disabled: state.forward.toggle()
     if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
+
+    state.old_size = state.sim_size
+    state.old_homebases = state.sim_homebases
+    state.old_walls = state.sim_walls
+    state.old_health = state.health_multiplier
 
 
 def quit(button: "Button | None" = None):
@@ -268,6 +332,7 @@ def fit_view_button(button: "Button"):
 
 def toggle_change_seed(button: "Button"):
     state.changing_seed = not state.changing_seed
+    state.seed_string = ""
     
     if state.changing_seed and not state.special_buttons[0].disabled: state.special_buttons[0].toggle()
 
@@ -290,14 +355,187 @@ def paste_seed(button: "Button"):
         if seed.startswith("-"):
             if seed[1:].isdigit(): 
                 state.seed_string = str(seed)
-                state.typing_seed = True
         else:
             if seed.isdigit(): 
                 state.seed_string = str(seed)
-                state.typing_seed = True
         if ((state.seed_string.startswith("-") and len(state.seed_string) > 1) or (not state.seed_string.startswith("-") and len(state.seed_string) > 0)) and state.special_buttons[0].disabled: state.special_buttons[0].toggle()
 
 
 def regenerate_world(button: "Button | None"):
     state.seed_string = str(random.randrange(2**32))
     if ((state.seed_string.startswith("-") and len(state.seed_string) > 1) or (not state.seed_string.startswith("-") and len(state.seed_string) > 0)) and state.special_buttons[0].disabled: state.special_buttons[0].toggle()
+
+
+def increase_homebases(button: "Button"):
+    _team_color_length = len(list(TeamColor))
+    state.sim_homebases = min(_team_color_length, state.sim_homebases + 1, state.sim_size**2 - state.sim_walls)
+    if state.sim_homebases >= _team_color_length or state.sim_homebases >= state.sim_size**2 - state.sim_walls: button.toggle()
+
+    if state.special_buttons[10].disabled: state.special_buttons[10].toggle()
+    check_walls()
+
+    state.special_buttons[4].label = f"{state.sim_homebases}"
+    state.special_buttons[4].initialize()
+    pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 1000, loops=1)
+
+    state.homebase_change = 1
+
+
+def decrease_homebases(button: "Button"):
+    state.sim_homebases = max(2, state.sim_homebases - 1)
+    if state.sim_homebases <= 2: button.toggle()
+
+    if state.special_buttons[9].disabled: state.special_buttons[9].toggle()
+    check_walls()
+
+    state.special_buttons[4].label = f"{state.sim_homebases}"
+    state.special_buttons[4].initialize()
+    pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_HOMEBASE_TEXT, 1000, loops=1)
+
+    state.homebase_change = 1
+
+
+def increase_health(button: "Button"):
+    state.health_multiplier = round(min(5.0, state.health_multiplier + 0.1), 1)
+    if state.health_multiplier >= 5.0: button.toggle()
+
+    if state.special_buttons[12].disabled: state.special_buttons[12].toggle()
+
+    state.special_buttons[5].label = f"x{state.health_multiplier}"
+    state.special_buttons[5].initialize()
+    pygame.time.set_timer(assets.CLEAR_HEALTH_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_HEALTH_TEXT, 1000, loops=1)
+
+    state.homebase_change = 1
+
+
+def decrease_health(button: "Button"):
+    state.health_multiplier = round(max(0.1, state.health_multiplier - 0.1), 1)
+    if state.health_multiplier <= 0.1: button.toggle()
+
+    if state.special_buttons[11].disabled: state.special_buttons[11].toggle()
+
+    state.special_buttons[5].label = f"x{state.health_multiplier}"
+    state.special_buttons[5].initialize()
+    pygame.time.set_timer(assets.CLEAR_HEALTH_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_HEALTH_TEXT, 1000, loops=1)
+
+    state.health_change = 1
+
+
+def increase_spawn_rate(button: "Button"):
+    state.spawn_rate = min(8, state.spawn_rate + 1)
+    if state.spawn_rate >= 8: button.toggle()
+
+    if state.special_buttons[14].disabled: state.special_buttons[14].toggle()
+
+    state.special_buttons[6].label = f"{state.spawn_rate}"
+    state.special_buttons[6].initialize()
+    pygame.time.set_timer(assets.CLEAR_SPAWN_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_SPAWN_TEXT, 1000, loops=1)
+
+    state.spawn_change = 1
+
+
+def decrease_spawn_rate(button: "Button"):
+    state.spawn_rate = max(1, state.spawn_rate - 1)
+    if state.spawn_rate <= 1: button.toggle()
+
+    if state.special_buttons[13].disabled: state.special_buttons[13].toggle()
+
+    state.special_buttons[6].label = f"{state.spawn_rate}"
+    state.special_buttons[6].initialize()
+    pygame.time.set_timer(assets.CLEAR_SPAWN_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_SPAWN_TEXT, 1000, loops=1)
+
+    state.spawn_change = 1
+
+
+def increase_walls(button: "Button"):
+    state.sim_walls = min(state.sim_size**2 - state.sim_homebases, state.sim_walls + 1)
+    if state.sim_walls >= state.sim_size**2 - state.sim_homebases: button.toggle()
+
+    if state.special_buttons[16].disabled: state.special_buttons[16].toggle()
+    check_homebases()
+
+    state.special_buttons[7].label = f"{state.sim_walls}"
+    state.special_buttons[7].initialize()
+    pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 1000, loops=1)
+
+    state.wall_change = 1
+
+
+def decrease_walls(button: "Button"):
+    state.sim_walls = min(state.sim_size**2 - state.sim_homebases, state.sim_walls - 1)
+    if state.sim_walls <= 0: button.toggle()
+
+    if state.special_buttons[15].disabled: state.special_buttons[15].toggle()
+    check_homebases()
+
+    state.special_buttons[7].label = f"{state.sim_walls}"
+    state.special_buttons[7].initialize()
+    pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_WALL_TEXT, 1000, loops=1)
+
+    state.wall_change = 1
+
+
+def increase_sim_size(button: "Button"):
+    state.sim_size = min(100, state.sim_size + 1)
+    if state.sim_size >= 100: button.toggle()
+
+    if state.special_buttons[18].disabled: state.special_buttons[18].toggle()
+    check_walls()
+    check_homebases()
+
+    state.special_buttons[8].label = f"{state.sim_size}"
+    state.special_buttons[8].initialize()
+    pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 1000, loops=1)
+
+    state.size_change = 1
+
+
+def decrease_sim_size(button: "Button"):
+    state.sim_size = max(2, state.sim_size - 1)
+    if state.sim_size <= 2: button.toggle()
+
+    if state.special_buttons[17].disabled: state.special_buttons[17].toggle()
+    check_walls()
+    check_homebases()
+
+    state.special_buttons[8].label = f"{state.sim_size}"
+    state.special_buttons[8].initialize()
+    pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 0)
+    pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 1000, loops=1)
+
+    state.size_change = 1
+
+
+def reset_homebases(button: "Button"):
+    state.sim_homebases = 2
+    _check_size()
+    check_walls()
+    check_homebases()
+
+
+def reset_health(button: "Button"): state.health_multiplier = 1.0
+
+
+def reset_spawn_ticks(button: "Button"): state.spawn_rate = 3
+
+
+def reset_walls(button: "Button"): 
+    state.sim_walls = 40
+    _check_size()
+    check_homebases()
+    check_walls()
+
+
+def reset_size(button: "Button"):
+    state.sim_size = 20
+    check_walls()
+    check_homebases()

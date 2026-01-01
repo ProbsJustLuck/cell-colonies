@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 import pygame
 
 from classes.entity import Entity
+from classes.position import Position
 from classes.ui.menu_area import MenuArea
 from constants import Constants
 
@@ -25,6 +26,13 @@ class States:
     sim_size: int = 20
     sim_homebases: int = 2
     sim_walls: int = 40
+    health_multiplier: float = 1.0
+    spawn_rate: int = 3
+
+    old_size: int = 20
+    old_homebases: int = 2
+    old_walls: int = 40
+    old_health: float = 1.0
 
     # Simulation
     game_end: bool = False
@@ -32,11 +40,13 @@ class States:
     second_render_page: bool = False
     world: "WorldManager | None" = None
     max_catchup: int = 5
-    max_history: int = 20
+    max_history: int = 30
 
     selected_cell: Entity | None = None
     selected_id: int | None = None
     disabled_cells: list[str] = []
+
+    hovered_pos: Position | None = None
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)
@@ -78,6 +88,14 @@ class States:
     seed_string: str = ""
     backspace_repeat: int = 0
     caret_timer: int = 0
+
+    ## Seed speed ups
+    homebase_change: int = 0
+    health_change: int = 0
+    spawn_change: int = 0
+    wall_change: int = 0
+    size_change: int = 0
+
 
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

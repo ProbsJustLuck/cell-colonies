@@ -241,7 +241,7 @@ def render_game_screen():
             else:
                 draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: None", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {Constants.SPAWN_TICKS - cell.spawn_ticks}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {state.spawn_rate - cell.spawn_ticks}", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Ticks Since Targetted: {max(0, cell.ticks_since_targeted - 1)} (max 8)", "#000000", 35)
 
@@ -249,7 +249,7 @@ def render_game_screen():
         elif isinstance(cell, Attacker):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Target: {cell.target.color.name} {cell.target.name} - Position ({cell.target.pos.x}, {cell.target.pos.y})", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Rotated: {cell.rotated}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health} / 1 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}", "#000000", 35)
 
@@ -276,6 +276,8 @@ def render_game_screen():
 
             draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (state.world.size * 2 - state.world.walls_amount // 6))}", "#000000", 35)
+
         elif isinstance(cell, Wall):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Generic wall.", "#000000", 35)
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Entities cannot move through this.", "#000000", 35)
@@ -283,11 +285,11 @@ def render_game_screen():
         
         # Name
         if cell.name != "Wall":
-            draw_text(Position(750, 90), f"{cell.color.name} {title}", "#000000", 43)
-            draw_text(Position(751, 90), f"{cell.color.name} {title}", "#000000", 43)
+            draw_text(Position(750, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
+            draw_text(Position(751, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
         else:
-            draw_text(Position(750, 90), f"{title}", "#000000", 43)
-            draw_text(Position(751, 90), f"{title}", "#000000", 43)
+            draw_text(Position(750, 90), f"{title} (Age {cell.age})", "#000000", 43)
+            draw_text(Position(751, 90), f"{title} (Age {cell.age})", "#000000", 43)
 
         # Type
         draw_text(Position(751, 118), f"{cell.type} Cell - Position ({cell.pos.x}, {cell.pos.y}) [ID #{cell.id}]", "#000000", 35)
@@ -312,7 +314,8 @@ def render_game_screen():
 
         for slider in menu_assets.sliders.get(state.current_area, []):
             slider.draw(assets.screen)
-    
+
+
     if state.changing_seed:
         rect = pygame.Rect(300, 100, 600, 500)
 
@@ -342,14 +345,14 @@ def render_game_screen():
 
         if state.seed_string:
             if not state.typing_seed:
-                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=140)
+                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
             else: 
                 draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
     
         draw_text(Position(405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
 
         mouse = pygame.mouse.get_pos()
-        for i in range(4):
+        for i in range(19):
             menu_assets.special_buttons[i].draw(assets.screen, mouse)
 
         string = state.seed_string.strip("-")
@@ -362,9 +365,32 @@ def render_game_screen():
             y = state.typing_box.centery + assets.big_font.get_height() // 2
             pygame.draw.line(assets.screen, (255,255,255), (x, y), (x + width, y), height)
 
-        assets.screen.blit(assets.COPY_ICON, (625, 475))
-        assets.screen.blit(assets.PASTE_ICON, (700, 475))
-        assets.screen.blit(assets.REGENERATE_ICON, (775, 483))
+        assets.screen.blit(assets.COPY_ICON, (655, 475 + 10))
+        assets.screen.blit(assets.PASTE_ICON, (730, 475 + 10))
+        assets.screen.blit(assets.REGENERATE_ICON, (805, 483 + 10))
+
+        if not state.special_buttons[4].label: assets.screen.blit(assets.HOMEBASE_ICON, (326, 475 + 10))
+        if not state.special_buttons[5].label: assets.screen.blit(assets.HEART_ICON, (383, 492))
+        if not state.special_buttons[6].label: assets.screen.blit(assets.HOURGLASS_ICON, (432, 491))
+        if not state.special_buttons[7].label: assets.screen.blit(assets.WALL_ICON, (480, 490))
+
+        if not state.special_buttons[8].label:
+            # hor
+            pygame.draw.line(assets.screen, "#000000", (535, 495), (563, 495), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 502), (563, 502), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 509), (563, 509), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 516), (563, 516), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 523), (563, 523), 2)
+
+            # ver
+            pygame.draw.line(assets.screen, "#000000", (535, 495), (535, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (542, 495), (542, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (549, 495), (549, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (556, 495), (556, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (563, 495), (563, 523), 2)
+
+        if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
+            draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
 
     if Button.pending_tooltip:

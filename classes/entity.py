@@ -12,6 +12,7 @@ class Entity:
     def __init__(self, pos: Position, world_manager: "world_manager.WorldManager"):
         self._pos = pos
         self._id = world_manager.new_id()
+        self._age = 0
 
         self._alive: bool = True # Whether this entity is alive or not.
         world_manager.register(self)
@@ -50,6 +51,14 @@ class Entity:
 
     @property
     def id(self) -> int: return self._id
+
+
+    @property
+    def age(self) -> int: return self._age
+
+
+    @age.setter
+    def age(self, value: int) -> None: self._age = value
 
 
     def _deregister(self, world_manager: "world_manager.WorldManager") -> None:

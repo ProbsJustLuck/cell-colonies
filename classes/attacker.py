@@ -23,6 +23,7 @@ class Attacker(cell.Cell):
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
+        self.__health = 1
 
         self.__color = self.homebase.color
         self.__icon = self.homebase.attacker_icon
@@ -34,6 +35,8 @@ class Attacker(cell.Cell):
         self.__rotated: bool = False # Whether this attacker has been rotated recently (resets upon a wall collision)
 
         self.__direction: Direction = Direction.NORTH # Starting/default direction
+
+        self.__hurt = False
 
         self.__path: list[Position] = [] # Default path, nothing
 
@@ -85,6 +88,18 @@ class Attacker(cell.Cell):
 
 
     @property
+    def health(self) -> int: return self.__health
+
+
+    @property
+    def hurt(self) -> bool: return self.__hurt
+
+
+    @hurt.setter
+    def hurt(self, value: bool) -> None: self.__hurt = value
+
+
+    @property
     def damage(self) -> int: return self.__damage
 
 
@@ -101,7 +116,9 @@ class Attacker(cell.Cell):
     
 
     @property
-    def icon(self) -> pygame.Surface: return self.__icon[self.direction] # Returns the icon for this attacker.
+    def icon(self) -> pygame.Surface: # Returns the icon for this attacker.
+        if self.__hurt: return self.__icon["hurt"][self.direction]
+        return self.__icon["base"][self.direction]
 
 
     @property
@@ -141,6 +158,11 @@ class Attacker(cell.Cell):
     def set_rotated(self) -> None: self.__rotated = True
 
 
+    def change_health(self, delta: int) -> None:
+        self.__health += delta
+        self.__hurt = True
+
+
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
         if self.spawned:
             self.spawned = False
@@ -151,7 +173,7 @@ class Attacker(cell.Cell):
         if cell is self.__target:
             assert isinstance(cell, homebase.Homebase)
             cell.change_health(-self.__damage)
-            self._deregister(world_manager)
+            self.change_health(-self.damage)
             return
 
         if not self.__path: # gets rid of stuck attackers
@@ -159,7 +181,7 @@ class Attacker(cell.Cell):
         else:
             self.__ticks_since_valid_path = 0
         if self.__ticks_since_valid_path > 4:
-            self._deregister(world_manager)
+            self.change_health(-self.damage)
             return
         
 
@@ -216,14 +238,16 @@ class Attacker(cell.Cell):
         if isinstance(cell, rotator.Rotator) and cell.homebase is self.homebase:
             self.__path.clear()
             return
-        elif isinstance(cell, (rotator.Rotator, homebase.Homebase)): return
+        elif isinstance(cell, (rotator.Rotator, homebase.Homebase)): 
+            self.__path.clear()
+            return
         elif isinstance(cell, Attacker) and cell.homebase is self.homebase:
             self.__path.clear()   # force recompute next tick
             self.__rotated = False
             return
         elif isinstance(cell, Attacker):
-            cell._deregister(world_manager)
-            self._deregister(world_manager)
+            cell.change_health(-self.__damage)
+            self.change_health(-self.__damage)
             return
         elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):
             assert self.__target is not None # type checker was buggy, the tick code solves this already tho

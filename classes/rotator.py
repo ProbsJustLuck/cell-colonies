@@ -10,6 +10,7 @@ import classes.homebase as homebase
 import classes.attacker as attacker
 
 from classes.ui.colors import ColorInfo
+from util.game_states import States
 import util.pathfinding as pathfinding
 
 if TYPE_CHECKING:
@@ -25,8 +26,8 @@ class Rotator(cell.Cell):
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
 
-        self.__max_health: int = health
-        self.__health: int = health
+        self.__max_health: int = round(health * States.health_multiplier)
+        self.__health: int = round(health * States.health_multiplier)
 
         self.__color = homebase_link.color
         self.__icon = self.homebase.rotator_icon
@@ -46,6 +47,7 @@ class Rotator(cell.Cell):
             )
 
         self.__stationary: bool = False
+        self.__hurt: bool = False
 
 
     @classmethod
@@ -68,7 +70,9 @@ class Rotator(cell.Cell):
         return None
 
 
-    def change_health(self, delta: int) -> None: self.__health += delta
+    def change_health(self, delta: int) -> None: 
+        self.__health += delta
+        self.__hurt = True
 
 
     @property
@@ -80,7 +84,9 @@ class Rotator(cell.Cell):
 
 
     @property
-    def icon(self) -> pygame.Surface: return self.__icon # Returns the icon for this homebase.
+    def icon(self) -> pygame.Surface: # Returns the icon for this homebase.
+        if self.__hurt: return self.__icon["hurt"] 
+        else: return self.__icon["base"]
 
 
     @property
@@ -111,11 +117,12 @@ class Rotator(cell.Cell):
         if self.spawned:
             self.spawned = False
             return
-
-        if self.__health <= 0: # If the health is below 0, then its dead
-            self._deregister(world_manager)
-            return
         
+        if self.__hurt: self.__hurt = False
+
+        if self.age > max(10, (round(world_manager.size * 1.5) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(1, self.max_health // 5)) # take 20% of its max health as damage every other tick if its old
+        
+
         surroundings = self._get_surroundings(world_manager)
         if surroundings: # Loop through all nearby attackers and rotate them
             for atk in surroundings:

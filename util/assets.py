@@ -37,6 +37,7 @@ cell_scale_sizes= (64, 64)
 ## Homebases
 base_homebase = pygame.image.load("assets/cells/homebase.png").convert_alpha()
 base_homebase = pygame.transform.scale(base_homebase, cell_scale_sizes)
+HOMEBASE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/homebase_icon.png").convert_alpha(), (48, 48))
 
 ## Attackers
 base_attacker_up = pygame.image.load("assets/cells/attacker_up.png").convert_alpha()
@@ -58,12 +59,19 @@ base_rotator = pygame.transform.scale(base_rotator, cell_scale_sizes)
 ## Walls
 wall = pygame.image.load("assets/cells/wall.png").convert_alpha()
 wall = pygame.transform.scale(wall, cell_scale_sizes)
+WALL_ICON = pygame.transform.scale(pygame.image.load("assets/menu/wall_icon.png").convert_alpha(), (40, 40))
 
 # Icons
 COPY_ICON = pygame.transform.scale(pygame.image.load("assets/menu/copy_icon.png").convert_alpha(), (52, 52))
 PASTE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/paste_icon.png").convert_alpha(), (48, 48))
 REGENERATE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/regenerate_icon.png").convert_alpha(), (32, 32))
-
+HEART_ICON = pygame.transform.scale(pygame.image.load("assets/menu/pixel_heart.png").convert_alpha(), (35, 35))
+HOURGLASS_ICON = pygame.transform.scale(pygame.image.load("assets/menu/hourglass.png").convert_alpha(), (38, 38))
 
 # Events
 CLEAR_TPS_TEXT = pygame.USEREVENT + 1
+CLEAR_HOMEBASE_TEXT = pygame.USEREVENT + 2
+CLEAR_HEALTH_TEXT = pygame.USEREVENT + 3
+CLEAR_SPAWN_TEXT = pygame.USEREVENT + 4
+CLEAR_WALL_TEXT = pygame.USEREVENT + 5
+CLEAR_SIZE_TEXT = pygame.USEREVENT + 6

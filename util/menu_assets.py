@@ -7,7 +7,7 @@ from classes.ui.slider import Slider, SliderStyle
 from classes.ui.menu_area import MenuArea
 
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_debug, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world
+from util.game_actions import quit, go_to_credits, go_to_debug, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls
 
 _main_menu_style_main = ButtonStyle(
     height=45,
@@ -88,11 +88,32 @@ state.next_render_page = buttons[MenuArea.SIMULATION][17]
 state.seed_button = buttons[MenuArea.SIMULATION][18]
 
 
+# it was here when i realized it would be better to properly id them instead of putting them in a list
 special_buttons: dict[int, Button] = {
     0: Button(">", (818, 345), "Confirm and apply the entered seed!", style=ButtonStyle(height=44,width=30, scale=1.2, base="#707070", hover="#515151", border=2, disabled_opacity=150), on_enter=change_seed),
-    1: Button("", (650, 500), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=copy_seed),
-    2: Button("", (720, 500), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=paste_seed),
-    3: Button("", (790, 500), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=regenerate_world),
+    1: Button("", (680, 500 + 10), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=copy_seed),
+    2: Button("", (750, 500 + 10), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=paste_seed),
+    3: Button("", (820, 500 + 10), "", style=ButtonStyle(height=60,width=60, scale=1.2, base="#707070", hover="#515151", disabled_opacity=150), on_enter=regenerate_world),
+
+    4: Button("", (350, 500 + 10), "The amount of homebases to spawn. Click to reset to default!", style=ButtonStyle(height=40,width=40, scale=1, tooltip_scale=0.8, base="#707070", hover="#515151"), on_enter=reset_homebases),
+    5: Button("", (400, 500 + 10), "The health multiplier of all entities. Click to reset to default!", style=ButtonStyle(height=40,width=40, scale=0.8, tooltip_scale=1, base="#707070", hover="#515151"), on_enter=reset_health),
+    6: Button("", (450, 500 + 10), "The # of ticks it takes for a homebase to spawn an entity. Click to reset to default!", style=ButtonStyle(height=40,width=40, scale=1.2, tooltip_scale=0.6667, base="#707070", hover="#515151"), on_enter=reset_spawn_ticks),
+    7: Button("", (500, 500 + 10), "The amount of walls to spawn. Click to reset to default!", style=ButtonStyle(height=40,width=40, scale=0.8, tooltip_scale=1, base="#707070", hover="#515151"), on_enter=reset_walls),
+    8: Button("", (550, 500 + 10), "The size of the map. Click to reset to default!", style=ButtonStyle(height=40,width=40, scale=1.1, tooltip_scale=0.72727, base="#707070", hover="#515151"), on_enter=reset_size),
+
+    9: Button("^", (350, 460 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.2, base="#707070", hover="#515151"), on_enter=increase_homebases),
+    10: Button("v", (350, 540 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.1, base="#707070", hover="#515151"), on_enter=decrease_homebases, disabled=True),
+    11: Button("^", (400, 460 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.2, base="#707070", hover="#515151"), on_enter=increase_health),
+    12: Button("v", (400, 540 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.1, base="#707070", hover="#515151"), on_enter=decrease_health),
+    13: Button("^", (450, 460 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.2, base="#707070", hover="#515151"), on_enter=increase_spawn_rate),
+    14: Button("v", (450, 540 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.1, base="#707070", hover="#515151"), on_enter=decrease_spawn_rate),
+    15: Button("^", (500, 460 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.2, base="#707070", hover="#515151"), on_enter=increase_walls),
+    16: Button("v", (500, 540 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.1, base="#707070", hover="#515151"), on_enter=decrease_walls),
+    17: Button("^", (550, 460 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.2, base="#707070", hover="#515151"), on_enter=increase_sim_size),
+    18: Button("v", (550, 540 + 10), "", style=ButtonStyle(height=20,width=20, scale=1.1, base="#707070", hover="#515151"), on_enter=decrease_sim_size),
+    
+
+
 }
 for button in special_buttons.values():
     button.initialize()

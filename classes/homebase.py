@@ -9,6 +9,7 @@ from classes.position import Position
 
 from util import assets
 from constants import Constants
+from util.game_states import States
 
 if TYPE_CHECKING:
     from classes.world_manager import WorldManager
@@ -20,36 +21,60 @@ class Homebase(entity.Entity):
     __NAME: str = "Homebase"
     
 
-    def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 10):
+    def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 5):
         super().__init__(pos, world_manager)
 
-        self.__max_health: int = health
-        self.__health: int = health # The health of the homebase.
+        self.__max_health: int = round(health * States.health_multiplier)
+        self.__health: int = round(health * States.health_multiplier) # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
         self.__max_cells_alive: int = 0
+
+        self.__hurt = False
 
         self.__last_cell_spawned: entity.Entity | None = None
 
         self.__color = color
-        self.__icon = assets.base_homebase.copy()
-        self.__icon.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
-
-        self.__attacker_icon = {
-            Direction.NORTH: assets.base_attacker_up.copy(),
-            Direction.EAST: assets.base_attacker_right.copy(),
-            Direction.SOUTH: assets.base_attacker_down.copy(),
-            Direction.WEST: assets.base_attacker_left.copy()
+        self.__icon = {
+            "base": assets.base_homebase.copy(),
+            "hurt": assets.base_homebase.copy()
         }
-        for surf in self.__attacker_icon.values():
-            surf.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        self.__icon["base"].fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        self.__icon["hurt"].fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
-        self.__rotator_icon = assets.base_rotator.copy()
-        self.__rotator_icon.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        self.__attacker_icon: dict[str, dict[Direction, pygame.Surface]] = {
+            "base": {
+                Direction.NORTH: assets.base_attacker_up.copy(),
+                Direction.EAST: assets.base_attacker_right.copy(),
+                Direction.SOUTH: assets.base_attacker_down.copy(),
+                Direction.WEST: assets.base_attacker_left.copy()
+            },
+            "hurt": {
+                Direction.NORTH: assets.base_attacker_up.copy(),
+                Direction.EAST: assets.base_attacker_right.copy(),
+                Direction.SOUTH: assets.base_attacker_down.copy(),
+                Direction.WEST: assets.base_attacker_left.copy()
+            }
+        }
+        for key, dict in self.__attacker_icon.items():
+            if key == "hurt": 
+                for surf in dict.values(): 
+                    surf.fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
+            else: 
+                for surf in dict.values():
+                    surf.fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+
+        self.__rotator_icon = {
+            "base": assets.base_rotator.copy(),
+            "hurt": assets.base_rotator.copy()
+        }
+        self.__rotator_icon["base"].fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        self.__rotator_icon["hurt"].fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
         self.__spawn_ticks: int = 0
 
         self.__ticks_since_target: int = 0 # The number of ticks since this Homebase had an attacker successfully find a path to it.
         self.__waiting_for_attacker = False
+
 
     @property
     def type(self) -> str: return self.__TYPE # Returns this homebase's type (always CORE)
@@ -60,11 +85,13 @@ class Homebase(entity.Entity):
 
 
     @property
-    def icon(self) -> pygame.Surface: return self.__icon # Returns the icon for this homebase.
+    def icon(self) -> pygame.Surface: # Returns the icon for this homebase.
+        if self.__hurt: return self.__icon["hurt"]
+        return self.__icon["base"]
 
 
     @property
-    def attacker_icon(self) -> dict[Direction, pygame.Surface]: return self.__attacker_icon
+    def attacker_icon(self) -> dict[str, dict[Direction, pygame.Surface]]: return self.__attacker_icon
 
 
     @property
@@ -78,7 +105,7 @@ class Homebase(entity.Entity):
 
 
     @property
-    def rotator_icon(self) -> pygame.Surface: return self.__rotator_icon
+    def rotator_icon(self) -> dict[str, pygame.Surface]: return self.__rotator_icon
 
 
     @property
@@ -113,13 +140,15 @@ class Homebase(entity.Entity):
     def tick(self, world_manager: "WorldManager"):
         if self.cells_amount > self.__max_cells_alive: self.__max_cells_alive = self.cells_amount
 
-        if self.__health <= 0:
+        if self.__hurt: self.__hurt = False
+
+        if self.__health < 1:
             self.deregister(world_manager)
             return
         
         self.__spawn_ticks += 1
         
-        if self.__spawn_ticks >= Constants.SPAWN_TICKS:
+        if self.__spawn_ticks >= States.spawn_rate:
             self.spawn_cell(world_manager)
             self.__spawn_ticks = 0
 
@@ -134,10 +163,11 @@ class Homebase(entity.Entity):
 
         self.__ticks_since_target += 1
 
-        
 
 
-    def change_health(self, delta: int) -> None: self.__health += delta # Changes the health of this homebase
+    def change_health(self, delta: int) -> None: # Changes the health of this homebase
+        self.__health += delta 
+        self.__hurt = True
 
 
     def reset_target_count(self) -> None: 

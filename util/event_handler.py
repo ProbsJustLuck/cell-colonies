@@ -16,6 +16,21 @@ def event_handler(event: pygame.Event):
         state.tps_button.label = "TPS"
         state.tps_button.initialize()
         return
+    elif event.type == assets.CLEAR_HOMEBASE_TEXT:
+        state.special_buttons[4].label = ""
+        state.special_buttons[4].initialize()
+    elif event.type == assets.CLEAR_HEALTH_TEXT:
+        state.special_buttons[5].label = ""
+        state.special_buttons[5].initialize()
+    elif event.type == assets.CLEAR_SPAWN_TEXT:
+        state.special_buttons[6].label = ""
+        state.special_buttons[6].initialize()
+    elif event.type == assets.CLEAR_WALL_TEXT:
+        state.special_buttons[7].label = ""
+        state.special_buttons[7].initialize()
+    elif event.type == assets.CLEAR_SIZE_TEXT:
+        state.special_buttons[8].label = ""
+        state.special_buttons[8].initialize()
 
 
     if event.type == pygame.KEYDOWN and state.typing_seed:
@@ -52,6 +67,10 @@ def event_handler(event: pygame.Event):
         return
 
 
+    for slider in menu_assets.sliders.get(state.current_area, []):
+            slider.handle_event(event)
+
+
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #lc
         assert state.tps_button and state.tps_up and state.tps_down
 
@@ -64,7 +83,7 @@ def event_handler(event: pygame.Event):
                 state.typing_seed = False
                 return
             
-            for i in range(4):
+            for i in range(19):
                 if state.special_buttons[i].rect.collidepoint(event.pos):
                     state.special_buttons[i].click()
             
@@ -78,6 +97,7 @@ def event_handler(event: pygame.Event):
             state.tps_button.click()
             return
         
+
         for button in menu_assets.buttons.get(state.current_area, []):
             if (button.id in ["walls_toggle", "homebase_toggle", "rotator_toggle"] and not state.second_render_page) or (button.id in ["attackers_toggle", "gridlines_toggle", "fit_view"] and state.second_render_page): continue
 
@@ -110,12 +130,13 @@ def event_handler(event: pygame.Event):
         return
 
 
-    for slider in menu_assets.sliders.get(state.current_area, []):
-        slider.handle_event(event)
-
-
     if event.type == pygame.MOUSEBUTTONUP and event.button == 1:
         if state.tps_change > 0: state.tps_change = 0
+        if state.homebase_change: state.homebase_change = 0
+        if state.health_change: state.health_change = 0
+        if state.spawn_change: state.spawn_change = 0
+        if state.wall_change: state.wall_change = 0
+        if state.size_change: state.size_change = 0
     
 
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2: #mc
@@ -157,11 +178,27 @@ def event_handler(event: pygame.Event):
                 return
             
             mouse_pos = pygame.mouse.get_pos()
-            if state.SIM_RECT.collidepoint(mouse_pos) and not state.changing_seed: pygame.mouse.set_cursor(assets.crosshair_cursor)
+            if state.SIM_RECT.collidepoint(mouse_pos) and not state.changing_seed: 
+                pygame.mouse.set_cursor(assets.crosshair_cursor)
+
+                origin = state.SIM_RECT.topleft + state.offset
+
+                cell_size = int((state.SIM_RECT.width / state.sim_size) * state.zoom)
+                world_rect = pygame.Rect(origin.x, origin.y, state.sim_size * cell_size, state.sim_size * cell_size)
+
+                if world_rect.collidepoint(event.pos):
+                    col = int((event.pos[0] - origin.x) / cell_size)
+                    row = int((event.pos[1] - origin.y) / cell_size)
+
+                    state.hovered_pos = Position(row, col)
+                else:
+                    state.hovered_pos = None
             elif state.typing_box and state.typing_box.collidepoint(mouse_pos): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
             else: pygame.mouse.set_cursor(assets.arrow_cursor)
         
     elif event.type == pygame.MOUSEWHEEL: 
+        if state.changing_seed: return
+
         if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(pygame.mouse.get_pos()): # Zoom
             if event.y > 0: # Up
                 old_zoom = state.zoom_levels[state.zoom_index]
