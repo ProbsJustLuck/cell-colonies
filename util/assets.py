@@ -68,6 +68,17 @@ REGENERATE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/regenera
 HEART_ICON = pygame.transform.scale(pygame.image.load("assets/menu/pixel_heart.png").convert_alpha(), (35, 35))
 HOURGLASS_ICON = pygame.transform.scale(pygame.image.load("assets/menu/hourglass.png").convert_alpha(), (38, 38))
 
+
+# Yellowboss
+TEXT_BUBBLE = pygame.transform.scale(pygame.image.load("assets/yellowboss/chat_bubble.png").convert_alpha(), (400, 200))
+ANGER = pygame.transform.scale(pygame.image.load("assets/yellowboss/anger.png").convert_alpha(), (200, 200))
+CONFUSED = pygame.transform.scale(pygame.image.load("assets/yellowboss/confusion.png").convert_alpha(), (200, 200))
+HAPPY = pygame.transform.scale(pygame.image.load("assets/yellowboss/happiness.png").convert_alpha(), (200, 200))
+IDLE = pygame.transform.scale(pygame.image.load("assets/yellowboss/idle.png").convert_alpha(), (200, 200))
+SAD = pygame.transform.scale(pygame.image.load("assets/yellowboss/sadness.png").convert_alpha(), (200, 200))
+TERROR = pygame.transform.scale(pygame.image.load("assets/yellowboss/terror.png").convert_alpha(), (200, 200))
+
+
 # Events
 CLEAR_TPS_TEXT = pygame.USEREVENT + 1
 CLEAR_HOMEBASE_TEXT = pygame.USEREVENT + 2

@@ -12,55 +12,73 @@ class SliderStyle:
 
 
 class Slider:
-    def __init__(self, rect: pygame.Rect, orientation: Literal["h", "v"] = "h", min_value: float = 0.0, max_value: float = 1.0, steps: Optional[int] = None, value: float = 0.0, on_change: Optional[Callable[[float], None]] = None, snap_on_release: bool = True, style: SliderStyle = SliderStyle()):
-        self.rect = rect
+    def __init__(self, rect: pygame.Rect, orientation: Literal["h", "v"] = "h", min_value: float = 0.0, max_value: float = 1.0, steps: Optional[int] = None, value: float = 0.0, on_change: Optional[Callable[[float], None]] = None, snap: bool = True, style: SliderStyle = SliderStyle()):
+        self.__rect = rect
 
-        self.orientation = orientation
+        self.__orientation = orientation
 
-        self.min_value = min_value
-        self.max_value = max_value
+        self.__min_value = min_value
+        self.__max_value = max_value
 
-        self.steps = steps
-        self.value = value
+        self.__steps = steps
+        self.__value = value
 
-        self.on_change = on_change
-        self.snap_on_release = snap_on_release
+        self.__on_change = on_change
+        self.__snap = snap
 
-        if style: self.style = style
+        if style: self.__style = style
 
         self.__dragging = False
 
+
+    @property
+    def rect(self) -> pygame.Rect: return self. __rect
+
+
+    @property
+    def value(self) -> float: return self.__value
+
+
+    @value.setter
+    def value(self, value: float) -> None: self.__value = value
+
+
+    @property
+    def style(self) -> SliderStyle: return self.__style
+
+
     @property
     def progress(self) -> float:
-        span = self.max_value - self.min_value
+        span = self.__max_value - self.__min_value
         if span == 0: return 0.0
-        else: return(self.value - self.min_value) / span
+        else: return(self.__value - self.__min_value) / span
+
 
     def set_value(self, progress: float, on_change: bool) -> None:
         progress = max(0.0, min(1.0, progress))
 
-        if self.steps and self.snap_on_release and not self.__dragging: progress = round(progress * (self.steps-1)) / (self.steps-1) # snap to steps
+        if self.__steps and self.__snap and not self.__dragging: progress = round(progress * (self.__steps - 1)) / (self.__steps - 1) # snap to steps
 
-        val = self.min_value + progress * (self.max_value - self.min_value)
-        if val != self.value:
-            self.value = val
-            if on_change and self.on_change: self.on_change(self.value)
+        val = self.__min_value + progress * (self.__max_value - self.__min_value)
+        if val != self.__value:
+            self.__value = val
+            if on_change and self.__on_change: self.__on_change(self.__value)
 
 
     def __pos_to_progress(self, pos: tuple[int, int]) -> float:
-        if self.orientation == "h":
-            rel = pos[0] - self.rect.left
-            length = self.rect.width
+        if self.__orientation == "h":
+            rel = pos[0] - self.__rect.left
+            length = self.__rect.width
         else:
-            rel = pos[1] - self.rect.top
-            length = self.rect.height
+            rel = pos[1] - self.__rect.top
+            length = self.__rect.height
 
         return 0.0 if length <= 1 else rel / (length - 1)
 
 
     def handle_event(self, event: pygame.event.Event) -> None:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            if self.rect.collidepoint(event.pos):
+            if self.__rect.collidepoint(event.pos):
                 self.__dragging = True
                 self.set_value(self.__pos_to_progress(event.pos), on_change=True)
 
@@ -69,35 +87,35 @@ class Slider:
 
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1 and self.__dragging:
             self.__dragging = False
-            if self.steps and self.snap_on_release:
+            if self.__steps and self.__snap:
                 self.set_value(self.__pos_to_progress(event.pos), on_change=True)
 
 
     def draw(self, surface: pygame.Surface) -> None:
         # track line
-        if self.orientation == "h": pygame.draw.line(surface, self.style.track_color, (self.rect.left, self.rect.centery), (self.rect.right, self.rect.centery), 3)
-        else: pygame.draw.line(surface, self.style.track_color, (self.rect.centerx, self.rect.top), (self.rect.centerx, self.rect.bottom), 3)
+        if self.__orientation == "h": pygame.draw.line(surface, self.__style.track_color, (self.__rect.left, self.__rect.centery), (self.__rect.right, self.__rect.centery), 3)
+        else: pygame.draw.line(surface, self.__style.track_color, (self.__rect.centerx, self.__rect.top), (self.__rect.centerx, self.__rect.bottom), 3)
 
         # ticks
-        if self.steps:
-            for i in range(self.steps):
-                if self.orientation == "h":
-                    x = self.rect.left + i / (self.steps - 1) * (self.rect.width - 1)
-                    pygame.draw.line(surface, self.style.track_color, (x, self.rect.centery - 1), (x, self.rect.centery + self.style.tick_size), 3)
+        if self.__steps:
+            for i in range(self.__steps):
+                if self.__orientation == "h":
+                    x = self.__rect.left + i / (self.__steps - 1) * (self.__rect.width - 1)
+                    pygame.draw.line(surface, self.__style.track_color, (x, self.__rect.centery - 1), (x, self.__rect.centery + self.__style.tick_size), 3)
                 else:
-                    y = self.rect.top + i / (self.steps - 1) * (self.rect.height - 1)
-                    pygame.draw.line(surface, self.style.track_color, (self.rect.centerx - 1, y), (self.rect.centerx + self.style.tick_size, y), 3)
+                    y = self.__rect.top + i / (self.__steps - 1) * (self.__rect.height - 1)
+                    pygame.draw.line(surface, self.__style.track_color, (self.__rect.centerx - 1, y), (self.__rect.centerx + self.__style.tick_size, y), 3)
 
         # head
-        head_rect = pygame.Rect(0, 0, self.style.head_radius * 2, self.style.head_radius * 2)
-        border_rect = pygame.Rect(0, 0, self.style.head_radius * 2 + 6, self.style.head_radius * 2 + 6)
-        if self.orientation == "h":
-            head_rect.center = (int(self.rect.left + self.progress * (self.rect.width - 1)), int(self.rect.centery))
-            border_rect.center = (int(self.rect.left + self.progress * (self.rect.width - 1)), int(self.rect.centery))
+        head_rect = pygame.Rect(0, 0, self.__style.head_radius * 2, self.__style.head_radius * 2)
+        border_rect = pygame.Rect(0, 0, self.__style.head_radius * 2 + 6, self.__style.head_radius * 2 + 6)
+        if self.__orientation == "h":
+            head_rect.center = (int(self.__rect.left + self.progress * (self.__rect.width - 1)), int(self.__rect.centery))
+            border_rect.center = (int(self.__rect.left + self.progress * (self.__rect.width - 1)), int(self.__rect.centery))
         else:
-            head_rect.center = (int(self.rect.centerx), int(self.rect.top + self.progress * (self.rect.height - 1)))
-            border_rect.center = (int(self.rect.centerx), int(self.rect.top + self.progress * (self.rect.height - 1)))
+            head_rect.center = (int(self.__rect.centerx), int(self.__rect.top + self.progress * (self.__rect.height - 1)))
+            border_rect.center = (int(self.__rect.centerx), int(self.__rect.top + self.progress * (self.__rect.height - 1)))
 
         pygame.draw.rect(surface, "#000000", border_rect)
-        pygame.draw.rect(surface, self.style.head_color, head_rect)
+        pygame.draw.rect(surface, self.__style.head_color, head_rect)
         

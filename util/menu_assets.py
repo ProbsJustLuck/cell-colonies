@@ -130,7 +130,7 @@ sliders: dict[MenuArea, list[Slider]] = {
             min_value=20.0,
             max_value=0.5,
             value=2.0,
-            snap_on_release=False,
+            snap=False,
             style=SliderStyle(),
             on_change=set_tps
         )
