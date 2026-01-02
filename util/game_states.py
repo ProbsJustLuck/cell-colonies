@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import pygame
 
 from classes.entity import Entity
@@ -47,6 +47,8 @@ class States:
     disabled_cells: list[str] = []
 
     hovered_pos: Position | None = None
+
+    last_played_game: dict[str, "WorldManager | tuple[Any, ...]"] | None = None
     
     ## Zooming + panning
     offset: pygame.Vector2 = pygame.Vector2(0, 0)

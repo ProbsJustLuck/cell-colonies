@@ -16,7 +16,7 @@ def fit_view(world_size: int):
     state.zoom = cell_pix / base_cell
 
     factor = Constants.ZOOM_FACTOR
-    state.zoom_levels = [state.zoom * (factor ** i) for i in range(-5, 20)]
+    state.zoom_levels = [state.zoom * (factor ** i) for i in range(-7, 30)]
     state.zoom_index = state.zoom_levels.index(state.zoom)
 
     state.offset = pygame.Vector2(

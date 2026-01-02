@@ -26,8 +26,8 @@ class Rotator(cell.Cell):
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
 
-        self.__max_health: int = round(health * States.health_multiplier)
-        self.__health: int = round(health * States.health_multiplier)
+        self.__max_health: int = max(round(health * States.health_multiplier), 1)
+        self.__health: int = max(round(health * States.health_multiplier), 1)
 
         self.__color = homebase_link.color
         self.__icon = self.homebase.rotator_icon

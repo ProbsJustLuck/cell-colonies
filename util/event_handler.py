@@ -1,11 +1,12 @@
 import pygame
 
 from classes.position import Position
+from classes.ui.colors import TeamColor
 from classes.ui.menu_area import MenuArea
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit
+from util.game_actions import quit, check_homebases, check_walls
 from util import menu_assets
 
 def event_handler(event: pygame.Event):
@@ -68,7 +69,7 @@ def event_handler(event: pygame.Event):
 
 
     for slider in menu_assets.sliders.get(state.current_area, []):
-            slider.handle_event(event)
+        slider.handle_event(event)
 
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #lc
@@ -105,7 +106,10 @@ def event_handler(event: pygame.Event):
             if button.rect.collidepoint(event.pos):
                 button.click()
                 return
-        
+        if state.current_area is MenuArea.MAIN_MENU:
+            for i in range(19, 22):
+                if state.special_buttons[i].rect.collidepoint(event.pos):
+                    state.special_buttons[i].click()
 
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -197,9 +201,11 @@ def event_handler(event: pygame.Event):
             else: pygame.mouse.set_cursor(assets.arrow_cursor)
         
     elif event.type == pygame.MOUSEWHEEL: 
-        if state.changing_seed: return
+        mouse = pygame.mouse.get_pos()
+        _team_color_length = len(list(TeamColor))
 
-        if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(pygame.mouse.get_pos()): # Zoom
+
+        if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(mouse) and not state.changing_seed: # Zoom
             if event.y > 0: # Up
                 old_zoom = state.zoom_levels[state.zoom_index]
                 state.zoom_index = max(0, min(len(state.zoom_levels) - 1, state.zoom_index + 1))
@@ -228,7 +234,7 @@ def event_handler(event: pygame.Event):
                 state.zoom = new_zoom
                 return
             
-        elif state.current_area is MenuArea.SIMULATION and state.tps_button and state.tps_slider and (state.tps_button.rect.collidepoint(pygame.mouse.get_pos()) or state.tps_slider.rect.collidepoint(pygame.mouse.get_pos())) and state.tps_button:
+        elif state.current_area is MenuArea.SIMULATION and state.tps_button and state.tps_slider and (state.tps_button.rect.collidepoint(mouse) or state.tps_slider.rect.collidepoint(mouse)) and state.tps_button and not state.changing_seed:
             if event.y > 0 and state.target_tps < 20.0: # Up
                 state.target_tps = round(min(state.target_tps + (event.y / 5), 20.0), 1)
 
@@ -258,3 +264,128 @@ def event_handler(event: pygame.Event):
                 pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
 
                 return
+    
+        elif state.current_area is MenuArea.SIMULATION and state.changing_seed:
+            if event.y > 0:
+                if state.special_buttons[4].rect.collidepoint(mouse) and state.sim_homebases < min(_team_color_length, state.sim_size**2 - state.sim_walls): 
+                    state.sim_homebases = max(min(state.sim_size**2 - state.sim_walls, state.sim_homebases + event.y, _team_color_length), 2)
+                    check_walls()
+
+
+                    button = state.special_buttons[9]
+                    if state.sim_homebases >= min(_team_color_length, state.sim_size**2 - state.sim_walls) and not button.disabled: button.toggle()
+                    elif state.sim_homebases < min(_team_color_length, state.sim_size**2 - state.sim_walls) and button.disabled: button.toggle()
+
+                    button = state.special_buttons[10]
+                    if state.sim_homebases <= 2 and not button.disabled: button.toggle()
+                    elif state.sim_homebases > 2 and button.disabled: button.toggle()
+
+                elif state.special_buttons[5].rect.collidepoint(mouse) and state.health_multiplier < 5.0: 
+                    state.health_multiplier = max(min(5.0, round(state.health_multiplier + event.y / 10, 1)), 0.1)
+
+                    button = state.special_buttons[11]
+                    if state.health_multiplier >= 5.0 and not button.disabled: button.toggle()
+                    elif state.health_multiplier < 5.0 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[12]
+                    if state.health_multiplier <= 0.1 and not button.disabled: button.toggle()
+                    elif state.health_multiplier > 0.1 and button.disabled: button.toggle()
+
+                elif state.special_buttons[6].rect.collidepoint(mouse) and state.spawn_rate < 8: 
+                    state.spawn_rate = max(min(8, state.spawn_rate + event.y), 1)
+
+                    button = state.special_buttons[13]
+                    if state.spawn_rate >= 8 and not button.disabled: button.toggle()
+                    elif state.spawn_rate < 8 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[14]
+                    if state.spawn_rate <= 1 and not button.disabled: button.toggle()
+                    elif state.spawn_rate > 1 and button.disabled: button.toggle()
+
+                elif state.special_buttons[7].rect.collidepoint(mouse) and state.sim_walls < state.sim_size**2 - state.sim_homebases: 
+                    state.sim_walls = max(min(state.sim_size**2 - state.sim_homebases, state.sim_walls + event.y), 0)
+                    check_homebases()
+
+                    button = state.special_buttons[15]
+                    if state.sim_walls >= state.sim_size**2 - state.sim_homebases and not button.disabled: button.toggle()
+                    elif state.sim_walls < state.sim_size**2 - state.sim_homebases and button.disabled: button.toggle()
+
+                    button = state.special_buttons[16]
+                    if state.sim_walls <= 0 and not button.disabled: button.toggle()
+                    elif state.sim_walls > 0 and button.disabled: button.toggle()
+
+                elif state.special_buttons[8].rect.collidepoint(mouse) and state.sim_size < 100: 
+                    state.sim_size = max(min(100, state.sim_size + event.y), 2)
+                    check_walls()
+                    check_homebases()
+
+                    button = state.special_buttons[17]
+                    if state.sim_size >= 100 and not button.disabled: button.toggle()
+                    elif state.sim_size < 100 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[18]
+                    if state.sim_size <= 0 and not button.disabled: button.toggle()
+                    elif state.sim_size > 0 and button.disabled: button.toggle()
+
+            if event.y < 0:
+                if state.special_buttons[4].rect.collidepoint(mouse) and 2 < state.sim_homebases: 
+                    state.sim_homebases = max(min(state.sim_size**2 - state.sim_walls, state.sim_homebases + event.y, _team_color_length), 2)
+                    check_walls()
+
+
+                    button = state.special_buttons[9]
+                    if state.sim_homebases >= min(_team_color_length, state.sim_size**2 - state.sim_walls) and not button.disabled: button.toggle()
+                    elif state.sim_homebases < min(_team_color_length, state.sim_size**2 - state.sim_walls) and button.disabled: button.toggle()
+
+                    button = state.special_buttons[10]
+                    if state.sim_homebases <= 2 and not button.disabled: button.toggle()
+                    elif state.sim_homebases > 2 and button.disabled: button.toggle()
+
+                elif state.special_buttons[5].rect.collidepoint(mouse) and 0.1 < state.health_multiplier: 
+                    state.health_multiplier = max(min(5.0, round(state.health_multiplier + event.y / 10, 1)), 0.1)
+
+                    button = state.special_buttons[11]
+                    if state.health_multiplier >= 5.0 and not button.disabled: button.toggle()
+                    elif state.health_multiplier < 5.0 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[12]
+                    if state.health_multiplier <= 0.1 and not button.disabled: button.toggle()
+                    elif state.health_multiplier > 0.1 and button.disabled: button.toggle()
+
+                elif state.special_buttons[6].rect.collidepoint(mouse) and 1 < state.spawn_rate: 
+                    state.spawn_rate = max(min(8, state.spawn_rate + event.y), 1)
+
+                    button = state.special_buttons[13]
+                    if state.spawn_rate >= 8 and not button.disabled: button.toggle()
+                    elif state.spawn_rate < 8 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[14]
+                    if state.spawn_rate <= 1 and not button.disabled: button.toggle()
+                    elif state.spawn_rate > 1 and button.disabled: button.toggle()
+
+                elif state.special_buttons[7].rect.collidepoint(mouse) and 0 < state.sim_walls: 
+                    state.sim_walls = max(min(state.sim_size**2 - state.sim_homebases, state.sim_walls + event.y), 0)
+                    check_homebases()
+
+                    button = state.special_buttons[15]
+                    if state.sim_walls >= state.sim_size**2 - state.sim_homebases and not button.disabled: button.toggle()
+                    elif state.sim_walls < state.sim_size**2 - state.sim_homebases and button.disabled: button.toggle()
+
+                    button = state.special_buttons[16]
+                    if state.sim_walls <= 0 and not button.disabled: button.toggle()
+                    elif state.sim_walls > 0 and button.disabled: button.toggle()
+
+                elif state.special_buttons[8].rect.collidepoint(mouse) and 2 < state.sim_size: 
+                    state.sim_size = max(min(100, state.sim_size + event.y), 2)
+                    check_walls()
+                    check_homebases()
+
+                    button = state.special_buttons[17]
+                    if state.sim_size >= 100 and not button.disabled: button.toggle()
+                    elif state.sim_size < 100 and button.disabled: button.toggle()
+
+                    button = state.special_buttons[18]
+                    if state.sim_size <= 0 and not button.disabled: button.toggle()
+                    elif state.sim_size > 0 and button.disabled: button.toggle()
+
+    

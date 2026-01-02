@@ -145,6 +145,40 @@ def render_start_screen() -> None:
             button.style.overwrite_opacity = -1
 
         button.draw(assets.screen, mouse_pos)
+
+
+    if state.last_played_game:
+        button = state.special_buttons[20]
+        if not state.skipped_animation:
+            if not button.disabled and _button_opacity_lerp:
+                button.style.opacity = int(_button_opacity_lerp.value(pygame.time.get_ticks()))
+        else:
+            button.style.opacity = 255
+            button.style.overwrite_opacity = -1
+                
+        button.draw(assets.screen, mouse_pos)
+
+        button = state.special_buttons[21]
+        if not state.skipped_animation:
+            if not button.disabled and _button_opacity_lerp:
+                button.style.opacity = int(_button_opacity_lerp.value(pygame.time.get_ticks()))
+        else:
+            button.style.opacity = 255
+            button.style.overwrite_opacity = -1
+                
+        button.draw(assets.screen, mouse_pos)
+    else:
+        button = state.special_buttons[19]
+        if not state.skipped_animation:
+            if not button.disabled and _button_opacity_lerp:
+                button.style.opacity = int(_button_opacity_lerp.value(pygame.time.get_ticks()))
+        else:
+            button.style.opacity = 255
+            button.style.overwrite_opacity = -1
+                
+        button.draw(assets.screen, mouse_pos)
+
+
     if Button.pending_tooltip:
         Button.pending_tooltip()
         Button.pending_tooltip = None
@@ -241,10 +275,9 @@ def render_game_screen():
             else:
                 draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: None", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {state.spawn_rate - cell.spawn_ticks}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {max(state.spawn_rate - cell.spawn_ticks, 0)}", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Ticks Since Targetted: {max(0, cell.ticks_since_targeted - 1)} (max 8)", "#000000", 35)
-
 
         elif isinstance(cell, Attacker):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Target: {cell.target.color.name} {cell.target.name} - Position ({cell.target.pos.x}, {cell.target.pos.y})", "#000000", 35)
@@ -276,7 +309,7 @@ def render_game_screen():
 
             draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (state.world.size * 2 - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
 
         elif isinstance(cell, Wall):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Generic wall.", "#000000", 35)

@@ -55,7 +55,7 @@ class Attacker(cell.Cell):
                 self.__direction = self.__set_starting_dir(self.__target.pos) # The direction that this Attacker is facing.
                 self.__reset_target_count()
             else:
-                self._deregister(world_manager)
+                self.deregister(world_manager)
 
             return
 
@@ -76,7 +76,7 @@ class Attacker(cell.Cell):
                 return
             else:
                 choices.remove(self.__target)
-        self._deregister(world_manager)
+        self.deregister(world_manager)
 
 
     @classmethod
@@ -246,8 +246,9 @@ class Attacker(cell.Cell):
             self.__rotated = False
             return
         elif isinstance(cell, Attacker):
-            cell.change_health(-self.__damage)
-            self.change_health(-self.__damage)
+            if cell.alive: 
+                cell.change_health(-self.__damage)
+                self.change_health(-self.__damage)
             return
         elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):
             assert self.__target is not None # type checker was buggy, the tick code solves this already tho

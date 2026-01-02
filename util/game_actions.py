@@ -1,6 +1,7 @@
 # Guess what, ANOTHER FILE!
+import copy
 import math
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 import pygame
 import random
 
@@ -47,7 +48,7 @@ def check_walls():
 
 def check_homebases():
     _team_color_length = len(list(TeamColor))
-    if state.sim_homebases > state.sim_size**2 - state.sim_walls or state.sim_homebases > _team_color_length:
+    if state.sim_homebases > min(state.sim_size**2 - state.sim_walls, _team_color_length):
         state.sim_homebases = max(min(state.sim_size**2 - state.sim_walls, state.sim_homebases, _team_color_length), 2)
 
         state.special_buttons[4].label = f"{state.sim_homebases}"
@@ -83,10 +84,27 @@ def _check_size():
     if state.sim_size > 2 and button.disabled: button.toggle()
 
 
-def create_world(seed: int | None = None):
+def _save_game():
+    if not state.world: return
+
+    state.last_played_game = {
+        "world": copy.deepcopy(state.world),
+        "rng": copy.deepcopy(state.world.rng.getstate())
+    }
+
+
+def create_world(seed: int | None = None, world: WorldManager | None = None, rng: tuple[Any, ...] | None = None):
     if not state.sim_pause: toggle_pause_simulation(None)
     state.game_end = False
-    state.world = WorldManager(state.sim_size, state.sim_homebases, state.sim_walls, seed)
+
+    if not world:
+        state.world = WorldManager(state.sim_size, state.sim_homebases, state.sim_walls, seed)
+    else:
+        state.world = world
+
+    
+
+    if rng: state.world.rng.setstate(rng)
 
     if state.rewind and not state.rewind.disabled: state.rewind.toggle()
     if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
@@ -100,13 +118,22 @@ def create_world(seed: int | None = None):
     state.old_health = state.health_multiplier
 
 
+def load_world(button: "Button"):
+    if state.last_played_game:
+        assert isinstance(state.last_played_game["world"], WorldManager)
+        assert isinstance(state.last_played_game["rng"], tuple)
+
+        start_game(button=None, world = state.last_played_game["world"], rng=state.last_played_game["rng"])
+        state.last_played_game = None
+
+
 def quit(button: "Button | None" = None):
     state.running = False
 
 
-def start_game(button: "Button"):
+def start_game(button: "Button | None", world: WorldManager | None = None, rng: tuple[Any, ...] | None = None):
     state.current_area = MenuArea.SIMULATION
-    create_world()
+    create_world(world=world, rng=rng)
     fit_view(state.sim_size)
 
     state.target_tps = 2.0
@@ -115,11 +142,22 @@ def start_game(button: "Button"):
 def go_to_main_menu(button: "Button"):
     state.current_area = MenuArea.MAIN_MENU
 
+    _save_game()
+
     state.game_end = False
     if state.show_tps and state.tps_button: state.tps_button.click()
     if state.pause and state.pause.disabled: state.pause.toggle()
     if state.pause and not state.sim_pause: state.pause.click()
+
+    # Flags off (safety)
     state.panning = False
+    state.changing_seed = False
+    state.typing_seed = False
+    state.seed_string = ""
+    state.selected_cell = None
+    state.selected_id = None
+    state.second_render_page = False
+    state.hovered_pos = None
 
 
 def go_to_options(button: "Button"):
@@ -369,7 +407,7 @@ def regenerate_world(button: "Button | None"):
 def increase_homebases(button: "Button"):
     _team_color_length = len(list(TeamColor))
     state.sim_homebases = min(_team_color_length, state.sim_homebases + 1, state.sim_size**2 - state.sim_walls)
-    if state.sim_homebases >= _team_color_length or state.sim_homebases >= state.sim_size**2 - state.sim_walls: button.toggle()
+    if state.sim_homebases >= min(_team_color_length, state.sim_size**2 - state.sim_walls): button.toggle()
 
     if state.special_buttons[10].disabled: state.special_buttons[10].toggle()
     check_walls()

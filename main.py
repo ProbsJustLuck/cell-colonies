@@ -115,8 +115,6 @@ while state.running:
                 _label_button = state.special_buttons[4]
                 if _mouse_down and _change_button.rect.collidepoint(_mouse_pos): # homebase up
                     state.homebase_change += 1
-                    print(state.sim_size**2 - state.sim_walls)
-                    print(state.sim_homebases)
                     if state.homebase_change > 40 and state.sim_homebases < _team_color_amount and state.sim_homebases < state.sim_size**2 - state.sim_walls:
                         state.sim_homebases = min(min(state.sim_size**2 - state.sim_walls, state.sim_homebases + 1), _team_color_amount)
 

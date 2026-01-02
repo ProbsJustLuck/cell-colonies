@@ -24,8 +24,8 @@ class Homebase(entity.Entity):
     def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 5):
         super().__init__(pos, world_manager)
 
-        self.__max_health: int = round(health * States.health_multiplier)
-        self.__health: int = round(health * States.health_multiplier) # The health of the homebase.
+        self.__max_health: int = max(round(health * States.health_multiplier), 1)
+        self.__health: int = max(round(health * States.health_multiplier), 1) # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
         self.__max_cells_alive: int = 0
 
@@ -149,8 +149,8 @@ class Homebase(entity.Entity):
         self.__spawn_ticks += 1
         
         if self.__spawn_ticks >= States.spawn_rate:
-            self.spawn_cell(world_manager)
-            self.__spawn_ticks = 0
+            spawned = self.spawn_cell(world_manager)
+            if spawned: self.__spawn_ticks = 0
 
         if self.__ticks_since_target > 8 and not self.__waiting_for_attacker: # If we haven't been targetted in at least 9 ticks, then force an attacker to spawn
             self.__waiting_for_attacker = True
@@ -178,10 +178,10 @@ class Homebase(entity.Entity):
     def deregister(self, world_manager: "WorldManager"):
         for cell in self.__cells[:]:
             if cell.alive:
-                cell._deregister(world_manager)
+                cell.deregister(world_manager)
                 
         self.__cells.clear()
-        super()._deregister(world_manager)
+        super().deregister(world_manager)
 
 
     def remove_cell(self, cell: entity.Entity) -> None: 
@@ -202,9 +202,14 @@ class Homebase(entity.Entity):
 
         world_manager.rng.shuffle(positions)
         for pos in positions:
-            if world_manager.get_cell(pos) is None:
+            if world_manager.get_cell(pos) is not None: continue
+
+            cell = None
+            for _ in range(5):
                 cell = world_manager.spawn_cell(pos, self, type, target)
-                self.__cells.append(cell)
-                return cell
+                if cell and cell.alive:
+                    self.__cells.append(cell)
+                    self.__last_cell_spawned = cell
+                    return cell
             
         # Fail the spawn attempt is no square is free.
