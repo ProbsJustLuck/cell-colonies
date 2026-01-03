@@ -184,7 +184,7 @@ def render_start_screen() -> None:
         Button.pending_tooltip = None
 
 
-def render_game_screen():
+def render_game_screen(downtime: int):
     # Background
     assets.screen.blit(assets.simulation_background, assets.simulation_background.get_rect(topleft = (0, 0)))
 
@@ -327,7 +327,17 @@ def render_game_screen():
         # Type
         draw_text(Position(751, 118), f"{cell.type} Cell - Position ({cell.pos.x}, {cell.pos.y}) [ID #{cell.id}]", "#000000", 35)
 
+    # Typewriter
+    if state.typewriter:
+        state.typewriter.update(downtime)
+        if state.typewriter.has_lines_left():
+            state.typewriter.draw(assets.screen, (700, 430), line_spacing=20)
 
+            if state.typewriter.finished_line():
+                state.finished_timer += 1
+
+                if state.finished_timer > 50: draw_text(Position(1070, 650), "Press C to continue!", "#7B7B7B", 25, mode="bottomright", opacity=200)
+    
     pos = pygame.mouse.get_pos()
     for button in menu_assets.buttons.get(state.current_area, []):
         if (button.id in ["walls_toggle", "homebase_toggle", "rotator_toggle"] and not state.second_render_page) or (button.id in ["attackers_toggle", "gridlines_toggle", "fit_view"] and state.second_render_page): continue
@@ -425,6 +435,25 @@ def render_game_screen():
         if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
             draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
+
+    # Typewriter stuff
+    if state.typewriter and state.typewriter.id != -1:
+        match state.typewriter.id:
+            case 0:
+                surf = pygame.Surface(state.SIM_RECT.size, pygame.SRCALPHA)
+                pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=5)
+
+                assets.screen.blit(surf, state.SIM_RECT.topleft)
+            case _:
+                pass
+
+    if state.waiting_for_pan and state.panned and state.zoomed:
+        state.waiting_for_pan = False
+        state.panned = False
+        state.zoomed = False
+
+        pygame.time.set_timer(assets.ROSS_PAN_REMINDER, 0, loops=1)
+        pygame.time.set_timer(assets.ROSS_PAN, 3000, loops=1)
 
     if Button.pending_tooltip:
         Button.pending_tooltip()

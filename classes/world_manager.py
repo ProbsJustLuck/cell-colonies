@@ -13,7 +13,6 @@ import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
 from classes.ui.colors import TeamColor
-from classes.ui.typewriter import Typewriter, Emotion
 
 from util.game_states import States
 import util.cell_registry as cell_registry
@@ -30,9 +29,6 @@ class WorldManager:
         self.__rng = random.Random(self.__seed)
 
         self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=States.max_history)
-
-        self.__typewriter: Typewriter = Typewriter(40, speed=30)
-        self.__typewriter.queue(Emotion.IDLE, ["What's up danger", "My name... is Miles Morales.", "Who am I? Im spiderman", "fire emoji x10"])
 
         self.__current_tick: int = 0
         self.__id_counter: int = 0
@@ -92,12 +88,7 @@ class WorldManager:
 
     @property
     def walls_amount(self) -> int: return len(self.__walls)
-
-
-    @property
-    def typewriter(self) -> Typewriter: return self.__typewriter
     
-
 
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
         return {

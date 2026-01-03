@@ -70,13 +70,8 @@ HOURGLASS_ICON = pygame.transform.scale(pygame.image.load("assets/menu/hourglass
 
 
 # Yellowboss
-TEXT_BUBBLE = pygame.transform.scale(pygame.image.load("assets/yellowboss/chat_bubble.png").convert_alpha(), (400, 200))
-ANGER = pygame.transform.scale(pygame.image.load("assets/yellowboss/anger.png").convert_alpha(), (200, 200))
-CONFUSED = pygame.transform.scale(pygame.image.load("assets/yellowboss/confusion.png").convert_alpha(), (200, 200))
-HAPPY = pygame.transform.scale(pygame.image.load("assets/yellowboss/happiness.png").convert_alpha(), (200, 200))
-IDLE = pygame.transform.scale(pygame.image.load("assets/yellowboss/idle.png").convert_alpha(), (200, 200))
-SAD = pygame.transform.scale(pygame.image.load("assets/yellowboss/sadness.png").convert_alpha(), (200, 200))
-TERROR = pygame.transform.scale(pygame.image.load("assets/yellowboss/terror.png").convert_alpha(), (200, 200))
+TEXT_BUBBLE = pygame.transform.scale(pygame.image.load("assets/yellowboss/chat_bubble.png").convert_alpha(), (500, 250))
+BOB_ROSS = pygame.transform.scale(pygame.image.load("assets/yellowboss/bob_ross.png").convert_alpha(), (204 * 1.3, 340 * 1.3))
 
 
 # Events
@@ -86,3 +81,7 @@ CLEAR_HEALTH_TEXT = pygame.USEREVENT + 3
 CLEAR_SPAWN_TEXT = pygame.USEREVENT + 4
 CLEAR_WALL_TEXT = pygame.USEREVENT + 5
 CLEAR_SIZE_TEXT = pygame.USEREVENT + 6
+
+ROSS_CALL = pygame.USEREVENT + 7
+ROSS_PAN = pygame.USEREVENT + 8
+ROSS_PAN_REMINDER = pygame.USEREVENT + 9

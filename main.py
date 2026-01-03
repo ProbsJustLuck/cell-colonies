@@ -37,11 +37,7 @@ while state.running:
         case MenuArea.MAIN_MENU:
             render_start_screen()
         case MenuArea.SIMULATION:
-            render_game_screen()
-
-            if state.world:
-                state.world.typewriter.update(downtime)
-                state.world.typewriter.draw(assets.screen, (670, 400), line_spacing=28)
+            render_game_screen(downtime)
 
             if state.world and not state.sim_pause and not state.full_pause and not state.game_end: # tick logic
                 accum += downtime

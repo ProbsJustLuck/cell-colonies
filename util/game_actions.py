@@ -6,6 +6,7 @@ import pygame
 import random
 
 from classes.ui.colors import TeamColor
+from classes.ui.typewriter import Typewriter
 from util import assets
 from util.ui_helpers import fit_view
 from util.game_states import States as state
@@ -136,6 +137,10 @@ def start_game(button: "Button | None", world: WorldManager | None = None, rng: 
     create_world(world=world, rng=rng)
     fit_view(state.sim_size)
 
+    if not state.typewriter: state.typewriter = Typewriter(30, speed=20)
+
+    if not state.seen_bob: pygame.time.set_timer(assets.ROSS_CALL, 1000, loops=1)
+
     state.target_tps = 2.0
 
 
@@ -158,6 +163,8 @@ def go_to_main_menu(button: "Button"):
     state.selected_id = None
     state.second_render_page = False
     state.hovered_pos = None
+
+    pygame.time.set_timer(assets.ROSS_CALL, 0)
 
 
 def go_to_options(button: "Button"):

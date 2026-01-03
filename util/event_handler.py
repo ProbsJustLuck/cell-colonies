@@ -3,11 +3,26 @@ import pygame
 from classes.position import Position
 from classes.ui.colors import TeamColor
 from classes.ui.menu_area import MenuArea
+from classes.ui.typewriter import Message
 
 from util import assets
 from util.game_states import States as state
 from util.game_actions import quit, check_homebases, check_walls
 from util import menu_assets
+
+
+def __key_name(binding: str) -> str:
+    if state.bindings[binding][0] == "mouse":
+        match state.bindings[binding][1]:
+            case 1: return "LMB"
+            case 2: return "MMB"
+            case 3: return "RMB"
+            case 4: return "Scroll Up"
+            case 5: return "Scroll Down"
+            case _: return "Unknown!"
+    else:
+        return pygame.key.name(state.bindings[binding][1])
+
 
 def event_handler(event: pygame.Event):
     if event.type == pygame.QUIT: quit()
@@ -33,7 +48,25 @@ def event_handler(event: pygame.Event):
         state.special_buttons[8].label = ""
         state.special_buttons[8].initialize()
 
+    elif event.type == assets.ROSS_CALL:
+        if state.typewriter:
+            state.seen_bob = True
+            state.typewriter.queue(Message(["Hello, welcome to Cell Colonies!", "My name is Bob Ross. You can tell from", " my hair.", "", "I will be your guide and tutorial for", "this game!"]))
 
+            state.typewriter.queue(Message(["I'll help get you started for now.", "", "If you look around the screen, you'll", "find many different buttons and sliders", "for you to play with!"]))
+
+            state.typewriter.queue(Message(["An example would be the simulation zone,", "the main attraction of this game!", "", "I've marked it in red on your screen.", "", "Here you'll find the main simulation", "with every cell and its team displayed!"], 0))
+    
+    elif event.type == assets.ROSS_PAN:
+        if state.typewriter:
+            state.typewriter.queue(Message(["Great work! You've got a knack for that.", "", "Anyways, we can move onto the next", "area of our tour."], 3))
+    elif event.type == assets.ROSS_PAN_REMINDER:
+        if state.typewriter:
+            state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to pan and zoom", "remember?"], -1))
+            state.typewriter.queue(Message(["If you've forgotten, you can pan by", f"using ({__key_name('pan')}) and moving your mouse,", f"and zoom using ({__key_name('zoom_in')}/{__key_name('zoom_out')})!"], -1))
+            state.typewriter.queue(Message(["Remember, you have to hover over the", "simulation zone to be able to do those!"], 2))
+
+    # Keys/clicks
     if event.type == pygame.KEYDOWN and state.typing_seed:
         if event.key == pygame.K_BACKSPACE and state.seed_string:
             state.seed_string = state.seed_string[:-1]
@@ -59,6 +92,25 @@ def event_handler(event: pygame.Event):
             if ((state.seed_string.startswith("-") and len(state.seed_string) > 1) or (not state.seed_string.startswith("-") and len(state.seed_string) > 0)) and state.special_buttons[0].disabled: state.special_buttons[0].toggle()
             return
     if event.type == pygame.KEYUP and event.key == pygame.K_BACKSPACE and state.typing_seed: state.backspace_repeat = 0
+
+    if event.type == pygame.KEYDOWN and state.typewriter and state.typewriter.done and event.key == pygame.K_c:
+        match state.typewriter.id:
+            case 0:
+                state.typewriter.queue(Message(["To give you better viewing options for", f"the simulation zone, you can pan ({__key_name('pan')})", f"and zoom ({__key_name('zoom_in')}/{__key_name('zoom_out')}) while", "hovered over it.", "", "Give it a try now!"], 1))
+                return
+        
+            case 1:
+                state.waiting_for_pan = True
+                pygame.time.set_timer(assets.ROSS_PAN_REMINDER, 20000, loops=1)
+
+            case 2:
+                pygame.time.set_timer(assets.ROSS_PAN_REMINDER, 20000, loops=1)
+
+            case _: pass
+
+        
+        state.typewriter.next()
+    elif event.type == pygame.KEYDOWN and state.typewriter and not state.typewriter.finished_line() and event.key == pygame.K_c: state.typewriter.skip()
 
 
     if not state.loaded_menu:
@@ -164,20 +216,19 @@ def event_handler(event: pygame.Event):
     elif event.type == pygame.MOUSEMOTION :
         if state.current_area is MenuArea.SIMULATION and state.world:
             if state.panning:
+                if state.waiting_for_pan and not state.panned: state.panned = True
+
                 dx, dy = pygame.mouse.get_rel()
                 state.offset += (dx, dy)
 
-                world_px = state.world.size * (state.SIM_RECT.width / state.world.size) * state.zoom  # simplifies to SIM_RECT.width * zoom
-                margin = (3 * state.SIM_RECT.width) / 7
-                limit_x = world_px + margin
-                limit_y = world_px + margin
+                limit = state.SIM_RECT.width * state.zoom + (3 * state.SIM_RECT.width) / 7
 
-                # wrap when you drift past the span
-                if state.offset.x > limit_x: state.offset.x -= 2 * limit_x
-                if state.offset.x < -limit_x: state.offset.x += 2 * limit_x
+                # wrap
+                if state.offset.x > limit: state.offset.x -= 2 * limit
+                if state.offset.x < -limit: state.offset.x += 2 * limit
 
-                if state.offset.y > limit_y: state.offset.y -= 2 * limit_y
-                if state.offset.y < -limit_y: state.offset.y += 2 * limit_y
+                if state.offset.y > limit: state.offset.y -= 2 * limit
+                if state.offset.y < -limit: state.offset.y += 2 * limit
 
                 return
             
@@ -207,6 +258,8 @@ def event_handler(event: pygame.Event):
 
         if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(mouse) and not state.changing_seed: # Zoom
             if event.y > 0: # Up
+                if state.waiting_for_pan and not state.zoomed: state.zoomed = True
+
                 old_zoom = state.zoom_levels[state.zoom_index]
                 state.zoom_index = max(0, min(len(state.zoom_levels) - 1, state.zoom_index + 1))
                 new_zoom = state.zoom_levels[state.zoom_index]
@@ -220,7 +273,10 @@ def event_handler(event: pygame.Event):
                 state.zoom = new_zoom
                 return
 
+
             if event.y < 0: # Down
+                if state.waiting_for_pan and not state.zoomed: state.zoomed = True
+
                 old_zoom = state.zoom_levels[state.zoom_index]
                 state.zoom_index = max(0, min(len(state.zoom_levels) - 1, state.zoom_index - 1))
                 new_zoom = state.zoom_levels[state.zoom_index]

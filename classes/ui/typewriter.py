@@ -1,27 +1,20 @@
 from dataclasses import dataclass
 import pygame
-from enum import Enum, auto
 
-from util.assets import ANGER, CONFUSED, HAPPY, IDLE, SAD, TERROR, TEXT_BUBBLE
-from util.ui_helpers import get_font
+from classes.position import Position
+from util.assets import TEXT_BUBBLE, BOB_ROSS
+from util.game_states import States as state
+from util.ui_helpers import get_font, draw_text
 
-
-class Emotion(Enum):
-    ANGER = auto()
-    CONFUSED = auto()
-    HAPPY = auto()
-    IDLE = auto()
-    SAD = auto()
-    TERROR = auto()
 
 @dataclass
 class Message:
-    emotion: Emotion
     lines: list[str]
+    id: int = -1
 
 
 class Typewriter:
-    def __init__(self, font_size: int, speed: int=30):
+    def __init__(self, font_size: int, speed: int = 30):
         self.__font_size = font_size
         self.__speed = speed
 
@@ -32,28 +25,38 @@ class Typewriter:
         self.__progress = 0
         self.__accum = 0
 
-        self.__SPRITES = {
-            Emotion.ANGER: ANGER,
-            Emotion.CONFUSED: CONFUSED,
-            Emotion.HAPPY: HAPPY,
-            Emotion.IDLE: IDLE,
-            Emotion.SAD: SAD,
-            Emotion.TERROR: TERROR
-        }
-
         self.__done = True
 
 
-    def queue(self, emotion: Emotion, lines: list[str]) -> None:
-        if not lines: return
-
-        self.__queue.append(Message(emotion, lines))
-        if self.__done: self.start()
+    @property
+    def done(self) -> bool: return self.__done
 
 
-    def start(self) -> None:
+    @property
+    def id(self) -> int: return self.__current.id if self.__current else -1
+
+
+    def has_lines_left(self) -> bool: return True if self.__queue or self.__lines else False
+
+
+    def finished_line(self) -> bool: return self.__progress >= self.__get_length()
+
+
+    def queue(self, message: Message) -> None:
+        if not message.lines:
+            return
+        
+        self.__queue.append(message)
+        if self.__done: self.next()
+
+
+    def next(self) -> None:
+        state.finished_timer = 0
+
         if not self.__queue:
             self.__done = True
+            self.__current = None
+            self.__lines = []
             return
         
         self.__current = self.__queue.pop(0)
@@ -102,7 +105,12 @@ class Typewriter:
 
         screen.blit(TEXT_BUBBLE, (pos[0] - 25, pos[1] - 20))
 
-        y = pos[1]
+        screen.blit(BOB_ROSS, (pos[0] + 300, pos[1] + 20))
+
+        draw_text(Position(pos[0], pos[1] + 4), "Bob Ross", "#4F1212", 50)
+        draw_text(Position(pos[0] + 2, pos[1] + 4), "Bob Ross", "#4F1212", 50)
+
+        y = pos[1] + 40
         for line in self.__lines:
             l = min(len(line), remaining)
             text = line[:l]
@@ -111,6 +119,3 @@ class Typewriter:
             screen.blit(surf, (pos[0], y))
             remaining -= l
             y += line_spacing
-
-        if self.__current:
-            screen.blit(self.__SPRITES[self.__current.emotion], (pos[0] + 350, pos[1] + 80))

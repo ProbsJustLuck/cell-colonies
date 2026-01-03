@@ -7,6 +7,7 @@ from classes.ui.menu_area import MenuArea
 from constants import Constants
 
 if TYPE_CHECKING:
+    from classes.ui.typewriter import Typewriter
     from classes.world_manager import WorldManager
     from classes.ui.button import Button
     from classes.ui.slider import Slider
@@ -97,6 +98,23 @@ class States:
     spawn_change: int = 0
     wall_change: int = 0
     size_change: int = 0
+
+    # Bob ross
+    typewriter: "Typewriter | None" = None
+    finished_timer: int = 0
+    seen_bob: bool = False
+
+    waiting_for_pan: bool = False
+    panned: bool = False
+    zoomed: bool = False
+
+
+    # Controls
+    bindings: dict[str, tuple[str, int]] = {
+        "pan": ("mouse", 2),
+        "zoom_in": ("mouse", 4),
+        "zoom_out": ("mouse", 5)
+    }
 
 
     # Other stuff
