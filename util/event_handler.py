@@ -15,6 +15,15 @@ from util import menu_assets
 def event_handler(event: pygame.Event):
     if event.type == pygame.QUIT: quit()
 
+    if hasattr(event, "pos"):
+        data = event.dict.copy()
+
+        data["pos"] = assets.get_scale_mouse_pos(event.pos)
+        if "rel" in data: data["rel"] = int(data["rel"][0] * assets.MOUSE_SCALE_X), int(data["rel"][1] * assets.MOUSE_SCALE_Y)
+
+        event = pygame.event.Event(event.type, data)
+
+
     # Events
     if event.type == assets.CLEAR_TPS_TEXT and state.tps_button: 
         state.tps_button.label = "TPS"
@@ -275,19 +284,20 @@ def event_handler(event: pygame.Event):
         if state.size_change: state.size_change = 0
     
 
-    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 2: #mc
-        if state.current_area is MenuArea.SIMULATION and state.SIM_RECT.collidepoint(event.pos):
+    elif ((event.type == pygame.MOUSEBUTTONDOWN and event.button == 2) or (event.type == pygame.KEYDOWN and event.key == state.bindings[KeyActions.PAN_ALIAS])) and not state.panning: #mc
+        mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
+        if state.current_area is MenuArea.SIMULATION and state.SIM_RECT.collidepoint(mouse_pos):
             pygame.event.set_grab(True); 
             pygame.mouse.set_cursor(assets.grab_cursor)
             pygame.mouse.get_rel()
 
-            state.old_cursor_pos = pygame.mouse.get_pos()
+            state.old_cursor_pos = mouse_pos
             state.panning = True
             return
-    elif event.type == pygame.MOUSEBUTTONUP and event.button == 2:
+    elif ((event.type == pygame.MOUSEBUTTONUP and event.button == 2) or (event.type == pygame.KEYUP and event.key == state.bindings[KeyActions.PAN_ALIAS])) and state.panning:
         pygame.event.set_grab(False)
 
-        if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(pygame.mouse.get_pos()): pygame.mouse.set_cursor(assets.crosshair_cursor)
+        if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(assets.get_scale_mouse_pos(pygame.mouse.get_pos())): pygame.mouse.set_cursor(assets.crosshair_cursor)
         else: pygame.mouse.set_cursor(assets.arrow_cursor)
 
         state.panning = False
@@ -305,13 +315,13 @@ def event_handler(event: pygame.Event):
                         state.special_buttons[i].right_click()
 
 
-
     elif event.type == pygame.MOUSEMOTION :
         if state.current_area is MenuArea.SIMULATION and state.world:
             if state.panning:
                 if state.waiting_for_pan and not state.panned: state.panned = True
 
-                dx, dy = pygame.mouse.get_rel()
+                rel = pygame.mouse.get_rel()
+                dx, dy = int(rel[0] * assets.MOUSE_SCALE_X), int(rel[1] * assets.MOUSE_SCALE_Y)
                 state.offset += (dx, dy)
 
                 limit = state.SIM_RECT.width * state.zoom + (3 * state.SIM_RECT.width) / 7
@@ -325,7 +335,7 @@ def event_handler(event: pygame.Event):
 
                 return
             
-            mouse_pos = pygame.mouse.get_pos()
+            mouse_pos = event.pos
             if state.SIM_RECT.collidepoint(mouse_pos) and not state.changing_seed: 
                 pygame.mouse.set_cursor(assets.crosshair_cursor)
 
@@ -345,7 +355,7 @@ def event_handler(event: pygame.Event):
             else: pygame.mouse.set_cursor(assets.arrow_cursor)
         
     elif event.type == pygame.MOUSEWHEEL: 
-        mouse = pygame.mouse.get_pos()
+        mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
         _team_color_length = len(list(TeamColor))
 
 
@@ -358,7 +368,7 @@ def event_handler(event: pygame.Event):
                 new_zoom = state.zoom_levels[state.zoom_index]
 
                 # anchor to
-                mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+                mouse_pos = pygame.Vector2(assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
                 base_cell = state.SIM_RECT.width / state.world.size
                 origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
                 world_pt = (mouse_pos - origin) / (base_cell * old_zoom)
@@ -375,7 +385,7 @@ def event_handler(event: pygame.Event):
                 new_zoom = state.zoom_levels[state.zoom_index]
 
                 # anchor to
-                mouse_pos = pygame.Vector2(pygame.mouse.get_pos())
+                mouse_pos = pygame.Vector2(assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
                 base_cell = state.SIM_RECT.width / state.world.size
                 origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
                 world_pt = (mouse_pos - origin) / (base_cell * old_zoom)

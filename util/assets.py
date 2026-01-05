@@ -2,7 +2,8 @@ import pygame
 
 from constants import Constants
 
-screen = pygame.display.set_mode((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT), display=1)
+screen = pygame.Surface((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
+display_screen = pygame.display.set_mode((Constants.DISPLAY_WIDTH, Constants.DISPLAY_HEIGHT), display=0)
 
 main_menu_background = pygame.transform.smoothscale(
     pygame.image.load("assets/menu/main_menu.jpg").convert(),
@@ -93,3 +94,10 @@ ROSS_PAUSE_REMINDER = pygame.USEREVENT + 11
 
 ROSS_REWIND = pygame.USEREVENT + 12
 ROSS_REWIND_REMINDER = pygame.USEREVENT + 13
+
+# fix mouse scaling for different resolution
+MOUSE_SCALE_X = Constants.SCREEN_WIDTH / Constants.DISPLAY_WIDTH
+MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / Constants.DISPLAY_HEIGHT
+
+
+def get_scale_mouse_pos(pos: tuple[int, int]) -> tuple[int, int]: return (int(pos[0] * MOUSE_SCALE_X), int(pos[1] * MOUSE_SCALE_Y))

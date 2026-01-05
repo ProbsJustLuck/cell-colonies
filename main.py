@@ -64,7 +64,7 @@ while state.running:
                 last_measure = current_time
 
 
-            if pygame.mouse.get_pressed()[0] and state.tps_up and state.tps_up.rect.collidepoint(pygame.mouse.get_pos()) and state.tps_slider and state.tps_button: # tps up
+            if pygame.mouse.get_pressed()[0] and state.tps_up and state.tps_up.rect.collidepoint(assets.get_scale_mouse_pos(pygame.mouse.get_pos())) and state.tps_slider and state.tps_button: # tps up
                 state.tps_change += 1
                 if state.tps_change > 40 and state.target_tps < 20.0: 
                     state.target_tps = round(min(20.0, state.target_tps + 0.2), 1)
@@ -80,7 +80,7 @@ while state.running:
                     if state.target_tps >= 20.0 and not state.tps_up.disabled: state.tps_up.toggle()
 
 
-            if pygame.mouse.get_pressed()[0] and state.tps_down and state.tps_down.rect.collidepoint(pygame.mouse.get_pos()) and state.tps_slider and state.tps_button: # tps down
+            if pygame.mouse.get_pressed()[0] and state.tps_down and state.tps_down.rect.collidepoint(assets.get_scale_mouse_pos(pygame.mouse.get_pos())) and state.tps_slider and state.tps_button: # tps down
                 state.tps_change += 1
                 if state.tps_change > 40 and state.target_tps > 0.1: 
                     state.target_tps = round(max(0.1, state.target_tps - 0.2), 1)
@@ -108,7 +108,7 @@ while state.running:
 
                 _team_color_amount = len(list(TeamColor))
                 _mouse_down = pygame.mouse.get_pressed()[0]
-                _mouse_pos = pygame.mouse.get_pos()
+                _mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
 
 
                 _change_button = state.special_buttons[9]
@@ -317,6 +317,7 @@ while state.running:
     draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos}", "#000000", 20)
 
     # flip the display to put your work on screen
+    assets.display_screen.blit(pygame.transform.smoothscale(assets.screen, assets.display_screen.get_size()), (0, 0))
     pygame.display.flip()
 
 pygame.quit()

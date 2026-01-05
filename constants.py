@@ -17,6 +17,9 @@ class Constants:
     SCREEN_WIDTH: int = 1200
     SCREEN_HEIGHT: int = 700
 
+    DISPLAY_WIDTH: int = 960
+    DISPLAY_HEIGHT: int = 560
+
     # Sim
     DEFAULT_ZOOM: float = 1.05
     MAX_ZOOM: float = 10

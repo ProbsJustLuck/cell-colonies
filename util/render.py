@@ -1,7 +1,7 @@
 from typing import Callable
 import pygame
 
-from classes.ui.key_actions import KeyActions
+from classes.ui.key_actions import KeyActions # type: ignore
 from classes.wall import Wall
 from constants import Constants
 from classes.lerp import Lerp
@@ -35,16 +35,16 @@ _icons: dict[tuple[int, int, int | None], pygame.Surface] = {}
 _cell_size: int | None = None
 
 
-def get_icon(surf: pygame.Surface, cell_size: int, alpha: int | None = None) -> pygame.Surface:
-    key = (id(surf), cell_size, alpha)
+def get_icon(surf: pygame.Surface, cell_size: int, opacity: int | None = None) -> pygame.Surface:
+    key = (id(surf), cell_size, opacity)
 
     icon = _icons.get(key)
     if icon: return icon
 
     icon = pygame.transform.smoothscale(surf, (cell_size, cell_size))
-    if alpha:
+    if opacity:
         icon = icon.copy()
-        icon.set_alpha(alpha)
+        icon.set_alpha(opacity)
     _icons[key] = icon
     return icon
 
@@ -134,7 +134,7 @@ def render_start_screen() -> None:
     assets.screen.blit(_base2, _base2.get_rect(center=(_centers[1])))
 
     # Fade in other text text
-    mouse_pos = pygame.mouse.get_pos()
+    mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
     for button in menu_assets.buttons.get(state.current_area, []):
         if not state.skipped_animation:
             if not button.disabled and _button_opacity_lerp:
@@ -339,7 +339,7 @@ def render_game_screen(downtime: int):
 
                 if state.finished_timer > 50: draw_text(Position(1070, 650), "Press C to continue!", "#7B7B7B", 25, mode="bottomright", opacity=200)
     
-    pos = pygame.mouse.get_pos()
+    pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
     for button in menu_assets.buttons.get(state.current_area, []):
         if (button.id in ["walls_toggle", "homebase_toggle", "rotator_toggle"] and not state.second_render_page) or (button.id in ["attackers_toggle", "gridlines_toggle", "fit_view"] and state.second_render_page): continue
 
@@ -358,82 +358,6 @@ def render_game_screen(downtime: int):
 
         for slider in menu_assets.sliders.get(state.current_area, []):
             slider.draw(assets.screen)
-
-    if state.changing_seed:
-        rect = pygame.Rect(300, 100, 600, 500)
-
-        pygame.draw.rect(assets.screen, "#000000", rect, width=10, border_radius=4)
-        rect = rect.inflate(-10, -10)
-        state.seed_box = rect.copy()
-        pygame.draw.rect(assets.screen, "#a5a5a5", rect, border_radius=4)
-
-        draw_text(Position(435, 150), "Seed Settings", "#000000", 80)
-        draw_text(Position(436, 150), "Seed Settings", "#000000", 80)
-
-        draw_text(Position(600, 250), "Current Seed", "#272727", 40, mode="center")
-        draw_text(Position(600, 290), f"{state.world.seed}", "#000000", 60, mode="center")
-
-        rect = pygame.Rect(400, 320, 400, 50)
-        if not state.typing_seed:
-            pygame.draw.rect(assets.screen, "#ffffff", rect, width=10, border_radius=1)
-        else:
-            pygame.draw.rect(assets.screen, "#fffa70", rect, width=10, border_radius=1)
-
-        rect = rect.inflate(-4, -4)
-        state.typing_box = rect.copy()
-        pygame.draw.rect(assets.screen, "#000000", rect, border_radius=1)
-
-        if not state.seed_string: 
-            draw_text(Position(410, 335), "Type seed...", "#ffffff", size=50, opacity=110)
-
-        if state.seed_string:
-            if not state.typing_seed:
-                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
-            else: 
-                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
-    
-        draw_text(Position(405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
-
-        mouse = pygame.mouse.get_pos()
-        for i in range(19):
-            menu_assets.special_buttons[i].draw(assets.screen, mouse)
-
-        string = state.seed_string.strip("-")
-        draw_text(Position(795, 370), f"{len(string)}/10", "#ffffff", size=25, mode="bottomright", opacity=160)
-
-        if state.typing_seed and state.caret_timer / 500 <= 1:
-            width = assets.big_font.size("1")[0]
-            height = 2
-            x = state.typing_box.x + 9 + assets.big_font.size(state.seed_string[:len(state.seed_string)])[0]
-            y = state.typing_box.centery + assets.big_font.get_height() // 2
-            pygame.draw.line(assets.screen, (255,255,255), (x, y), (x + width, y), height)
-
-        assets.screen.blit(assets.COPY_ICON, (655, 475 + 10))
-        assets.screen.blit(assets.PASTE_ICON, (730, 475 + 10))
-        assets.screen.blit(assets.REGENERATE_ICON, (805, 483 + 10))
-
-        if not state.special_buttons[4].label: assets.screen.blit(assets.HOMEBASE_ICON, (326, 475 + 10))
-        if not state.special_buttons[5].label: assets.screen.blit(assets.HEART_ICON, (383, 492))
-        if not state.special_buttons[6].label: assets.screen.blit(assets.HOURGLASS_ICON, (432, 491))
-        if not state.special_buttons[7].label: assets.screen.blit(assets.WALL_ICON, (480, 490))
-
-        if not state.special_buttons[8].label:
-            # hor
-            pygame.draw.line(assets.screen, "#000000", (535, 495), (563, 495), 2)
-            pygame.draw.line(assets.screen, "#000000", (535, 502), (563, 502), 2)
-            pygame.draw.line(assets.screen, "#000000", (535, 509), (563, 509), 2)
-            pygame.draw.line(assets.screen, "#000000", (535, 516), (563, 516), 2)
-            pygame.draw.line(assets.screen, "#000000", (535, 523), (563, 523), 2)
-
-            # ver
-            pygame.draw.line(assets.screen, "#000000", (535, 495), (535, 523), 2)
-            pygame.draw.line(assets.screen, "#000000", (542, 495), (542, 523), 2)
-            pygame.draw.line(assets.screen, "#000000", (549, 495), (549, 523), 2)
-            pygame.draw.line(assets.screen, "#000000", (556, 495), (556, 523), 2)
-            pygame.draw.line(assets.screen, "#000000", (563, 495), (563, 523), 2)
-
-        if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
-            draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
     # Typewriter stuff
     if state.typewriter and state.typewriter.id != -1:
@@ -561,6 +485,83 @@ def render_game_screen(downtime: int):
                 pass
 
 
+    if state.changing_seed:
+        rect = pygame.Rect(300, 100, 600, 500)
+
+        pygame.draw.rect(assets.screen, "#000000", rect, width=10, border_radius=4)
+        rect = rect.inflate(-10, -10)
+        state.seed_box = rect.copy()
+        pygame.draw.rect(assets.screen, "#a5a5a5", rect, border_radius=4)
+
+        draw_text(Position(435, 150), "Seed Settings", "#000000", 80)
+        draw_text(Position(436, 150), "Seed Settings", "#000000", 80)
+
+        draw_text(Position(600, 250), "Current Seed", "#272727", 40, mode="center")
+        draw_text(Position(600, 290), f"{state.world.seed}", "#000000", 60, mode="center")
+
+        rect = pygame.Rect(400, 320, 400, 50)
+        if not state.typing_seed:
+            pygame.draw.rect(assets.screen, "#ffffff", rect, width=10, border_radius=1)
+        else:
+            pygame.draw.rect(assets.screen, "#fffa70", rect, width=10, border_radius=1)
+
+        rect = rect.inflate(-4, -4)
+        state.typing_box = rect.copy()
+        pygame.draw.rect(assets.screen, "#000000", rect, border_radius=1)
+
+        if not state.seed_string: 
+            draw_text(Position(410, 335), "Type seed...", "#ffffff", size=50, opacity=110)
+
+        if state.seed_string:
+            if not state.typing_seed:
+                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
+            else: 
+                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
+    
+        draw_text(Position(405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
+
+        mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
+        for i in range(19):
+            menu_assets.special_buttons[i].draw(assets.screen, mouse)
+
+        string = state.seed_string.strip("-")
+        draw_text(Position(795, 370), f"{len(string)}/10", "#ffffff", size=25, mode="bottomright", opacity=160)
+
+        if state.typing_seed and state.caret_timer / 500 <= 1:
+            width = assets.big_font.size("1")[0]
+            height = 2
+            x = state.typing_box.x + 9 + assets.big_font.size(state.seed_string[:len(state.seed_string)])[0]
+            y = state.typing_box.centery + assets.big_font.get_height() // 2
+            pygame.draw.line(assets.screen, (255,255,255), (x, y), (x + width, y), height)
+
+        assets.screen.blit(assets.COPY_ICON, (655, 475 + 10))
+        assets.screen.blit(assets.PASTE_ICON, (730, 475 + 10))
+        assets.screen.blit(assets.REGENERATE_ICON, (805, 483 + 10))
+
+        if not state.special_buttons[4].label: assets.screen.blit(assets.HOMEBASE_ICON, (326, 475 + 10))
+        if not state.special_buttons[5].label: assets.screen.blit(assets.HEART_ICON, (383, 492))
+        if not state.special_buttons[6].label: assets.screen.blit(assets.HOURGLASS_ICON, (432, 491))
+        if not state.special_buttons[7].label: assets.screen.blit(assets.WALL_ICON, (480, 490))
+
+        if not state.special_buttons[8].label:
+            # hor
+            pygame.draw.line(assets.screen, "#000000", (535, 495), (563, 495), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 502), (563, 502), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 509), (563, 509), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 516), (563, 516), 2)
+            pygame.draw.line(assets.screen, "#000000", (535, 523), (563, 523), 2)
+
+            # ver
+            pygame.draw.line(assets.screen, "#000000", (535, 495), (535, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (542, 495), (542, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (549, 495), (549, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (556, 495), (556, 523), 2)
+            pygame.draw.line(assets.screen, "#000000", (563, 495), (563, 523), 2)
+
+        if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
+            draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
+
+
     if state.waiting_for_pan and state.panned and state.zoomed:
         state.waiting_for_pan = False
         state.panned = False
@@ -596,7 +597,7 @@ def render_options_screen() -> None:
     pygame.draw.rect(assets.screen, "#9e9e9e", rect)
     pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=3, border_radius=2)
 
-    mouse_pos = pygame.mouse.get_pos()
+    mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
     state.special_buttons[22].draw(assets.screen, mouse_pos)
 
     for i in range(23, 27): state.special_buttons[i].draw(assets.screen, mouse_pos)

@@ -55,7 +55,7 @@ class ButtonStyle:
 
         if self.overwrite_opacity >= 0:
             surf.set_alpha(self.overwrite_opacity)
-        elif self.disabled:
+        elif disabled:
             surf.set_alpha(self.disabled_opacity)
         else:
             surf.set_alpha(self.opacity)
@@ -84,10 +84,10 @@ class Button:
 
     id: str | KeyActions | None = None
     is_selected: Callable[[], bool] | None = None
-    on_enter: Callable[[Button], None] | None = None
-    on_leave: Callable[[Button], None] | None = None
+    on_enter: Callable[["Button"], None] | None = None
+    on_leave: Callable[["Button"], None] | None = None
 
-    on_right_click: Callable[[Button], None] | None = None
+    on_right_click: Callable[["Button"], None] | None = None
 
     _surfaces: dict[str, pygame.Surface] = field(default_factory=dict[str, pygame.Surface])
     rect: pygame.Rect = field(default_factory=pygame.Rect)
