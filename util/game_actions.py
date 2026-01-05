@@ -6,7 +6,9 @@ import pygame
 import random
 
 from classes.ui.colors import TeamColor
+from classes.ui.key_actions import KeyActions
 from classes.ui.typewriter import Message, Typewriter
+from constants import Constants
 from util import assets
 from util.ui_helpers import fit_view
 from util.game_states import States as state
@@ -615,3 +617,93 @@ def reset_size(button: "Button"):
     state.sim_size = 20
     check_walls()
     check_homebases()
+
+
+def change_option_section(button: "Button"):
+    match state.controls_section:
+        case "controls": state.special_buttons[23].clicked = False
+        case "teams": state.special_buttons[24].clicked = False
+        case "misc": state.special_buttons[25].clicked = False
+        case "debug": state.special_buttons[26].clicked = False
+        case _: pass
+
+    match button.id:
+        case "23": state.controls_section = "controls"
+        case "24": state.controls_section = "teams"
+        case "25": state.controls_section = "misc"
+        case "26": state.controls_section = "debug"
+        case _: pass
+
+
+def toggle_second_bindings(button: "Button"):
+    state.second_binding_page = not state.second_binding_page
+
+    state.special_buttons[33].toggle()
+    state.special_buttons[34].toggle()
+
+
+def change_binding(button: "Button"):
+    if type(button.id) is KeyActions:
+        state.rebinding = (button.id, button)
+
+    button.label = "Press a key..."
+    button.initialize()
+
+
+def reset_binding(button: "Button"):
+    if type(button.id) is KeyActions:
+        state.bindings[button.id] = Constants.DEFAULT_BINDINGS[button.id]
+
+        button.label = f"{pygame.key.name(state.bindings[button.id]).upper()}"
+        button.initialize()
+
+        if button.clicked: button.clicked = False
+
+        # get rid of conflict if there isn't any
+        state.conflicts.clear()
+        items = list(state.bindings.items())
+        for i in range(len(items)):
+            for j in range(i + 1, len(items)):
+                if items[i][1] == items[j][1]:
+                    if items[i][0] not in state.conflicts: state.conflicts.append(items[i][0])
+                    if items[j][0] not in state.conflicts: state.conflicts.append(items[j][0])
+
+
+        if state.rebinding and state.rebinding[1] == button: state.rebinding = None
+
+
+def change_binding_event(event: pygame.Event):
+    if state.rebinding is None: return
+
+    if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        state.rebinding[1].label = f"{pygame.key.name(state.bindings[state.rebinding[0]]).upper()}"
+        state.rebinding[1].initialize()
+
+        state.rebinding[1].clicked = False
+
+        state.rebinding = None
+        return
+
+    elif event.type == pygame.KEYDOWN:
+        conflicts = [key for key, val in state.bindings.items() if val == state.bindings[state.rebinding[0]]]
+        if conflicts:
+            if state.rebinding not in state.conflicts: state.conflicts.append(state.rebinding[0])
+
+            for key in conflicts:
+                if key not in state.conflicts: state.conflicts.append(key)
+
+        state.bindings[state.rebinding[0]] = event.key
+
+        state.rebinding[1].label = f"{pygame.key.name(state.bindings[state.rebinding[0]]).upper()}"
+        state.rebinding[1].initialize()
+        state.rebinding[1].clicked = False
+        state.rebinding = None
+
+    elif event.type == pygame.MOUSEBUTTONDOWN or event.type == pygame.MOUSEWHEEL:
+        state.rebinding[1].label = f"{pygame.key.name(state.bindings[state.rebinding[0]]).upper()}"
+        state.rebinding[1].initialize()
+
+        state.rebinding[1].clicked = False
+
+        state.rebinding = None
+        return

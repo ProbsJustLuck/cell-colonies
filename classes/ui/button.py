@@ -3,6 +3,7 @@ from enum import Enum, auto
 from typing import Callable
 import pygame
 
+from classes.ui.key_actions import KeyActions
 from util.ui_helpers import create_text, add_bg_to_text_dimensions, add_background_to_text, add_outline_to_image
 from util import assets
 
@@ -81,10 +82,12 @@ class Button:
     clicked: bool = False
     disabled: bool = False
 
-    id: str | None = None
-    is_selected: Callable[[], bool] | None = None # Override
-    on_enter: Callable[[Button], None] | None = None # Run once when the button was first clicked.
-    on_leave: Callable[[Button], None] | None = None # Run once when the button stops being clicked.
+    id: str | KeyActions | None = None
+    is_selected: Callable[[], bool] | None = None
+    on_enter: Callable[[Button], None] | None = None
+    on_leave: Callable[[Button], None] | None = None
+
+    on_right_click: Callable[[Button], None] | None = None
 
     _surfaces: dict[str, pygame.Surface] = field(default_factory=dict[str, pygame.Surface])
     rect: pygame.Rect = field(default_factory=pygame.Rect)
@@ -112,6 +115,12 @@ class Button:
                 self.on_leave(self)
         else: # normal
             if self.on_enter: self.on_enter(self)
+
+
+    def right_click(self):
+        if self.disabled: return
+        if self.on_right_click: self.on_right_click(self)
+
 
     def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
         if self.disabled: button_state = "disabled"

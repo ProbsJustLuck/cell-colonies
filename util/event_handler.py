@@ -2,26 +2,14 @@ import pygame
 
 from classes.position import Position
 from classes.ui.colors import TeamColor
+from classes.ui.key_actions import KeyActions
 from classes.ui.menu_area import MenuArea
 from classes.ui.typewriter import Message
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, check_homebases, check_walls, toggle_pause_simulation
+from util.game_actions import quit, check_homebases, check_walls, toggle_pause_simulation, change_binding_event
 from util import menu_assets
-
-
-def __key_name(binding: str) -> str:
-    if state.bindings[binding][0] == "mouse":
-        match state.bindings[binding][1]:
-            case 1: return "LMB"
-            case 2: return "MMB"
-            case 3: return "RMB"
-            case 4: return "Scroll Up"
-            case 5: return "Scroll Down"
-            case _: return "Unknown!"
-    else:
-        return pygame.key.name(state.bindings[binding][1]).upper()
 
 
 def event_handler(event: pygame.Event):
@@ -64,8 +52,8 @@ def event_handler(event: pygame.Event):
             state.typewriter.queue(Message(["That middle button pauses/unpauses", "the current simulation.", "", "The buttons to the right of the pause", "button control moving the simulation one", "or two ticks forward respectively.", "When the simulation ends, you cannot", "use either of them!"], 4))
     elif event.type == assets.ROSS_PAN_REMINDER:
         if state.typewriter:
-            state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to pan and zoom", "remember?"], -1))
-            state.typewriter.queue(Message(["If you've forgotten, you can pan by", f"using ({__key_name('pan')}) and moving your mouse,", f"and zoom using ({__key_name('zoom_in')}/{__key_name('zoom_out')})!"], -1))
+            state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to pan and zoom", "remember?"]))
+            state.typewriter.queue(Message(["If you've forgotten, you can pan by", "using (MMB) and moving your mouse,", "and zoom using (Wheel Up/Down)!"]))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "simulation zone to be able to do those!"], 2))
 
     elif event.type == assets.ROSS_PAUSE:
@@ -77,7 +65,7 @@ def event_handler(event: pygame.Event):
     elif event.type == assets.ROSS_PAUSE_REMINDER:
         if state.typewriter:
             state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to unpause, remember?"]))
-            state.typewriter.queue(Message(["If you've forgotten, you can unpause by", f"using ({__key_name('press_button')}) on the middle pause button,", f"and forward using ({__key_name('press_button')}) on the forward", "or fast forward buttons!"], 4))
+            state.typewriter.queue(Message(["If you've forgotten, you can unpause by", "using (LMB) on the middle pause button,", "and forward using (LMB) on the forward", "or fast forward buttons!"], 4))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "buttons to do those!"], 7))
 
     elif event.type == assets.ROSS_REWIND:
@@ -85,19 +73,19 @@ def event_handler(event: pygame.Event):
             state.typewriter.queue(Message(["Nice!", "", "For the next area, we'll focus on", "controlling the unpaused speed of", "the simulation."]))
             state.typewriter.queue(Message(["See the tps button in the bottom?", "", "Scrolling directly on the tps button will", "change the TPS based off your input!"], 10))
             state.typewriter.queue(Message(["The two buttons beside the TPS button", "allow you to fine-tune the TPS to", "whatever you wish too."], 12))
-            state.typewriter.queue(Message(["Finally, pressing the TPS button pulls", "up a slider to allow easier", "control over the TPS.", "", "You can try this now!", f"Once you're finished, press ({__key_name("advance_dialogue")}) and", "I'll explain the next part."], 13))
+            state.typewriter.queue(Message(["Finally, pressing the TPS button pulls", "up a slider to allow easier", "control over the TPS.", "", "You can try this now!", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the next part."], 13))
 
             state.typewriter.queue(Message(["We can move on now.", "Remember, changing the TPS too high", "might drop your framerate by a lot"]))
             state.typewriter.queue(Message(["In the bottom left, you'll notice the seed", "button.", "", "Pressing this will bring up a new menu,", "allowing you to set the seed of the world", "and set different world options, such as", "how often Homebases will spawn entities!"], 14))
             state.typewriter.queue(Message(["You'll also find some options to copy the", "current seed and paste a seed in, letting", "you share creative and interesting", "seeds that you find to others!", "", "Beware, some options can be VERY", " laggy when maxed!"]))
-            state.typewriter.queue(Message(["Try some of the options out!", "I'll let you play around with the settings", "for a bit.", "", f"Once you're finished, press ({__key_name("advance_dialogue")}) and", "I'll explain the next part!"]))
+            state.typewriter.queue(Message(["Try some of the options out!", "I'll let you play around with the settings", "for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the next part!"]))
 
             state.typewriter.queue(Message(["Next on the tour is the visibility toolbar.", "Look at the top of your screen and you'll", "find it!", "", "This toolbar toggles visibility of certain", "aspects of the game for you."], 15))
             state.typewriter.queue(Message(["The first button actually just resets", "your view, but other than that, the rest", "of the buttons are relatively self", "explanatory."]))
-            state.typewriter.queue(Message(["Try some of the options out!", "I'll let you play around with the settings", "for a bit.", "", f"Once you're finished, press ({__key_name("advance_dialogue")}) and", "I'll explain the next part!"]))
+            state.typewriter.queue(Message(["Try some of the options out!", "I'll let you play around with the settings", "for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the next part!"]))
 
             state.typewriter.queue(Message(["Now try clicking on a cell!", "It'll bring up a cool menu above me,", "showing you different information", "about the cell you clicked on.", "", "All cells have unique information to show in", "the sidebar!"]))
-            state.typewriter.queue(Message(["I'll let you play around for a bit.", "", f"Once you're finished, press ({__key_name("advance_dialogue")}) and", "I'll explain the final part!"]))
+            state.typewriter.queue(Message(["I'll let you play around for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the final part!"]))
 
             state.typewriter.queue(Message(["The final area to cover is the bottom left,", "just above the seed button.", "This area only has two buttons in it."], 16))
             state.typewriter.queue(Message(["The button to the right resets your", "current world to the original, with the", "same game settings you set. Its useful", "to retry a simulation from scratch!"], 17))
@@ -109,7 +97,7 @@ def event_handler(event: pygame.Event):
     elif event.type == assets.ROSS_REWIND_REMINDER:
         if state.typewriter:
             state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to rewind, remember?"]))
-            state.typewriter.queue(Message(["If you've forgotten, you can rewind by", f"using ({__key_name('press_button')}) on either rewind button!", "", "You have to have some ticks to rewind to", "in order to rewind!"], 9))
+            state.typewriter.queue(Message(["If you've forgotten, you can rewind by", "using (LMB) on either rewind button!", "", "You have to have some ticks to rewind to", "in order to rewind!"], 9))
             state.typewriter.queue(Message(["If you can't rewind, try unpausing for", "a few ticks, then retrying."], 9))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "buttons to do those!"], 11))
 
@@ -144,7 +132,7 @@ def event_handler(event: pygame.Event):
     if event.type == pygame.KEYDOWN and state.typewriter and state.typewriter.done and event.key == pygame.K_c:
         match state.typewriter.id:
             case 0:
-                state.typewriter.queue(Message(["To give you better viewing options for", f"the simulation zone, you can pan ({__key_name('pan')})", f"and zoom ({__key_name('zoom_in')}/{__key_name('zoom_out')}) while", "hovered over it.", "", "Give it a try now!"], 1))
+                state.typewriter.queue(Message(["To give you better viewing options for", "the simulation zone, you can pan (MMB)", "and zoom (Wheel Up/Down) while", "hovered over it.", "", "Give it a try now!"], 1))
                 return
         
             case 1:
@@ -155,7 +143,7 @@ def event_handler(event: pygame.Event):
                 pygame.time.set_timer(assets.ROSS_PAN_REMINDER, 20000, loops=1)
 
             case 4:
-                state.typewriter.queue(Message(["Give it a try  now!", f"You can click on them using ({__key_name("press_button")})", "", "I'll wait for you to mess around with this!"], 5))
+                state.typewriter.queue(Message(["Give it a try  now!", f"You can click on them using (LMB)", "", "I'll wait for you to mess around with this!"], 5))
                 return
             
             case 5:
@@ -197,6 +185,7 @@ def event_handler(event: pygame.Event):
     for slider in menu_assets.sliders.get(state.current_area, []):
         slider.handle_event(event)
 
+    change_binding_event(event)
 
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: #lc
         assert state.tps_button and state.tps_up and state.tps_down
@@ -237,9 +226,22 @@ def event_handler(event: pygame.Event):
                 if state.special_buttons[i].rect.collidepoint(event.pos):
                     state.special_buttons[i].click()
         elif state.current_area is MenuArea.OPTIONS:
-            for i in range(22, 23):
+            for i in range(22, 27):
                 if state.special_buttons[i].rect.collidepoint(event.pos):
                     state.special_buttons[i].click()
+
+            for i in range(33, 35):
+                if state.special_buttons[i].rect.collidepoint(event.pos):
+                    state.special_buttons[i].click()
+
+            if not state.second_binding_page:
+                for i in range(27, 33):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].click()
+            else:
+                for i in range(35, 41):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].click()
 
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -290,6 +292,19 @@ def event_handler(event: pygame.Event):
 
         state.panning = False
         return
+    
+    elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3: # rc
+        if state.current_area is MenuArea.OPTIONS:
+            if not state.second_binding_page:
+                for i in range(27, 33):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].right_click()
+            else:
+                for i in range(35, 41):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].right_click()
+
+
 
     elif event.type == pygame.MOUSEMOTION :
         if state.current_area is MenuArea.SIMULATION and state.world:

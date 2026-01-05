@@ -1,6 +1,7 @@
 from typing import Callable
 import pygame
 
+from classes.ui.key_actions import KeyActions
 from classes.wall import Wall
 from constants import Constants
 from classes.lerp import Lerp
@@ -598,15 +599,57 @@ def render_options_screen() -> None:
     mouse_pos = pygame.mouse.get_pos()
     state.special_buttons[22].draw(assets.screen, mouse_pos)
 
+    for i in range(23, 27): state.special_buttons[i].draw(assets.screen, mouse_pos)
 
     match state.controls_section:
         case "controls":
-            if not state.first_tick:
-                pass
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
 
-            for i in range(23, 27):
+            draw_text(Position(rect.topleft[0] + 150, rect.top + 90), "Action", "#000000", 40, mode="center")
+            pygame.draw.line(assets.screen, "#000000", (rect.topleft[0] + 106, rect.top + 102), (rect.topleft[0] + 190, rect.top + 102), 2)
+
+            draw_text(Position(rect.topleft[0] + 400, rect.top + 90), "Key", "#000000", 40, mode="center")
+            pygame.draw.line(assets.screen, "#000000", (rect.topleft[0] + 368, rect.top + 102), (rect.topleft[0] + 426, rect.top + 102), 2)
+
+            for i in range(33, 35):
                 state.special_buttons[i].draw(assets.screen, mouse_pos)
-            
+
+            if not state.second_binding_page:
+                # if KeyActions.PAN_ALIAS in state.conflicts:
+                #     pygame.draw.rect(assets.screen, "#8500005E", (rect.topleft[0] + 30, rect.topleft[1] + 100, 400, 30))
+                # else:
+                #     pygame.draw.rect(assets.screen, "#00000048", (rect.topleft[0] + 30, rect.topleft[1] + 100, 400, 30))
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Pan Alias (grab)", "#000000", 30, mode="center")
+
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 170), "Pan Up (key)", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Pan Down (key)", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pan Left (key)", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 260), "Pan Right (key)", "#000000", 30, mode="center")
+
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Regenerate World", "#000000", 30, mode="center")
+
+                for i in range(27, 33):
+                    state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+            else:
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Zoom In Alias", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 160), "Zoom Out Alias", "#000000", 30, mode="center")
+
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Advance/Skip Dialogue", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pause/Unpause Simulation", "#000000", 30, mode="center")
+
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 270), "Step Forward", "#000000", 30, mode="center")
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Step Backward", "#000000", 30, mode="center")
+
+                for i in range(35, 41):
+                    state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+            if state.conflicts:
+                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 340), "There are some conflicts with keys!", "#AA0000", 25, mode="center")
+                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 355), "You cannot start a simulation until", "#AA0000", 25, mode="center")
+                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 370), "the conflicts are resolved.", "#AA0000", 25, mode="center")
+
 
         case _: pass
 

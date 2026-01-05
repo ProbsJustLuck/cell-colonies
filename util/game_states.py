@@ -4,6 +4,7 @@ import pygame
 from classes.entity import Entity
 from classes.position import Position
 from classes.ui.menu_area import MenuArea
+from classes.ui.key_actions import KeyActions
 from constants import Constants
 
 if TYPE_CHECKING:
@@ -125,13 +126,28 @@ class States:
 
 
     # Controls
-    bindings: dict[str, tuple[str, int]] = {
-        "pan": ("mouse", 2),
-        "zoom_in": ("mouse", 4),
-        "zoom_out": ("mouse", 5),
-        "press_button": ("mouse", 1),
-        "advance_dialogue": ("key", pygame.K_c)
+    bindings: dict[KeyActions, int] = {
+        KeyActions.PAN_ALIAS: pygame.K_a,
+
+        KeyActions.PAN_UP: pygame.K_UP,
+        KeyActions.PAN_DOWN: pygame.K_DOWN,
+        KeyActions.PAN_LEFT: pygame.K_LEFT,
+        KeyActions.PAN_RIGHT: pygame.K_RIGHT,
+
+        KeyActions.ZOOM_IN_ALIAS: pygame.K_PLUS,
+        KeyActions.ZOOM_OUT_ALIAS: pygame.K_MINUS,
+
+        KeyActions.ADVANCE_DIALOGUE: pygame.K_c,
+        KeyActions.PAUSE_UNPAUSE: pygame.K_SPACE,
+
+        KeyActions.STEP_FORWARD: pygame.K_PERIOD,
+        KeyActions.STEP_BACKWARD: pygame.K_COMMA,
+
+        KeyActions.REGENERATE_WORLD: pygame.K_r,
     }
+    second_binding_page: bool = False
+    rebinding: tuple[KeyActions, "Button"] | None = None
+    conflicts: list[KeyActions] = []
 
 
     # Other stuff

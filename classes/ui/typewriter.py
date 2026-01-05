@@ -94,7 +94,9 @@ class Typewriter:
         self.__progress = self.__get_length()
 
 
-    def reset_progress(self) -> None: self.__progress = 0
+    def reset_progress(self) -> None: 
+        self.__progress = 0
+        if self.__done: self.__done = False
 
 
     def update(self, downtime: int) -> None:

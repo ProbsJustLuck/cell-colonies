@@ -3,11 +3,12 @@ import copy
 
 import pygame
 from classes.ui.button import Button, ButtonStyle, ButtonType
+from classes.ui.key_actions import KeyActions
 from classes.ui.slider import Slider, SliderStyle
 from classes.ui.menu_area import MenuArea
 
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_debug, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -39,8 +40,7 @@ buttons: dict[MenuArea, list[Button]] = {
     MenuArea.MAIN_MENU: [
         Button("OPTIONS", (535, 355), "Click to view and customize game options!", style=copy.copy(_main_menu_style_small), on_enter=go_to_options),
         Button("CELLS", (665, 355), "Click to view the cell catalogue!", style=copy.copy(_main_menu_style_small), on_enter=go_to_infopedia),
-        Button("CREDITS", (535, 410), "Click to view the game credits!", style=copy.copy(_main_menu_style_small), on_enter=go_to_credits),
-        Button("DEBUG", (665, 410), "Click to enter a debug simulation!", style=copy.copy(_main_menu_style_small), on_enter=go_to_debug),
+        Button("CREDITS", (600, 410), "Click to view the game credits!", style=ButtonStyle(font_size=29, height=45, width=250, scale=1.5), on_enter=go_to_credits),
         Button("QUIT", (600, 465), "Click to quit the game :(", style=copy.copy(_main_menu_style_quit), on_enter=quit)
     ],
     MenuArea.SIMULATION: [
@@ -117,10 +117,27 @@ special_buttons: dict[int, Button] = {
 
     # Options buttons are below
     22: Button("<-", (305, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=70, scale=1.5, opacity=255), on_enter=return_to_main_menu),
-    23: Button("CONTROLS", (255, 250), "Change the control bindings", type=ButtonType.TOGGLE, clicked=True, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
-    24: Button("TEAMS", (285, 305), "Change which teams appear in game!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
-    25: Button("MISC", (295, 360), "Change miscellaneous settings!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=85, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
-    26: Button("DEBUG", (285, 415), "Used for developmental purposes.", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
+    23: Button("CONTROLS", (255, 250), "Change the control bindings", type=ButtonType.TOGGLE, clicked=True, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="23"),
+    24: Button("COLONIES", (255, 305), "Change which colony colors appear in game!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="24"),
+    25: Button("MISC", (297, 360), "Change miscellaneous settings!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=85, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="25"),
+    26: Button("DEBUG", (285, 415), "Used for developmental purposes.", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="26"),
+
+    27: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_ALIAS]).upper()}", (750, 280), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_ALIAS, on_right_click=reset_binding),
+    28: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_UP]).upper()}", (750, 320), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_UP, on_right_click=reset_binding),
+    29: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_DOWN]).upper()}", (750, 350), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_DOWN, on_right_click=reset_binding),
+    30: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_LEFT]).upper()}", (750, 380), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_LEFT, on_right_click=reset_binding),
+    31: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_RIGHT]).upper()}", (750, 410), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_RIGHT, on_right_click=reset_binding),
+    32: Button(f"{pygame.key.name(state.bindings[KeyActions.REGENERATE_WORLD]).upper()}", (750, 450), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.REGENERATE_WORLD, on_right_click=reset_binding),
+
+    33: Button("<", (450, 500), "", disabled=True, style=ButtonStyle(height=30, width=30, scale=0.9), on_enter=toggle_second_bindings),
+    34: Button(">", (800, 500), "", style=ButtonStyle(height=30, width=30, scale=0.9), on_enter=toggle_second_bindings),
+
+    35: Button(f"{pygame.key.name(state.bindings[KeyActions.ZOOM_IN_ALIAS]).upper()}", (750, 280), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.ZOOM_IN_ALIAS, on_right_click=reset_binding),
+    36: Button(f"{pygame.key.name(state.bindings[KeyActions.ZOOM_OUT_ALIAS]).upper()}", (750, 310), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.ZOOM_OUT_ALIAS, on_right_click=reset_binding),
+    37: Button(f"{pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}", (750, 350), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.ADVANCE_DIALOGUE, on_right_click=reset_binding),
+    38: Button(f"{pygame.key.name(state.bindings[KeyActions.PAUSE_UNPAUSE]).upper()}", (750, 380), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAUSE_UNPAUSE, on_right_click=reset_binding),
+    39: Button(f"{pygame.key.name(state.bindings[KeyActions.STEP_FORWARD]).upper()}", (750, 420), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.STEP_FORWARD, on_right_click=reset_binding),
+    40: Button(f"{pygame.key.name(state.bindings[KeyActions.STEP_BACKWARD]).upper()}", (750, 450), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.STEP_BACKWARD, on_right_click=reset_binding),
 }
 for button in special_buttons.values():
     button.initialize()
