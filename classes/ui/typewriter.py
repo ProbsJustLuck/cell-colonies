@@ -42,13 +42,28 @@ class Typewriter:
     def finished_line(self) -> bool: return self.__progress >= self.__get_length()
 
 
+    def not_rude(self) -> bool: return True if self.__current and self.__current.id == -2 else False
+
+
+    def reset_to_queue(self) -> None:
+        if self.__current: 
+            self.__queue.insert(0, self.__current)
+            self.__lines = []
+            self.__current = None
+
+
     def queue(self, message: Message) -> None:
-        if not message.lines:
-            return
+        if not message.lines: return
         
         self.__queue.append(message)
         if self.__done: self.next()
 
+
+    def prepend(self, message: Message) -> None:
+        if not message.lines: return
+
+        self.__queue.insert(0, message)
+        self.next()
 
     def next(self) -> None:
         state.finished_timer = 0

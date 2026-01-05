@@ -23,6 +23,9 @@ class States:
     current_area = MenuArea.MAIN_MENU
     starting_opacity: int = 0
 
+    controls_section = "controls"
+    first_tick = False
+
     # Sim options
     sim_size: int = 20
     sim_homebases: int = 2
@@ -72,6 +75,10 @@ class States:
     tps_slider: "Slider | None" = None
     prev_render_page: "Button | None" = None
     next_render_page: "Button | None" = None
+    fit_view_button: "Button | None" = None
+
+    quit_button: "Button | None" = None
+    reset_button: "Button | None" = None
 
     ## Special buttons
     special_buttons: dict[int, "Button"] = {}
@@ -108,12 +115,22 @@ class States:
     panned: bool = False
     zoomed: bool = False
 
+    waiting_for_pause: bool = False
+    paused_forward: bool = False
+
+    waiting_for_rewind: bool = True
+    rewinded: bool = False
+
+    finished_tutorial: bool = False
+
 
     # Controls
     bindings: dict[str, tuple[str, int]] = {
         "pan": ("mouse", 2),
         "zoom_in": ("mouse", 4),
-        "zoom_out": ("mouse", 5)
+        "zoom_out": ("mouse", 5),
+        "press_button": ("mouse", 1),
+        "advance_dialogue": ("key", pygame.K_c)
     }
 
 

@@ -7,7 +7,7 @@ from classes.ui.slider import Slider, SliderStyle
 from classes.ui.menu_area import MenuArea
 
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_debug, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world
+from util.game_actions import quit, go_to_credits, go_to_debug, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -73,10 +73,13 @@ state.rewind = buttons[MenuArea.SIMULATION][1]
 state.pause = buttons[MenuArea.SIMULATION][2]
 state.forward = buttons[MenuArea.SIMULATION][3]
 state.fast_forward = buttons[MenuArea.SIMULATION][4]
+state.quit_button = buttons[MenuArea.SIMULATION][5]
 state.tps_button = buttons[MenuArea.SIMULATION][6]
+state.reset_button = buttons[MenuArea.SIMULATION][7]
 state.tps_down = buttons[MenuArea.SIMULATION][8]
 state.tps_up = buttons[MenuArea.SIMULATION][9]
 state.prev_render_page = buttons[MenuArea.SIMULATION][10]
+state.fit_view_button = buttons[MenuArea.SIMULATION][14]
 state.next_render_page = buttons[MenuArea.SIMULATION][17]
 state.seed_button = buttons[MenuArea.SIMULATION][18]
 
@@ -111,6 +114,13 @@ special_buttons: dict[int, Button] = {
     19: Button("SIMULATE", (600, 300), "Click to start a new simulation!", style=ButtonStyle(height=45, width=250, scale=1.5, opacity=0), on_enter=start_game),
     20: Button("SIMULATE", (575, 300), "Click to start a new simulation!", style=ButtonStyle(height=45, width=200, scale=1.5, opacity=0), on_enter=start_game),
     21: Button(">", (705, 300), "Load world from last save!", style=ButtonStyle(height=45, width=40, scale=1.5, opacity=0), on_enter=load_world),
+
+    # Options buttons are below
+    22: Button("<-", (305, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=70, scale=1.5, opacity=255), on_enter=return_to_main_menu),
+    23: Button("CONTROLS", (255, 250), "Change the control bindings", type=ButtonType.TOGGLE, clicked=True, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
+    24: Button("TEAMS", (285, 305), "Change which teams appear in game!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
+    25: Button("MISC", (295, 360), "Change miscellaneous settings!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=85, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
+    26: Button("DEBUG", (285, 415), "Used for developmental purposes.", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=return_to_main_menu),
 }
 for button in special_buttons.values():
     button.initialize()
@@ -128,7 +138,7 @@ sliders: dict[MenuArea, list[Slider]] = {
             rect=pygame.Rect(660, 420, 12, 200),
             orientation="v",
             min_value=20.0,
-            max_value=0.5,
+            max_value=0.1,
             value=2.0,
             snap=False,
             style=SliderStyle(),

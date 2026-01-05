@@ -6,7 +6,7 @@ import pygame
 import random
 
 from classes.ui.colors import TeamColor
-from classes.ui.typewriter import Typewriter
+from classes.ui.typewriter import Message, Typewriter
 from util import assets
 from util.ui_helpers import fit_view
 from util.game_states import States as state
@@ -154,6 +154,18 @@ def go_to_main_menu(button: "Button"):
     if state.pause and state.pause.disabled: state.pause.toggle()
     if state.pause and not state.sim_pause: state.pause.click()
 
+    assert state.typewriter
+
+    if not state.typewriter.not_rude() and not state.finished_tutorial:
+        if state.typewriter.has_lines_left():
+            state.typewriter.reset_to_queue()
+
+            state.typewriter.prepend(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game...", "", "Anyways..."], -2))
+        else:
+            state.typewriter.queue(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game..."], -2))
+    elif not state.finished_tutorial:
+        state.typewriter.reset_progress()
+
     # Flags off (safety)
     state.panning = False
     state.changing_seed = False
@@ -165,6 +177,10 @@ def go_to_main_menu(button: "Button"):
     state.hovered_pos = None
 
     pygame.time.set_timer(assets.ROSS_CALL, 0)
+
+
+def return_to_main_menu(button: "Button") -> None:
+    state.current_area = MenuArea.MAIN_MENU
 
 
 def go_to_options(button: "Button"):
@@ -186,6 +202,8 @@ def go_to_debug(button: "Button"):
 def toggle_pause_simulation(button: "Button | None"):
     if (state.game_end and state.sim_pause) or not state.pause: return
     state.sim_pause = not state.sim_pause
+
+    if button and state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.sim_pause and state.world:
         state.pause.label = ">"
@@ -210,6 +228,8 @@ def forward(button: "Button"):
     if not state.world: return
     _check_win(state.world.tick())
 
+    if button and state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
+
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
     if state.world.get_snapshot(2) and state.fast_rewind and state.fast_rewind.disabled: state.fast_rewind.toggle()
 
@@ -218,6 +238,8 @@ def fast_forward(button: "Button"):
     if not state.world: return
     _check_win(state.world.tick())
     if not state.game_end: _check_win(state.world.tick())
+
+    if button and state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
     if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2): state.fast_rewind.toggle()
@@ -239,6 +261,9 @@ def rewind(button: "Button"):
                     break
             if state.selected_cell:
                 break
+
+
+    if button and state.waiting_for_rewind and not state.rewinded: state.rewinded = True
                 
 
     if state.pause and state.pause.disabled: state.pause.toggle()
@@ -268,6 +293,9 @@ def fast_rewind(button: "Button"):
                 break
 
 
+    if button and state.waiting_for_rewind and not state.rewinded: state.rewinded = True
+
+
     if state.pause and state.pause.disabled: state.pause.toggle()
     if state.forward and state.forward.disabled: state.forward.toggle()
     if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
@@ -285,8 +313,11 @@ def hide_tps(button: "Button"): state.show_tps = False
 def set_tps(value: float): 
     state.target_tps = round(value, 1)
 
-    if state.target_tps >= 20.0 and state.tps_up: state.tps_up.toggle()
-    elif state.target_tps <= 0.1 and state.tps_down: state.tps_down.toggle()
+    if state.target_tps >= 20.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
+    elif state.target_tps < 20.0 and state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
+
+    if state.target_tps <= 0.1 and state.tps_down and not state.tps_down.disabled: state.tps_down.toggle()
+    elif state.target_tps > 0.1 and state.tps_down and state.tps_down.disabled: state.tps_down.toggle()
 
 
 def tps_up(button: "Button"):

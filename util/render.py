@@ -358,7 +358,6 @@ def render_game_screen(downtime: int):
         for slider in menu_assets.sliders.get(state.current_area, []):
             slider.draw(assets.screen)
 
-
     if state.changing_seed:
         rect = pygame.Rect(300, 100, 600, 500)
 
@@ -435,7 +434,6 @@ def render_game_screen(downtime: int):
         if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
             draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
-
     # Typewriter stuff
     if state.typewriter and state.typewriter.id != -1:
         match state.typewriter.id:
@@ -444,8 +442,123 @@ def render_game_screen(downtime: int):
                 pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=5)
 
                 assets.screen.blit(surf, state.SIM_RECT.topleft)
+
+            case 3:
+                rect = pygame.Rect(235, 585, 230, 60)
+                surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=5)
+
+                assets.screen.blit(surf, rect.topleft)
+
+            case 4:
+                if state.pause and state.fast_forward and state.forward:
+                    rect = state.pause.rect.inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+                    rect = pygame.Rect(state.forward.rect.topleft, (state.forward.rect.size[0] + state.fast_forward.rect.size[0], state.fast_forward.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+            
+            case 6:
+                if state.rewind and state.fast_rewind:
+                    rect = pygame.Rect(state.fast_rewind.rect.topleft, (state.rewind.rect.size[0] + state.rewind.rect.size[0], state.rewind.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 9:
+                if state.rewind and state.fast_rewind:
+                    rect = pygame.Rect(state.fast_rewind.rect.topleft, (state.rewind.rect.size[0] + state.rewind.rect.size[0], state.rewind.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 10:
+                if state.tps_down and state.tps_button and state.tps_up:
+                    rect = pygame.Rect((state.tps_down.rect.topleft[0], state.tps_down.rect.topleft[1] - 3), (state.tps_down.rect.size[0] + state.tps_button.rect.size[0] + state.tps_up.rect.size[0] + 7, state.tps_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 12:
+                if state.tps_down and state.tps_up:
+                    rect = pygame.Rect(state.tps_down.rect.topleft, (state.tps_down.rect.size[0], state.tps_down.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+                    rect = pygame.Rect(state.tps_up.rect.topleft, (state.tps_up.rect.size[0], state.tps_up.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 13:
+                if state.tps_button:
+                    rect = pygame.Rect(state.tps_button.rect.topleft, (state.tps_button.rect.size[0], state.tps_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+                if state.tps_slider and state.show_tps:
+                    rect = pygame.Rect(state.tps_slider.rect.topleft, (state.tps_slider.rect.size[0], state.tps_slider.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 14:
+                if state.seed_button:
+                    rect = pygame.Rect(state.seed_button.rect.topleft, (state.seed_button.rect.size[0], state.seed_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 15:
+                if state.prev_render_page and state.next_render_page and state.fit_view_button:
+                    rect = pygame.Rect(state.prev_render_page.rect.topleft, (state.prev_render_page.rect.size[0] + state.fit_view_button.rect.size[0] * 3 + 15 + state.next_render_page.rect.size[0], state.prev_render_page.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 16:
+                if state.quit_button and state.reset_button:
+                    rect = pygame.Rect(state.quit_button.rect.topleft, (state.quit_button.rect.size[0] + state.reset_button.rect.size[0] + 5, state.quit_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 17:
+                if state.reset_button:
+                    rect = pygame.Rect(state.reset_button.rect.topleft, (state.reset_button.rect.size[0], state.reset_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
+            case 18:
+                if state.quit_button:
+                    rect = pygame.Rect(state.quit_button.rect.topleft, (state.quit_button.rect.size[0], state.quit_button.rect.size[1])).inflate(11, 11)
+                    surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                    pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                    assets.screen.blit(surf, rect.topleft)
+
             case _:
                 pass
+
 
     if state.waiting_for_pan and state.panned and state.zoomed:
         state.waiting_for_pan = False
@@ -453,8 +566,52 @@ def render_game_screen(downtime: int):
         state.zoomed = False
 
         pygame.time.set_timer(assets.ROSS_PAN_REMINDER, 0, loops=1)
-        pygame.time.set_timer(assets.ROSS_PAN, 3000, loops=1)
+        pygame.time.set_timer(assets.ROSS_PAN, 1000, loops=1)
 
+    if state.waiting_for_pause and state.paused_forward:
+        state.waiting_for_pause = False
+        state.paused_forward = False
+
+        pygame.time.set_timer(assets.ROSS_PAUSE_REMINDER, 0, loops=1)
+        pygame.time.set_timer(assets.ROSS_PAUSE, 10000, loops=1)
+
+    if state.waiting_for_rewind and state.rewinded:
+        state.waiting_for_rewind = False
+        state.rewinded = False
+
+        pygame.time.set_timer(assets.ROSS_REWIND_REMINDER, 0, loops=1)
+        pygame.time.set_timer(assets.ROSS_REWIND, 1000, loops=1)
+
+
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None
+
+
+def render_options_screen() -> None:
+    assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
+
+    rect = pygame.Rect(350, 150, 560, 400)
+    pygame.draw.rect(assets.screen, "#9e9e9e", rect)
+    pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=3, border_radius=2)
+
+    mouse_pos = pygame.mouse.get_pos()
+    state.special_buttons[22].draw(assets.screen, mouse_pos)
+
+
+    match state.controls_section:
+        case "controls":
+            if not state.first_tick:
+                pass
+
+            for i in range(23, 27):
+                state.special_buttons[i].draw(assets.screen, mouse_pos)
+            
+
+        case _: pass
+
+
+    
     if Button.pending_tooltip:
         Button.pending_tooltip()
         Button.pending_tooltip = None
