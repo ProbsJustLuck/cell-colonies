@@ -1,7 +1,6 @@
 import pygame
 
 from classes.position import Position
-from classes.ui.colors import TeamColor
 from classes.ui.key_actions import KeyActions
 from classes.ui.menu_area import MenuArea
 from classes.ui.typewriter import Message
@@ -231,26 +230,38 @@ def event_handler(event: pygame.Event):
                 button.click()
                 return
         if state.current_area is MenuArea.MAIN_MENU:
-            for i in range(19, 22):
-                if state.special_buttons[i].rect.collidepoint(event.pos):
-                    state.special_buttons[i].click()
-        elif state.current_area is MenuArea.OPTIONS:
-            for i in range(22, 27):
-                if state.special_buttons[i].rect.collidepoint(event.pos):
-                    state.special_buttons[i].click()
-
-            for i in range(33, 35):
-                if state.special_buttons[i].rect.collidepoint(event.pos):
-                    state.special_buttons[i].click()
-
-            if not state.second_binding_page:
-                for i in range(27, 33):
+            if state.last_played_game:
+                for i in range(20, 22):
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].click()
             else:
-                for i in range(35, 41):
-                    if state.special_buttons[i].rect.collidepoint(event.pos):
-                        state.special_buttons[i].click()
+                if state.special_buttons[19].rect.collidepoint(event.pos):
+                    state.special_buttons[19].click()
+
+        elif state.current_area is MenuArea.OPTIONS:
+            for i in range(22, 27): # Option sections
+                if state.special_buttons[i].rect.collidepoint(event.pos):
+                    state.special_buttons[i].click()
+
+            for i in range(33, 35): # Second bindings page
+                if state.special_buttons[i].rect.collidepoint(event.pos):
+                    state.special_buttons[i].click()
+
+            if state.controls_section == "controls":
+                if not state.second_binding_page: # Controls 1
+                    for i in range(27, 33):
+                        if state.special_buttons[i].rect.collidepoint(event.pos):
+                            state.special_buttons[i].click()
+                else:
+                    for i in range(35, 41): # Controls 2
+                        if state.special_buttons[i].rect.collidepoint(event.pos):
+                            state.special_buttons[i].click()
+
+            elif state.controls_section == "colonies":
+                for button in state.toggle_colonies:
+                    if button.rect.collidepoint(event.pos):
+                        button.click()
+                        return
 
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -356,7 +367,7 @@ def event_handler(event: pygame.Event):
         
     elif event.type == pygame.MOUSEWHEEL: 
         mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
-        _team_color_length = len(list(TeamColor))
+        _team_color_length = len(state.allowed_colonies)
 
 
         if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(mouse) and not state.changing_seed: # Zoom

@@ -25,6 +25,7 @@ class ButtonStyle:
     opacity: int = 255
     disabled_opacity: int = 120
     overwrite_opacity: int = -1 # bandaid solution but it WORKS
+    selected_opacity: int = 255
 
     # Transformations
     width: int | None = None
@@ -41,7 +42,7 @@ class ButtonStyle:
     tooltip_scale: float = 0.8
 
 
-    def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False):
+    def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False, selected: bool = False):
         font_size = max(1, int(self.font_size * self.scale))
         padding = max(1, int(self.padding * self.scale))
         text = create_text(label, self.text, font_size)
@@ -57,6 +58,8 @@ class ButtonStyle:
             surf.set_alpha(self.overwrite_opacity)
         elif disabled:
             surf.set_alpha(self.disabled_opacity)
+        elif selected:
+            surf.set_alpha(self.selected_opacity)
         else:
             surf.set_alpha(self.opacity)
 
@@ -83,7 +86,6 @@ class Button:
     disabled: bool = False
 
     id: str | KeyActions | None = None
-    is_selected: Callable[[], bool] | None = None
     on_enter: Callable[["Button"], None] | None = None
     on_leave: Callable[["Button"], None] | None = None
 
@@ -96,7 +98,7 @@ class Button:
         self._surfaces = {
             "base": self.style.make_surface(self.label, self.style.base),
             "hover": self.style.make_surface(self.label, self.style.hover),
-            "selected": self.style.make_surface(self.label, self.style.selected),
+            "selected": self.style.make_surface(self.label, self.style.selected, selected=True),
             "disabled": self.style.make_surface(self.label, self.style.disabled, True)
         }
         self.rect = self._surfaces["base"].get_rect(center=self.center)
@@ -125,7 +127,7 @@ class Button:
     def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
         if self.disabled: button_state = "disabled"
 
-        elif self.is_selected() if self.is_selected else self.clicked: button_state = "selected"
+        elif self.clicked: button_state = "selected"
 
         elif self.rect and self.rect.collidepoint(mouse_pos): button_state = "hover"
 
@@ -136,6 +138,8 @@ class Button:
             surf.set_alpha(self.style.overwrite_opacity)
         elif self.disabled:
             surf.set_alpha(self.style.disabled_opacity)
+        elif self.clicked:
+            surf.set_alpha(self.style.selected_opacity)
         else:
             surf.set_alpha(self.style.opacity)
 

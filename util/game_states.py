@@ -3,6 +3,7 @@ import pygame
 
 from classes.entity import Entity
 from classes.position import Position
+from classes.ui.colors import TeamColor
 from classes.ui.menu_area import MenuArea
 from classes.ui.key_actions import KeyActions
 from constants import Constants
@@ -134,7 +135,7 @@ class States:
         KeyActions.PAN_LEFT: pygame.K_LEFT,
         KeyActions.PAN_RIGHT: pygame.K_RIGHT,
 
-        KeyActions.ZOOM_IN_ALIAS: pygame.K_PLUS,
+        KeyActions.ZOOM_IN_ALIAS: pygame.K_EQUALS,
         KeyActions.ZOOM_OUT_ALIAS: pygame.K_MINUS,
 
         KeyActions.ADVANCE_DIALOGUE: pygame.K_c,
@@ -148,6 +149,9 @@ class States:
     second_binding_page: bool = False
     rebinding: tuple[KeyActions, "Button"] | None = None
     conflicts: list[KeyActions] = []
+
+    toggle_colonies: list["Button"] = []
+    allowed_colonies: list[TeamColor] = list(TeamColor)
 
 
     # Other stuff

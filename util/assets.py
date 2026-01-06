@@ -3,7 +3,7 @@ import pygame
 from constants import Constants
 
 screen = pygame.Surface((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
-display_screen = pygame.display.set_mode((Constants.DISPLAY_WIDTH, Constants.DISPLAY_HEIGHT), display=0)
+display_screen = pygame.display.set_mode((Constants.DISPLAY_WIDTH, Constants.DISPLAY_HEIGHT), display=1)
 
 main_menu_background = pygame.transform.smoothscale(
     pygame.image.load("assets/menu/main_menu.jpg").convert(),

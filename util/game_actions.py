@@ -50,7 +50,7 @@ def check_walls():
 
 
 def check_homebases():
-    _team_color_length = len(list(TeamColor))
+    _team_color_length = len(state.allowed_colonies)
     if state.sim_homebases > min(state.sim_size**2 - state.sim_walls, _team_color_length):
         state.sim_homebases = max(min(state.sim_size**2 - state.sim_walls, state.sim_homebases, _team_color_length), 2)
 
@@ -100,12 +100,14 @@ def create_world(seed: int | None = None, world: WorldManager | None = None, rng
     if not state.sim_pause: toggle_pause_simulation(None)
     state.game_end = False
 
+    check_homebases()
+    check_walls()
+    _check_size()
+
     if not world:
         state.world = WorldManager(state.sim_size, state.sim_homebases, state.sim_walls, seed)
     else:
         state.world = world
-
-    
 
     if rng: state.world.rng.setstate(rng)
 
@@ -183,6 +185,12 @@ def go_to_main_menu(button: "Button"):
 
 def return_to_main_menu(button: "Button") -> None:
     state.current_area = MenuArea.MAIN_MENU
+
+    if (state.conflicts and state.last_played_game and (not state.special_buttons[20].disabled and not state.special_buttons[21].disabled)) or (not state.conflicts and state.last_played_game and (state.special_buttons[20].disabled and state.special_buttons[21].disabled)):
+        state.special_buttons[20].toggle()
+        state.special_buttons[21].toggle()
+
+    if (state.conflicts and not state.last_played_game and not state.special_buttons[19].disabled) or (not state.conflicts and not state.last_played_game and state.special_buttons[19].disabled): state.special_buttons[19].toggle()
 
 
 def go_to_options(button: "Button"):
@@ -445,7 +453,7 @@ def regenerate_world(button: "Button | None"):
 
 
 def increase_homebases(button: "Button"):
-    _team_color_length = len(list(TeamColor))
+    _team_color_length = len(state.allowed_colonies)
     state.sim_homebases = min(_team_color_length, state.sim_homebases + 1, state.sim_size**2 - state.sim_walls)
     if state.sim_homebases >= min(_team_color_length, state.sim_size**2 - state.sim_walls): button.toggle()
 
@@ -621,18 +629,32 @@ def reset_size(button: "Button"):
 
 def change_option_section(button: "Button"):
     match state.controls_section:
-        case "controls": state.special_buttons[23].clicked = False
-        case "teams": state.special_buttons[24].clicked = False
-        case "misc": state.special_buttons[25].clicked = False
-        case "debug": state.special_buttons[26].clicked = False
+        case "controls":
+            b = state.special_buttons[23]
+            b.clicked = False
+            b.toggle()
+
+        case "colonies": 
+            b = state.special_buttons[24]
+            b.clicked = False
+            b.toggle()
+        case "misc": 
+            b = state.special_buttons[25]
+            b.clicked = False
+            b.toggle()
+        case "debug": 
+            b = state.special_buttons[26]
+            b.clicked = False
+            b.toggle()
         case _: pass
 
     match button.id:
         case "23": state.controls_section = "controls"
-        case "24": state.controls_section = "teams"
+        case "24": state.controls_section = "colonies"
         case "25": state.controls_section = "misc"
         case "26": state.controls_section = "debug"
         case _: pass
+    button.toggle()
 
 
 def toggle_second_bindings(button: "Button"):
@@ -685,14 +707,16 @@ def change_binding_event(event: pygame.Event):
         return
 
     elif event.type == pygame.KEYDOWN:
-        conflicts = [key for key, val in state.bindings.items() if val == state.bindings[state.rebinding[0]]]
-        if conflicts:
-            if state.rebinding not in state.conflicts: state.conflicts.append(state.rebinding[0])
-
-            for key in conflicts:
-                if key not in state.conflicts: state.conflicts.append(key)
-
         state.bindings[state.rebinding[0]] = event.key
+
+        # get rid of conflict if there isn't any
+        state.conflicts.clear()
+        items = list(state.bindings.items())
+        for i in range(len(items)):
+            for j in range(i + 1, len(items)):
+                if items[i][1] == items[j][1]:
+                    if items[i][0] not in state.conflicts: state.conflicts.append(items[i][0])
+                    if items[j][0] not in state.conflicts: state.conflicts.append(items[j][0])
 
         state.rebinding[1].label = f"{pygame.key.name(state.bindings[state.rebinding[0]]).upper()}"
         state.rebinding[1].initialize()
@@ -707,3 +731,14 @@ def change_binding_event(event: pygame.Event):
 
         state.rebinding = None
         return
+    
+
+def toggle_color(button: "Button", color: TeamColor) -> None:
+    if color in state.allowed_colonies:
+        if len(state.allowed_colonies) < 3: 
+            button.clicked = False
+            return
+
+        state.allowed_colonies.remove(color)
+
+    else: state.allowed_colonies.append(color)

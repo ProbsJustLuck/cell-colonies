@@ -1,6 +1,5 @@
 import time
 
-from classes.ui.colors import TeamColor
 from util import assets
 start_time = time.time()
 
@@ -35,7 +34,7 @@ while state.running:
 
     match state.current_area:
         case MenuArea.MAIN_MENU:
-            render_start_screen()
+            render_start_screen() 
         case MenuArea.SIMULATION:
             render_game_screen(downtime)
 
@@ -106,7 +105,7 @@ while state.running:
                 if state.caret_timer >= 1000:
                     state.caret_timer = 0
 
-                _team_color_amount = len(list(TeamColor))
+                _team_color_amount = len(state.allowed_colonies)
                 _mouse_down = pygame.mouse.get_pressed()[0]
                 _mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
 

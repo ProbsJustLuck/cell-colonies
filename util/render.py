@@ -1,6 +1,7 @@
 from typing import Callable
 import pygame
 
+from classes.ui.colors import TeamColor
 from classes.ui.key_actions import KeyActions # type: ignore
 from classes.wall import Wall
 from constants import Constants
@@ -14,7 +15,7 @@ from classes.rotator import Rotator
 from util import assets
 from util.game_states import States as state
 from util.ui_helpers import create_text, add_outline_to_image, draw_text, fit_view
-from util.game_actions import create_world
+from util.game_actions import create_world, toggle_color
 from util import menu_assets
 
 STARTING_SIZE = 300
@@ -617,30 +618,98 @@ def render_options_screen() -> None:
                 state.special_buttons[i].draw(assets.screen, mouse_pos)
 
             if not state.second_binding_page:
-                # if KeyActions.PAN_ALIAS in state.conflicts:
-                #     pygame.draw.rect(assets.screen, "#8500005E", (rect.topleft[0] + 30, rect.topleft[1] + 100, 400, 30))
-                # else:
-                #     pygame.draw.rect(assets.screen, "#00000048", (rect.topleft[0] + 30, rect.topleft[1] + 100, 400, 30))
+                overlay = pygame.Surface((435, 30), pygame.SRCALPHA)
+                
+                # Pan Alias (grab)
+                if KeyActions.PAN_ALIAS in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 115))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Pan Alias (grab)", "#000000", 30, mode="center")
 
+                # Pan Up
+                if KeyActions.PAN_UP in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 155))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 170), "Pan Up (key)", "#000000", 30, mode="center")
+
+                # Pan Down
+                if KeyActions.PAN_DOWN in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 185))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Pan Down (key)", "#000000", 30, mode="center")
+
+                # Pan Left
+                if KeyActions.PAN_LEFT in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 215))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pan Left (key)", "#000000", 30, mode="center")
+
+                # Pan Right
+                if KeyActions.PAN_RIGHT in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 245))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 260), "Pan Right (key)", "#000000", 30, mode="center")
 
+                # Regenerate World
+                if KeyActions.REGENERATE_WORLD in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 285))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Regenerate World", "#000000", 30, mode="center")
 
                 for i in range(27, 33):
                     state.special_buttons[i].draw(assets.screen, mouse_pos)
 
             else:
+                overlay = pygame.Surface((475, 30), pygame.SRCALPHA)
+                
+                # Zoom In Alias
+                if KeyActions.ZOOM_IN_ALIAS in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 115))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Zoom In Alias", "#000000", 30, mode="center")
+
+                # Zoom Out Alias
+                if KeyActions.ZOOM_OUT_ALIAS in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 145))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 160), "Zoom Out Alias", "#000000", 30, mode="center")
 
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Advance/Skip Dialogue", "#000000", 30, mode="center")
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pause/Unpause Simulation", "#000000", 30, mode="center")
 
+                # Advance/Skip Dialogue
+                if KeyActions.ADVANCE_DIALOGUE in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 185))
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Advance/Skip Dialogue", "#000000", 30, mode="center")
+
+                # Pause/Unpause
+                if KeyActions.PAUSE_UNPAUSE in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 215))
+                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pause/Unpause Sim", "#000000", 30, mode="center")
+
+
+                # Step Forward
+                if KeyActions.STEP_FORWARD in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 255))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 270), "Step Forward", "#000000", 30, mode="center")
+
+                # Step Backward
+                if KeyActions.STEP_BACKWARD in state.conflicts: overlay.fill((255, 0, 0, 140))
+                else: overlay.fill((0, 0, 0, 72))
+
+                assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 285))
                 draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Step Backward", "#000000", 30, mode="center")
 
                 for i in range(35, 41):
@@ -651,6 +720,29 @@ def render_options_screen() -> None:
                 draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 355), "You cannot start a simulation until", "#AA0000", 25, mode="center")
                 draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 370), "the conflicts are resolved.", "#AA0000", 25, mode="center")
 
+        case "colonies":
+            if not state.toggle_colonies:
+                y = rect.top + 120
+                x = rect.topleft[0] + 120
+
+                for i, color in enumerate(TeamColor):
+                    button = Button.Button("", (x, y), style=Button.ButtonStyle(width=32, height=32, base=f"#{color.value.primary[0]:02x}{color.value.primary[1]:02x}{color.value.primary[2]:02x}", hover=f"#{color.value.primary[0]:02x}{color.value.primary[1]:02x}{color.value.primary[2]:02x}", selected=f"#{color.value.primary[0]:02x}{color.value.primary[1]:02x}{color.value.primary[2]:02x}", selected_opacity=100), type=Button.ButtonType.TOGGLE, on_enter=lambda button, color=color: toggle_color(button, color), on_leave=lambda button, color=color: toggle_color(button, color))
+                    button.initialize()
+
+                    state.toggle_colonies.append(button)
+                    x += 80
+                    if x > 820:
+                        x = rect.topleft[0] + 120
+                        y += 100
+
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
+
+            for button in state.toggle_colonies:
+                button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
+
+        
+            
 
         case _: pass
 

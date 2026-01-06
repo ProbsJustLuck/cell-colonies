@@ -117,10 +117,10 @@ special_buttons: dict[int, Button] = {
 
     # Options buttons are below
     22: Button("<-", (305, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=70, scale=1.5, opacity=255), on_enter=return_to_main_menu),
-    23: Button("CONTROLS", (255, 250), "Change the control bindings", type=ButtonType.TOGGLE, clicked=True, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="23"),
-    24: Button("COLONIES", (255, 305), "Change which colony colors appear in game!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="24"),
-    25: Button("MISC", (297, 360), "Change miscellaneous settings!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=85, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="25"),
-    26: Button("DEBUG", (285, 415), "Used for developmental purposes.", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757"), on_enter=change_option_section, id="26"),
+    23: Button("CONTROLS", (255, 250), "Change the control bindings", type=ButtonType.TOGGLE, clicked=True, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757", disabled_opacity=255, disabled="#515151"), on_enter=change_option_section, id="23", disabled=True),
+    24: Button("COLONIES", (255, 305), "Change which colony colors appear in game!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=170, scale=1.5, opacity=255, selected="#575757", disabled_opacity=255, disabled="#515151"), on_enter=change_option_section, id="24"),
+    25: Button("MISC", (297, 360), "Change miscellaneous settings!", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=85, scale=1.5, opacity=255, selected="#575757", disabled_opacity=255, disabled="#515151"), on_enter=change_option_section, id="25"),
+    26: Button("DEBUG", (285, 415), "Used for developmental purposes.", type=ButtonType.TOGGLE, style=ButtonStyle(height=45, width=110, scale=1.5, opacity=255, selected="#575757", disabled_opacity=255, disabled="#515151"), on_enter=change_option_section, id="26"),
 
     27: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_ALIAS]).upper()}", (750, 280), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_ALIAS, on_right_click=reset_binding),
     28: Button(f"{pygame.key.name(state.bindings[KeyActions.PAN_UP]).upper()}", (750, 320), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAN_UP, on_right_click=reset_binding),

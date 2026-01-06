@@ -12,7 +12,6 @@ from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
 from classes.cell import Cell
-from classes.ui.colors import TeamColor
 
 from util.game_states import States
 import util.cell_registry as cell_registry
@@ -46,7 +45,7 @@ class WorldManager:
             for j in range(size)
         }
 
-        colors = list(TeamColor)
+        colors = States.allowed_colonies.copy()
         self.rng.shuffle(colors)
         colors = colors[:homebases] # limit
         

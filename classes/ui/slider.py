@@ -50,6 +50,7 @@ class Slider:
     @property
     def progress(self) -> float:
         span = self.__max_value - self.__min_value
+        
         if span == 0: return 0.0
         else: return(self.__value - self.__min_value) / span
 
