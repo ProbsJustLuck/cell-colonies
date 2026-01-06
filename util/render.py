@@ -741,7 +741,11 @@ def render_options_screen() -> None:
             for button in state.toggle_colonies:
                 button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
 
-        
+        case "misc":
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
+
+            
             
 
         case _: pass
