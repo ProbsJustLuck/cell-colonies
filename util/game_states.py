@@ -84,6 +84,7 @@ class States:
 
     ## Special buttons
     special_buttons: dict[int, "Button"] = {}
+    special_sliders: dict[int, "Slider"] = {}
 
     # tps control
     target_tps: float = 2

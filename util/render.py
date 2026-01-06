@@ -745,7 +745,10 @@ def render_options_screen() -> None:
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
 
-            
+            draw_text(Position(390, rect.top + 80), "Max History Length", "#000000", 35)
+            draw_text(Position(665, rect.top + 80), "Max Ticks per Frame", "#000000", 35)
+            for i in range(2):
+                state.special_sliders[i].draw(assets.screen)
             
 
         case _: pass

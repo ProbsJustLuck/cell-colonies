@@ -165,10 +165,20 @@ sliders: dict[MenuArea, list[Slider]] = {
 }
 state.tps_slider = sliders[MenuArea.SIMULATION][0]
 
-special_buttons: dict[int, Slider] = {
+special_sliders: dict[int, Slider] = {
     0: Slider(
-        rect=pygame.Rect(660, 420, 12, 200),
-        orientation="v",
+        rect=pygame.Rect(380, 240, 220, 50),
+        orientation="h",
+        min_value=20.0,
+        max_value=0.1,
+        value=2.0,
+        snap=False,
+        style=SliderStyle(),
+        on_change=set_tps
+    ),
+    1: Slider(
+        rect=pygame.Rect(660, 240, 220, 50),
+        orientation="h",
         min_value=20.0,
         max_value=0.1,
         value=2.0,
@@ -177,3 +187,4 @@ special_buttons: dict[int, Slider] = {
         on_change=set_tps
     )
 }
+state.special_sliders = special_sliders
