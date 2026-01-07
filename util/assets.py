@@ -1,9 +1,20 @@
 import pygame
 
+from util.game_states import States as state
 from constants import Constants
 
+RESOLUTIONS: dict[int, tuple[int, int]] = {
+    0: (720, 420),
+    1: (858, 500),
+    2: (1029, 600),
+    3: (1200, 700),
+    4: (1320, 770),
+    5: (1714, 1000),
+    6: (2057, 1200)
+}
+
 screen = pygame.Surface((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
-display_screen = pygame.display.set_mode((Constants.DISPLAY_WIDTH, Constants.DISPLAY_HEIGHT), display=0)
+display_screen = pygame.display.set_mode(RESOLUTIONS[3], display=1)
 
 main_menu_background = pygame.transform.smoothscale(
     pygame.image.load("assets/menu/main_menu.jpg").convert(),
@@ -83,7 +94,6 @@ CLEAR_SPAWN_TEXT = pygame.USEREVENT + 4
 CLEAR_WALL_TEXT = pygame.USEREVENT + 5
 CLEAR_SIZE_TEXT = pygame.USEREVENT + 6
 
-
 ## Ross
 ROSS_CALL = pygame.USEREVENT + 7
 ROSS_PAN = pygame.USEREVENT + 8
@@ -95,9 +105,17 @@ ROSS_PAUSE_REMINDER = pygame.USEREVENT + 11
 ROSS_REWIND = pygame.USEREVENT + 12
 ROSS_REWIND_REMINDER = pygame.USEREVENT + 13
 
+## Misc
+REVERT_VIDEO_CHANGES = pygame.USEREVENT + 14
+
 # fix mouse scaling for different resolution
-MOUSE_SCALE_X = Constants.SCREEN_WIDTH / Constants.DISPLAY_WIDTH
-MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / Constants.DISPLAY_HEIGHT
+MOUSE_SCALE_X = Constants.SCREEN_WIDTH / RESOLUTIONS[state.current_res][0]
+MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / RESOLUTIONS[state.current_res][1]
 
 
-def get_scale_mouse_pos(pos: tuple[int, int]) -> tuple[int, int]: return (int(pos[0] * MOUSE_SCALE_X), int(pos[1] * MOUSE_SCALE_Y))
+def get_scale_mouse_pos(pos: tuple[int, int]) -> tuple[int, int]:
+    info = pygame.display.Info()
+    MOUSE_SCALE_X = Constants.SCREEN_WIDTH / info.current_w
+    MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / info.current_h
+    
+    return (int(pos[0] * MOUSE_SCALE_X), int(pos[1] * MOUSE_SCALE_Y))

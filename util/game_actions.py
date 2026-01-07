@@ -3,6 +3,7 @@ import copy
 import math
 from typing import TYPE_CHECKING, Any
 import pygame
+import os
 import random
 
 from classes.ui.colors import TeamColor
@@ -742,3 +743,126 @@ def toggle_color(button: "Button", color: TeamColor) -> None:
         state.allowed_colonies.remove(color)
 
     else: state.allowed_colonies.append(color)
+
+
+def _check_res() -> bool:
+    if state.option_res == state.current_res and state.option_fullscreen == state.current_fullscreen:
+        return True
+    return False
+
+
+def create_video(fullscreen: bool, resolution: int) -> None:
+    os.environ['SDL_VIDEO_CENTERED'] = '1'
+
+    if not fullscreen: assets.display_screen = pygame.display.set_mode(assets.RESOLUTIONS[resolution], display=1)
+    else: assets.display_screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)    
+
+
+def increase_resolution(button: "Button") -> None:
+    if state.option_res >= len(assets.RESOLUTIONS) - 1: return
+    state.option_res = min(state.option_res + 1, len(assets.RESOLUTIONS) - 1)
+
+    if state.option_res == state.current_res: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}"
+    else: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}*"
+    button.initialize()
+
+    btn = state.special_buttons[43]
+    if (_check_res() and not btn.disabled) or (not _check_res() and btn.disabled): btn.toggle()
+
+
+def decrease_resolution(button: "Button") -> None:
+    if state.option_res == 0: return
+    state.option_res = max(state.option_res - 1, 0)
+
+    if state.option_res == state.current_res: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}"
+    else: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}*"
+    button.initialize()
+
+    btn = state.special_buttons[43]
+    if (_check_res() and not btn.disabled) or (not _check_res() and btn.disabled): btn.toggle()
+
+
+def toggle_fullscreen(button: "Button") -> None:
+    state.option_fullscreen = not state.option_fullscreen
+
+    if state.option_fullscreen == state.current_fullscreen: button.label = f"{'On' if state.option_fullscreen else 'Off'}"
+    else: button.label = f"{'On' if state.option_fullscreen else 'Off'}*"
+    button.initialize()
+
+    btn = state.special_buttons[41]
+    if (state.option_fullscreen and not btn.disabled) or (not state.option_fullscreen and btn.disabled): btn.toggle()
+
+    btn = state.special_buttons[43]
+    if (_check_res() and not btn.disabled) or (not _check_res() and btn.disabled): btn.toggle()
+
+
+def apply_video_changes(button: "Button"):
+    create_video(state.option_fullscreen, state.option_res)
+
+    state.current_fullscreen = state.option_fullscreen
+    state.current_res = state.option_res
+
+    state.reverting = True
+    state.skip_button_hover = True
+    state.reverting_time = 10000
+
+    pygame.time.set_timer(assets.REVERT_VIDEO_CHANGES, 0)
+    pygame.time.set_timer(assets.REVERT_VIDEO_CHANGES, 10000, loops=1)
+
+
+def revert_video_changes() -> None:
+    create_video(state.revert_fullscreen, state.revert_res)
+
+    state.reverting = False
+    state.reverting_time = 0
+    state.skip_button_hover = False
+    pygame.time.set_timer(assets.REVERT_VIDEO_CHANGES, 0)
+
+    state.current_res = state.revert_res
+    state.option_res = state.revert_res
+
+    button = state.special_buttons[41]
+    if state.option_res == state.current_res: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}"
+    else: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}*"
+    button.initialize()
+
+    state.current_fullscreen = state.revert_fullscreen
+    state.option_fullscreen = state.revert_fullscreen
+
+    button = state.special_buttons[42]
+    if state.option_fullscreen == state.current_fullscreen: button.label = f"{'On' if state.option_fullscreen else 'Off'}"
+    else: button.label = f"{'On' if state.option_fullscreen else 'Off'}*"
+    button.initialize()
+
+    btn = state.special_buttons[41]
+    if (state.option_fullscreen and not btn.disabled) or (not state.option_fullscreen and btn.disabled): btn.toggle()
+
+    button = state.special_buttons[43]
+    if not button.disabled: button.toggle()
+
+
+def keep_video_changes() -> None:
+    state.reverting = False
+    state.reverting_time = 0
+    state.skip_button_hover = False
+    pygame.time.set_timer(assets.REVERT_VIDEO_CHANGES, 0)
+
+    state.revert_res = state.current_res
+
+    button = state.special_buttons[41]
+    if state.option_res == state.current_res: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}"
+    else: button.label = f"{assets.RESOLUTIONS[state.option_res][0]}x{assets.RESOLUTIONS[state.option_res][1]}*"
+    button.initialize()
+
+    state.revert_fullscreen = state.current_fullscreen
+
+    button = state.special_buttons[42]
+    if state.option_fullscreen == state.current_fullscreen: button.label = f"{'On' if state.option_fullscreen else 'Off'}"
+    else: button.label = f"{'On' if state.option_fullscreen else 'Off'}*"
+    button.initialize()
+
+    btn = state.special_buttons[41]
+    if (state.option_fullscreen and not btn.disabled) or (not state.option_fullscreen and btn.disabled): btn.toggle()
+
+    button = state.special_buttons[43]
+    if not button.disabled: button.toggle()

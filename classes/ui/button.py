@@ -4,11 +4,13 @@ from typing import Callable
 import pygame
 
 from classes.ui.key_actions import KeyActions
+from util.game_states import States as state
 from util.ui_helpers import create_text, add_bg_to_text_dimensions, add_background_to_text, add_outline_to_image
 from util import assets
 
 
 pending_tooltip: Callable[[], None] | None = None
+skip_hover: bool = False
 
 
 class ButtonType(Enum):
@@ -42,10 +44,13 @@ class ButtonStyle:
     tooltip_scale: float = 0.8
 
 
-    def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False, selected: bool = False):
+    def make_surface(self, label: str, color: tuple[int, int, int] | str, disabled: bool = False, selected: bool = False, double_text: bool = False):
         font_size = max(1, int(self.font_size * self.scale))
         padding = max(1, int(self.padding * self.scale))
         text = create_text(label, self.text, font_size)
+        if double_text:
+            text1 = create_text(label, self.text, font_size)
+            text.blit(text1, (1, 0))
 
         # background sizing: override width/height if provided
         bg_width = self.width or text.get_width() + 2 * padding
@@ -84,6 +89,9 @@ class Button:
 
     clicked: bool = False
     disabled: bool = False
+    selected_override: bool = False
+
+    outline_text: bool = False
 
     id: str | KeyActions | None = None
     on_enter: Callable[["Button"], None] | None = None
@@ -96,10 +104,10 @@ class Button:
 
     def initialize(self):  
         self._surfaces = {
-            "base": self.style.make_surface(self.label, self.style.base),
-            "hover": self.style.make_surface(self.label, self.style.hover),
-            "selected": self.style.make_surface(self.label, self.style.selected, selected=True),
-            "disabled": self.style.make_surface(self.label, self.style.disabled, True)
+            "base": self.style.make_surface(self.label, self.style.base, double_text=self.outline_text),
+            "hover": self.style.make_surface(self.label, self.style.hover, double_text=self.outline_text),
+            "selected": self.style.make_surface(self.label, self.style.selected, selected=True, double_text=self.outline_text),
+            "disabled": self.style.make_surface(self.label, self.style.disabled, True, double_text=self.outline_text)
         }
         self.rect = self._surfaces["base"].get_rect(center=self.center)
 
@@ -127,9 +135,9 @@ class Button:
     def draw(self, screen: pygame.Surface, mouse_pos: tuple[int, int]):
         if self.disabled: button_state = "disabled"
 
-        elif self.clicked: button_state = "selected"
+        elif self.clicked and not self.selected_override: button_state = "selected"
 
-        elif self.rect and self.rect.collidepoint(mouse_pos): button_state = "hover"
+        elif not state.skip_button_hover and self.rect and self.rect.collidepoint(mouse_pos): button_state = "hover"
 
         else: button_state = "base"
         surf = self._surfaces[button_state]
@@ -146,7 +154,7 @@ class Button:
         self.rect = surf.get_rect(center=self.center)
 
         screen.blit(surf, self.rect)
-        if self.tooltip and (button_state == "hover" or (button_state == "selected" and self.rect and self.rect.collidepoint(mouse_pos))) and self.tooltip:
+        if self.tooltip and (button_state == "hover" or (button_state == "selected" and self.rect and self.rect.collidepoint(mouse_pos))):
             global pending_tooltip
             pending_tooltip = lambda tooltip=self.tooltip, rect=self.rect.copy(), pos=mouse_pos, style=self.style: render_tooltip(tooltip, rect, pos, style)
 

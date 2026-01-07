@@ -5,9 +5,10 @@ from classes.ui.key_actions import KeyActions
 from classes.ui.menu_area import MenuArea
 from classes.ui.typewriter import Message
 
+from constants import Constants
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, check_homebases, check_walls, toggle_pause_simulation, change_binding_event
+from util.game_actions import quit, check_homebases, check_walls, toggle_pause_simulation, change_binding_event, revert_video_changes
 from util import menu_assets
 
 
@@ -16,12 +17,12 @@ def event_handler(event: pygame.Event):
 
     if hasattr(event, "pos"):
         data = event.dict.copy()
+        info = pygame.display.Info()
 
         data["pos"] = assets.get_scale_mouse_pos(event.pos)
-        if "rel" in data: data["rel"] = int(data["rel"][0] * assets.MOUSE_SCALE_X), int(data["rel"][1] * assets.MOUSE_SCALE_Y)
+        if "rel" in data: data["rel"] = int(data["rel"][0] * (Constants.SCREEN_WIDTH / (Constants.SCREEN_WIDTH / info.current_w))), int(data["rel"][1] * (Constants.SCREEN_HEIGHT / (Constants.SCREEN_HEIGHT / info.current_h)))
 
         event = pygame.event.Event(event.type, data)
-
 
     # Events
     if event.type == assets.CLEAR_TPS_TEXT and state.tps_button: 
@@ -108,6 +109,23 @@ def event_handler(event: pygame.Event):
             state.typewriter.queue(Message(["If you've forgotten, you can rewind by", "using (LMB) on either rewind button!", "", "You have to have some ticks to rewind to", "in order to rewind!"], 9))
             state.typewriter.queue(Message(["If you can't rewind, try unpausing for", "a few ticks, then retrying."], 9))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "buttons to do those!"], 11))
+
+    elif event.type == assets.REVERT_VIDEO_CHANGES:
+        revert_video_changes()
+        return
+
+
+    if state.reverting:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            button1 = state.special_buttons[44]
+            button2 = state.special_buttons[45]
+            
+            if button1.rect.collidepoint(event.pos):
+                button1.click()
+            elif button2.rect.collidepoint(event.pos):
+                button2.click()
+        
+        return
 
 
     # Keys/clicks
@@ -243,11 +261,12 @@ def event_handler(event: pygame.Event):
                 if state.special_buttons[i].rect.collidepoint(event.pos):
                     state.special_buttons[i].click()
 
-            for i in range(33, 35): # Second bindings page
-                if state.special_buttons[i].rect.collidepoint(event.pos):
-                    state.special_buttons[i].click()
 
             if state.controls_section == "controls":
+                for i in range(33, 35): # Second bindings page
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].click()
+
                 if not state.second_binding_page: # Controls 1
                     for i in range(27, 33):
                         if state.special_buttons[i].rect.collidepoint(event.pos):
@@ -262,6 +281,11 @@ def event_handler(event: pygame.Event):
                     if button.rect.collidepoint(event.pos):
                         button.click()
                         return
+
+            elif state.controls_section == "misc":
+                for i in range(41, 44):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].click()
 
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -316,15 +340,20 @@ def event_handler(event: pygame.Event):
     
     elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 3: # rc
         if state.current_area is MenuArea.OPTIONS:
-            if not state.second_binding_page:
-                for i in range(27, 33):
+            if state.controls_section == "controls":
+                if not state.second_binding_page:
+                    for i in range(27, 33):
+                        if state.special_buttons[i].rect.collidepoint(event.pos):
+                            state.special_buttons[i].right_click()
+                else:
+                    for i in range(35, 41):
+                        if state.special_buttons[i].rect.collidepoint(event.pos):
+                            state.special_buttons[i].right_click()
+            
+            elif state.controls_section == "misc":
+                for i in range(41, 44):
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].right_click()
-            else:
-                for i in range(35, 41):
-                    if state.special_buttons[i].rect.collidepoint(event.pos):
-                        state.special_buttons[i].right_click()
-
 
     elif event.type == pygame.MOUSEMOTION :
         if state.current_area is MenuArea.SIMULATION and state.world:

@@ -745,10 +745,44 @@ def render_options_screen() -> None:
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
 
-            draw_text(Position(390, rect.top + 80), "Max History Length", "#000000", 35)
-            draw_text(Position(665, rect.top + 80), "Max Ticks per Frame", "#000000", 35)
+            draw_text(Position(390, rect.top + 75), "Max History Length", "#000000", 35)
+            draw_text(Position(665, rect.top + 75), "Max Ticks per Frame", "#000000", 35)
+            
             for i in range(2):
                 state.special_sliders[i].draw(assets.screen)
+
+            draw_text(Position(435, rect.top + 150), "Resolution", "#000000", 35)
+            draw_text(Position(720, rect.top + 150), "Fullscreen", "#000000", 35)
+            for i in range(41, 44):
+                state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+            draw_text(Position(455, rect.top + 260), "Sound", "#000000", 35)
+            draw_text(Position(745, rect.top + 260), "Music", "#000000", 35)
+            for i in range(2, 4):
+                state.special_sliders[i].draw(assets.screen)
+
+            if state.reverting:
+                Button.pending_tooltip = None
+
+                WIDTH = 400
+                HEIGHT = 250
+                rect = pygame.rect.Rect(assets.screen.size[0] // 2 - WIDTH // 2, assets.screen.size[1] // 2 - HEIGHT // 2, WIDTH, HEIGHT)
+                pygame.draw.rect(assets.screen, "#888888", rect)
+                pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=4, border_radius=2)
+
+                old = state.skip_button_hover
+                state.skip_button_hover = False
+                for i in range(44, 46):
+                    state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+                state.skip_button_hover = old
+
+                text = add_outline_to_image(create_text("Keep video changes?", "#FF0000", 40), 2, "#000000")
+                assets.screen.blit(text, text.get_rect(center = (assets.screen.size[0] // 2, assets.screen.size[1] // 2 - 60)))
+
+                num = round(state.reverting_time / 1000, 1)
+                text = add_outline_to_image(create_text(f"Reverting in {num:.1f}s...", "#FF0000", 30), 2, "#000000")
+                assets.screen.blit(text, text.get_rect(center = (assets.screen.size[0] // 2, assets.screen.size[1] // 2 - 30)))
             
 
         case _: pass

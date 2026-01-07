@@ -7,8 +7,9 @@ from classes.ui.key_actions import KeyActions
 from classes.ui.slider import Slider, SliderStyle
 from classes.ui.menu_area import MenuArea
 
+from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -138,6 +139,14 @@ special_buttons: dict[int, Button] = {
     38: Button(f"{pygame.key.name(state.bindings[KeyActions.PAUSE_UNPAUSE]).upper()}", (750, 380), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.PAUSE_UNPAUSE, on_right_click=reset_binding),
     39: Button(f"{pygame.key.name(state.bindings[KeyActions.STEP_FORWARD]).upper()}", (750, 420), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.STEP_FORWARD, on_right_click=reset_binding),
     40: Button(f"{pygame.key.name(state.bindings[KeyActions.STEP_BACKWARD]).upper()}", (750, 450), "Left click to set, right click to reset", type=ButtonType.TOGGLE, style=ButtonStyle(height=20, width=140, scale=0.7, base="#c6c6c6", border=1), on_enter=change_binding, id=KeyActions.STEP_BACKWARD, on_right_click=reset_binding),
+
+    # Misc button
+    41: Button(f"{assets.RESOLUTIONS[state.current_res][0]}x{assets.RESOLUTIONS[state.current_res][1]}", (490, 350), "Left click to increase, right click to decrease!", style=ButtonStyle(height=40, width=220, scale=1.2, base="#c6c6c6", border=1), on_enter=increase_resolution, on_right_click=decrease_resolution),
+    42: Button(f"{'On' if state.option_fullscreen else 'Off'}", (770, 350), "Left click to toggle!", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=1.2, base="#c6c6c6", border=1, selected="#c6c6c6"), on_enter=toggle_fullscreen, on_leave=toggle_fullscreen, selected_override=True),
+    43: Button("APPLY", (850, 520), "Left click to apply video changes!!", style=ButtonStyle(height=35, width=90, scale=0.8, base="#c6c6c6", border=1), on_enter=apply_video_changes, disabled=True),
+
+    44: Button("KEEP", (assets.screen.size[0] // 2 - 80, assets.screen.size[1] // 2 + 40), "", style=ButtonStyle(height=50, width=120, scale=1.4, base="#7eb483", hover="#4d614f", border=1, opacity=210), on_enter=lambda _: keep_video_changes(), outline_text=True),
+    45: Button("REVERT", (assets.screen.size[0] // 2 + 80, assets.screen.size[1] // 2 + 40), "", style=ButtonStyle(height=50, width=120, scale=1.4, base="#b47e7e", hover="#614d4d", border=1, opacity=210), on_enter=lambda _: revert_video_changes(), outline_text=True),
 }
 for button in special_buttons.values():
     button.initialize()
@@ -176,8 +185,31 @@ special_sliders: dict[int, Slider] = {
         style=SliderStyle(),
         on_change=set_tps
     ),
+
     1: Slider(
         rect=pygame.Rect(660, 240, 220, 50),
+        orientation="h",
+        min_value=20.0,
+        max_value=0.1,
+        value=2.0,
+        snap=False,
+        style=SliderStyle(),
+        on_change=set_tps
+    ),
+
+    2: Slider(
+        rect=pygame.Rect(380, 420, 220, 50),
+        orientation="h",
+        min_value=20.0,
+        max_value=0.1,
+        value=2.0,
+        snap=False,
+        style=SliderStyle(),
+        on_change=set_tps
+    ),
+
+    3: Slider(
+        rect=pygame.Rect(660, 420, 220, 50),
         orientation="h",
         min_value=20.0,
         max_value=0.1,

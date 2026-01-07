@@ -155,5 +155,19 @@ class States:
     allowed_colonies: list[TeamColor] = list(TeamColor)
 
 
+    # Resolutions
+    reverting: bool = False
+    reverting_time: int = 0
+    skip_button_hover: bool = False
+
+    option_fullscreen: bool = False
+    current_fullscreen: bool = False
+    revert_fullscreen: bool = False
+
+    option_res: int = 3
+    current_res: int = 3
+    revert_res: int = 3
+
+
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

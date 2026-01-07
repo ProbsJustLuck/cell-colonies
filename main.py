@@ -307,6 +307,8 @@ while state.running:
                     pygame.time.set_timer(assets.CLEAR_SIZE_TEXT, 50, loops=1)
 
         case MenuArea.OPTIONS:
+            if state.reverting and state.reverting_time >= 0:
+                state.reverting_time = max(state.reverting_time - downtime, 0)
             render_options_screen()
 
         case _: pass
