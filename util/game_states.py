@@ -47,6 +47,8 @@ class States:
     world: "WorldManager | None" = None
     max_catchup: int = 5
     max_history: int = 30
+    sound_fx_volume: float = 0.5
+    music_volume: float = 0.5
 
     selected_cell: Entity | None = None
     selected_id: int | None = None
@@ -113,6 +115,7 @@ class States:
     typewriter: "Typewriter | None" = None
     finished_timer: int = 0
     seen_bob: bool = False
+    skip_tutorial: bool = False
 
     waiting_for_pan: bool = False
     panned: bool = False

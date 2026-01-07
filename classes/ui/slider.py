@@ -1,14 +1,16 @@
+from dataclasses import dataclass
 import pygame
 from typing import Callable, Literal, Optional
 
 
+@dataclass
 class SliderStyle:
-    def __init__(self, track_color: tuple[int, int, int] = (60, 60, 60), fill_color: tuple[int, int, int] = (120, 120, 120), head_color: tuple[int, int, int] = (200, 200, 200), head_radius: int = 6, tick_color: tuple[int, int, int] = (100, 100, 100), tick_size: int = 6):
-        self.track_color = track_color
-        self.fill_color = fill_color
-        self.head_color = head_color
-        self.head_radius = head_radius
-        self.tick_size = tick_size
+    track_color: tuple[int, int, int] = (60, 60, 60)
+    fill_color: tuple[int, int, int] = (120, 120, 120)
+    head_color: tuple[int, int, int] = (200, 200, 200)
+    border_thickness: int = 4
+    head_radius: int = 6
+    tick_size: int = 6
 
 
 class Slider:
@@ -109,10 +111,11 @@ class Slider:
 
         # head
         head_rect = pygame.Rect(0, 0, self.__style.head_radius * 2, self.__style.head_radius * 2)
-        border_rect = pygame.Rect(0, 0, self.__style.head_radius * 2 + 6, self.__style.head_radius * 2 + 6)
+        border_rect = head_rect.inflate(self.__style.border_thickness, self.__style.border_thickness)
+
         if self.__orientation == "h":
             head_rect.center = (int(self.__rect.left + self.progress * (self.__rect.width - 1)), int(self.__rect.centery))
-            border_rect.center = (int(self.__rect.left + self.progress * (self.__rect.width - 1)), int(self.__rect.centery))
+            border_rect.center = (int(self.__rect.left  + self.progress * (self.__rect.width - 1)), int(self.__rect.centery))
         else:
             head_rect.center = (int(self.__rect.centerx), int(self.__rect.top + self.progress * (self.__rect.height - 1)))
             border_rect.center = (int(self.__rect.centerx), int(self.__rect.top + self.progress * (self.__rect.height - 1)))

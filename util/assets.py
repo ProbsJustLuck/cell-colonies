@@ -14,7 +14,7 @@ RESOLUTIONS: dict[int, tuple[int, int]] = {
 }
 
 screen = pygame.Surface((Constants.SCREEN_WIDTH, Constants.SCREEN_HEIGHT))
-display_screen = pygame.display.set_mode(RESOLUTIONS[3], display=1)
+display_screen = pygame.display.set_mode(RESOLUTIONS[3], display=Constants.DISPLAY_MONITOR)
 
 main_menu_background = pygame.transform.smoothscale(
     pygame.image.load("assets/menu/main_menu.jpg").convert(),

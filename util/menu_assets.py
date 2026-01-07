@@ -9,7 +9,7 @@ from classes.ui.menu_area import MenuArea
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -147,6 +147,8 @@ special_buttons: dict[int, Button] = {
 
     44: Button("KEEP", (assets.screen.size[0] // 2 - 80, assets.screen.size[1] // 2 + 40), "", style=ButtonStyle(height=50, width=120, scale=1.4, base="#7eb483", hover="#4d614f", border=1, opacity=210), on_enter=lambda _: keep_video_changes(), outline_text=True),
     45: Button("REVERT", (assets.screen.size[0] // 2 + 80, assets.screen.size[1] // 2 + 40), "", style=ButtonStyle(height=50, width=120, scale=1.4, base="#b47e7e", hover="#614d4d", border=1, opacity=210), on_enter=lambda _: revert_video_changes(), outline_text=True),
+    
+    46: Button("SKIP TUTORIAL", (490, 500), "Played the game already? Want to jump into the action? Skip the tutorial today!", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=1, font_size=50, tooltip_scale=0.4, padding=20), on_enter=toggle_skip, on_leave=toggle_skip),
 }
 for button in special_buttons.values():
     button.initialize()
@@ -163,7 +165,7 @@ sliders: dict[MenuArea, list[Slider]] = {
         Slider(
             rect=pygame.Rect(660, 420, 12, 200),
             orientation="v",
-            min_value=20.0,
+            min_value=40.0,
             max_value=0.1,
             value=2.0,
             snap=False,
@@ -175,48 +177,49 @@ sliders: dict[MenuArea, list[Slider]] = {
 state.tps_slider = sliders[MenuArea.SIMULATION][0]
 
 special_sliders: dict[int, Slider] = {
-    0: Slider(
-        rect=pygame.Rect(380, 240, 220, 50),
+    # Misc options
+    0: Slider( # Max history
+        rect=pygame.Rect(380, 260, 220, 15),
         orientation="h",
-        min_value=20.0,
-        max_value=0.1,
-        value=2.0,
+        min_value=1,
+        max_value=100,
+        value=30.0,
         snap=False,
-        style=SliderStyle(),
-        on_change=set_tps
+        style=SliderStyle(head_radius=5),
+        on_change=set_max_history,
     ),
 
-    1: Slider(
-        rect=pygame.Rect(660, 240, 220, 50),
+    1: Slider( # Max ticks per frame
+        rect=pygame.Rect(660, 260, 220, 15),
         orientation="h",
-        min_value=20.0,
-        max_value=0.1,
-        value=2.0,
+        min_value=1,
+        max_value=70,
+        value=5.0,
         snap=False,
-        style=SliderStyle(),
-        on_change=set_tps
+        style=SliderStyle(head_radius=5),
+        on_change=set_max_catchup
     ),
 
-    2: Slider(
-        rect=pygame.Rect(380, 420, 220, 50),
+    2: Slider( # Sound FX
+        rect=pygame.Rect(380, 420, 220, 15),
         orientation="h",
-        min_value=20.0,
-        max_value=0.1,
-        value=2.0,
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
         snap=False,
-        style=SliderStyle(),
-        on_change=set_tps
+        style=SliderStyle(head_radius=5),
+        on_change=set_sound_fx
     ),
 
-    3: Slider(
-        rect=pygame.Rect(660, 420, 220, 50),
+    3: Slider( # Music
+        rect=pygame.Rect(660, 420, 220, 15),
         orientation="h",
-        min_value=20.0,
-        max_value=0.1,
-        value=2.0,
+        min_value=0.0,
+        max_value=1.0,
+        value=0.5,
         snap=False,
-        style=SliderStyle(),
-        on_change=set_tps
+        style=SliderStyle(head_radius=5),
+        on_change=set_music
     )
 }
 state.special_sliders = special_sliders

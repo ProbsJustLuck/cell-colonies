@@ -1,5 +1,6 @@
 import time
 
+from classes.ui.key_actions import KeyActions
 from util import assets
 start_time = time.time()
 
@@ -65,8 +66,8 @@ while state.running:
 
             if pygame.mouse.get_pressed()[0] and state.tps_up and state.tps_up.rect.collidepoint(assets.get_scale_mouse_pos(pygame.mouse.get_pos())) and state.tps_slider and state.tps_button: # tps up
                 state.tps_change += 1
-                if state.tps_change > 40 and state.target_tps < 20.0: 
-                    state.target_tps = round(min(20.0, state.target_tps + 0.2), 1)
+                if state.tps_change > 40 and state.target_tps < 40.0: 
+                    state.target_tps = round(min(40.0, state.target_tps + 0.2), 1)
                     state.tps_slider.value = state.target_tps
 
                     if state.tps_down and state.tps_down.disabled: state.tps_down.toggle()
@@ -76,7 +77,7 @@ while state.running:
                     pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 0)
                     pygame.time.set_timer(assets.CLEAR_TPS_TEXT, 1000, loops=1)
 
-                    if state.target_tps >= 20.0 and not state.tps_up.disabled: state.tps_up.toggle()
+                    if state.target_tps >= 40.0 and not state.tps_up.disabled: state.tps_up.toggle()
 
 
             if pygame.mouse.get_pressed()[0] and state.tps_down and state.tps_down.rect.collidepoint(assets.get_scale_mouse_pos(pygame.mouse.get_pos())) and state.tps_slider and state.tps_button: # tps down
@@ -94,6 +95,29 @@ while state.running:
                     
                     if state.target_tps <= 0.1 and not state.tps_down.disabled: state.tps_down.toggle()
 
+            elif state.current_area is MenuArea.SIMULATION and state.world and not state.changing_seed and not state.show_tps:
+                offset = pygame.Vector2(0, 0)
+
+                if pressed_keys[state.bindings[KeyActions.PAN_UP]]: offset.y += 1
+
+                if pressed_keys[state.bindings[KeyActions.PAN_DOWN]]: offset.y -= 1
+
+                if pressed_keys[state.bindings[KeyActions.PAN_RIGHT]]: offset.x -= 1
+
+                if pressed_keys[state.bindings[KeyActions.PAN_LEFT]]: offset.x += 1
+
+                if offset.length_squared() != 0: offset = offset.normalize() * 5 * state.zoom
+
+                state.offset += offset
+
+                limit = state.SIM_RECT.width * state.zoom + (3 * state.SIM_RECT.width) / 7
+
+                # wrap
+                if state.offset.x > limit: state.offset.x -= 2 * limit
+                if state.offset.x < -limit: state.offset.x += 2 * limit
+
+                if state.offset.y > limit: state.offset.y -= 2 * limit
+                if state.offset.y < -limit: state.offset.y += 2 * limit
 
             if state.changing_seed:
                 if pygame.key.get_pressed()[pygame.K_BACKSPACE] and state.typing_box: # backspace

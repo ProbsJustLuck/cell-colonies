@@ -8,7 +8,7 @@ from classes.ui.typewriter import Message
 from constants import Constants
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, check_homebases, check_walls, toggle_pause_simulation, change_binding_event, revert_video_changes
+from util.game_actions import create_world, quit, check_homebases, check_walls, toggle_pause_simulation, change_binding_event, revert_video_changes, forward, fast_forward, rewind, fast_rewind
 from util import menu_assets
 
 
@@ -210,6 +210,9 @@ def event_handler(event: pygame.Event):
 
     for slider in menu_assets.sliders.get(state.current_area, []):
         slider.handle_event(event)
+    if state.current_area is MenuArea.OPTIONS and state.controls_section == "misc":
+        for i in range(4):
+            state.special_sliders[i].handle_event(event)
 
     change_binding_event(event)
 
@@ -286,6 +289,9 @@ def event_handler(event: pygame.Event):
                 for i in range(41, 44):
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].click()
+
+                if state.special_buttons[46].rect.collidepoint(event.pos):
+                    state.special_buttons[46].click()
 
         if state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -440,7 +446,7 @@ def event_handler(event: pygame.Event):
                 state.tps_slider.value = state.target_tps
 
                 if state.tps_down and state.tps_down.disabled: state.tps_down.toggle()
-                if state.target_tps >= 20.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
+                if state.target_tps >= 40.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
 
                 state.tps_button.label = f"{state.target_tps}"
                 state.tps_button.initialize()
@@ -587,4 +593,48 @@ def event_handler(event: pygame.Event):
                     if state.sim_size <= 0 and not button.disabled: button.toggle()
                     elif state.sim_size > 0 and button.disabled: button.toggle()
 
-    
+
+    # Below are basically just keybinds
+    elif event.type == pygame.KEYDOWN and state.current_area is MenuArea.SIMULATION and state.world:
+        if event.key == state.bindings[KeyActions.ZOOM_IN_ALIAS] and not state.changing_seed and not state.show_tps:
+            if state.waiting_for_pan and not state.zoomed: state.zoomed = True
+
+            old_zoom = state.zoom_levels[state.zoom_index]
+            state.zoom_index = max(0, min(len(state.zoom_levels) - 1, state.zoom_index + 2))
+            new_zoom = state.zoom_levels[state.zoom_index]
+
+            # anchor to
+            sim_center = pygame.Vector2(state.SIM_RECT.center)
+
+            base_cell = state.SIM_RECT.width / state.world.size
+            origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+            world_pt = (sim_center - origin) / (base_cell * old_zoom)
+            state.offset = sim_center - pygame.Vector2(state.SIM_RECT.topleft) - world_pt * (base_cell * new_zoom)
+            state.zoom = new_zoom
+            return
+        
+        elif event.key == state.bindings[KeyActions.ZOOM_OUT_ALIAS] and not state.changing_seed and not state.show_tps:
+            if state.waiting_for_pan and not state.zoomed: state.zoomed = True
+
+            old_zoom = state.zoom_levels[state.zoom_index]
+            state.zoom_index = max(0, min(len(state.zoom_levels) - 1, state.zoom_index - 2))
+            new_zoom = state.zoom_levels[state.zoom_index]
+
+            # anchor to
+            sim_center = pygame.Vector2(state.SIM_RECT.center)
+
+            base_cell = state.SIM_RECT.width / state.world.size
+            origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+            world_pt = (sim_center - origin) / (base_cell * old_zoom)
+            state.offset = sim_center - pygame.Vector2(state.SIM_RECT.topleft) - world_pt * (base_cell * new_zoom)
+            state.zoom = new_zoom
+            return
+        
+        elif event.key == state.bindings[KeyActions.REGENERATE_WORLD] and not state.changing_seed: create_world(seed=state.world.seed if state.world else None)
+        
+        elif event.key == state.bindings[KeyActions.PAUSE_UNPAUSE] and not state.changing_seed: toggle_pause_simulation(None)
+        
+        elif event.key == state.bindings[KeyActions.STEP_FORWARD] and not pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and not state.game_end: forward(None)
+        elif event.key == state.bindings[KeyActions.STEP_FORWARD] and pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and not state.game_end: fast_forward(None)
+        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and not pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(1): rewind(None)
+        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(2): fast_rewind(None)

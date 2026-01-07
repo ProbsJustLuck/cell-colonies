@@ -109,6 +109,8 @@ def create_world(seed: int | None = None, world: WorldManager | None = None, rng
         state.world = WorldManager(state.sim_size, state.sim_homebases, state.sim_walls, seed)
     else:
         state.world = world
+    from util.render import clear_icon_cache # i didnt wanna make another file
+    clear_icon_cache()
 
     if rng: state.world.rng.setstate(rng)
 
@@ -144,9 +146,7 @@ def start_game(button: "Button | None", world: WorldManager | None = None, rng: 
 
     if not state.typewriter: state.typewriter = Typewriter(30, speed=20)
 
-    if not state.seen_bob: pygame.time.set_timer(assets.ROSS_CALL, 1000, loops=1)
-
-    state.target_tps = 2.0
+    if not state.seen_bob and not state.skip_tutorial: pygame.time.set_timer(assets.ROSS_CALL, 1000, loops=1)
 
 
 def go_to_main_menu(button: "Button"):
@@ -168,7 +168,7 @@ def go_to_main_menu(button: "Button"):
             state.typewriter.prepend(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game...", "", "Anyways..."], -2))
         else:
             state.typewriter.queue(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game..."], -2))
-    elif not state.finished_tutorial:
+    elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
         state.typewriter.reset_progress()
 
     # Flags off (safety)
@@ -235,33 +235,35 @@ def toggle_pause_simulation(button: "Button | None"):
     state.pause.initialize()
 
 
-def forward(button: "Button"):
+def forward(button: "Button | None"):
     if not state.world: return
     _check_win(state.world.tick())
 
-    if button and state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
+    if state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
     if state.world.get_snapshot(2) and state.fast_rewind and state.fast_rewind.disabled: state.fast_rewind.toggle()
 
 
-def fast_forward(button: "Button"):
+def fast_forward(button: "Button | None"):
     if not state.world: return
     _check_win(state.world.tick())
     if not state.game_end: _check_win(state.world.tick())
 
-    if button and state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
+    if state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
     if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2): state.fast_rewind.toggle()
 
 
-def rewind(button: "Button"):
+def rewind(button: "Button | None"):
     if not state.world: return
     state.game_end = False
 
     selected_id = state.selected_cell.id if state.selected_cell else None
     state.world.restore_snapshot(1)
+    from util.render import clear_icon_cache
+    clear_icon_cache()
     state.selected_cell = None
 
     if selected_id is not None: # have to do this cuz 0 would be skipped
@@ -274,7 +276,7 @@ def rewind(button: "Button"):
                 break
 
 
-    if button and state.waiting_for_rewind and not state.rewinded: state.rewinded = True
+    if state.waiting_for_rewind and not state.rewinded: state.rewinded = True
                 
 
     if state.pause and state.pause.disabled: state.pause.toggle()
@@ -286,12 +288,14 @@ def rewind(button: "Button"):
         if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
 
 
-def fast_rewind(button: "Button"):
+def fast_rewind(button: "Button | None"):
     if not state.world: return
     state.game_end = False
 
     selected_id = state.selected_cell.id if state.selected_cell else None
     state.world.restore_snapshot(1)
+    from util.render import clear_icon_cache
+    clear_icon_cache()
     state.selected_cell = None
 
     if selected_id is not None: # have to do this cuz 0 would be skipped
@@ -304,7 +308,7 @@ def fast_rewind(button: "Button"):
                 break
 
 
-    if button and state.waiting_for_rewind and not state.rewinded: state.rewinded = True
+    if state.waiting_for_rewind and not state.rewinded: state.rewinded = True
 
 
     if state.pause and state.pause.disabled: state.pause.toggle()
@@ -324,7 +328,7 @@ def hide_tps(button: "Button"): state.show_tps = False
 def set_tps(value: float): 
     state.target_tps = round(value, 1)
 
-    if state.target_tps >= 20.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
+    if state.target_tps >= 40.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
     elif state.target_tps < 20.0 and state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
 
     if state.target_tps <= 0.1 and state.tps_down and not state.tps_down.disabled: state.tps_down.toggle()
@@ -338,7 +342,7 @@ def tps_up(button: "Button"):
     state.tps_slider.value = state.target_tps
 
     if state.tps_down and state.tps_down.disabled: state.tps_down.toggle()
-    if state.target_tps >= 20.0 and not button.disabled: button.toggle()
+    if state.target_tps >= 40.0 and not button.disabled: button.toggle()
 
     state.tps_button.label = f"{state.target_tps}"
     state.tps_button.initialize()
@@ -754,7 +758,7 @@ def _check_res() -> bool:
 def create_video(fullscreen: bool, resolution: int) -> None:
     os.environ['SDL_VIDEO_CENTERED'] = '1'
 
-    if not fullscreen: assets.display_screen = pygame.display.set_mode(assets.RESOLUTIONS[resolution], display=1)
+    if not fullscreen: assets.display_screen = pygame.display.set_mode(assets.RESOLUTIONS[resolution], display=Constants.DISPLAY_MONITOR)
     else: assets.display_screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)    
 
 
@@ -866,3 +870,18 @@ def keep_video_changes() -> None:
 
     button = state.special_buttons[43]
     if not button.disabled: button.toggle()
+
+
+def set_max_history(value: float): state.max_history = round(value)
+
+
+def set_max_catchup(value: float): state.max_catchup = round(value)
+
+
+def set_sound_fx(value: float): state.sound_fx_volume = round(value, 2)
+
+
+def set_music(value: float): state.music_volume = round(value, 2)
+
+
+def toggle_skip(button: "Button"): state.skip_tutorial = not state.skip_tutorial

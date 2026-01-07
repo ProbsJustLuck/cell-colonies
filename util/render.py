@@ -36,6 +36,12 @@ _icons: dict[tuple[int, int, int | None], pygame.Surface] = {}
 _cell_size: int | None = None
 
 
+def clear_icon_cache() -> None:
+    global _icons, _cell_size
+    _icons.clear()
+    _cell_size = None
+
+
 def get_icon(surf: pygame.Surface, cell_size: int, opacity: int | None = None) -> pygame.Surface:
     key = (id(surf), cell_size, opacity)
 
@@ -748,18 +754,49 @@ def render_options_screen() -> None:
             draw_text(Position(390, rect.top + 75), "Max History Length", "#000000", 35)
             draw_text(Position(665, rect.top + 75), "Max Ticks per Frame", "#000000", 35)
             
-            for i in range(2):
-                state.special_sliders[i].draw(assets.screen)
+            for i in range(2): state.special_sliders[i].draw(assets.screen)
+
+            VERTICAL_OFFSET = 10
+
+            # Max history
+            slider = state.special_sliders[0]
+            slider.draw(assets.screen)
+            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.max_history}", "#000000", 22, mode="center")
+
+            # Max catchup
+            slider = state.special_sliders[1]
+            slider.draw(assets.screen)
+            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "70", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.max_catchup}", "#000000", 22, mode="center")
 
             draw_text(Position(435, rect.top + 150), "Resolution", "#000000", 35)
             draw_text(Position(720, rect.top + 150), "Fullscreen", "#000000", 35)
-            for i in range(41, 44):
-                state.special_buttons[i].draw(assets.screen, mouse_pos)
+            for i in range(41, 44): state.special_buttons[i].draw(assets.screen, mouse_pos)
 
-            draw_text(Position(455, rect.top + 260), "Sound", "#000000", 35)
-            draw_text(Position(745, rect.top + 260), "Music", "#000000", 35)
-            for i in range(2, 4):
-                state.special_sliders[i].draw(assets.screen)
+            draw_text(Position(455, rect.top + 240), "Sound", "#000000", 35)
+            draw_text(Position(745, rect.top + 240), "Music", "#000000", 35)
+
+            # Sound fx
+            slider = state.special_sliders[2]
+            slider.draw(assets.screen)
+            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.sound_fx_volume * 100: .0f}%", "#000000", 22, mode="center")
+
+            # Music
+            slider = state.special_sliders[3]
+            slider.draw(assets.screen)
+            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
+            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.music_volume * 100: .0f}%", "#000000", 22, mode="center")
+
+
+            button = state.special_buttons[46]
+            if (state.seen_bob and not button.disabled) or (not state.seen_bob and button.disabled): button.toggle()
+            button.draw(assets.screen, mouse_pos)
 
             if state.reverting:
                 Button.pending_tooltip = None
