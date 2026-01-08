@@ -415,7 +415,6 @@ def event_handler(event: pygame.Event):
         mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
         _team_color_length = len(state.allowed_colonies)
 
-
         if state.current_area is MenuArea.SIMULATION and state.world and state.SIM_RECT.collidepoint(mouse) and not state.changing_seed: # Zoom
             if event.y > 0: # Up
                 if state.waiting_for_pan and not state.zoomed: state.zoomed = True
@@ -603,6 +602,10 @@ def event_handler(event: pygame.Event):
                     button = state.special_buttons[18]
                     if state.sim_size <= 0 and not button.disabled: button.toggle()
                     elif state.sim_size > 0 and button.disabled: button.toggle()
+
+        elif state.current_area is MenuArea.SIMULATION and state.world and state.TIMELINE_RECT.collidepoint(mouse) and not state.changing_seed:
+            if event.y > 0: state.y_offset = min(state.y_offset + event.y * 5, 50 * len(state.world.history))
+            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 5, 0)
 
 
     # Below are basically just keybinds

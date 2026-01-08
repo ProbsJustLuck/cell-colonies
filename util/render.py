@@ -535,11 +535,11 @@ def render_game_screen(downtime: int):
         draw_text(Position(795, 370), f"{len(string)}/10", "#ffffff", size=25, mode="bottomright", opacity=160)
 
         if state.typing_seed and state.caret_timer / 500 <= 1:
-            width = assets.big_font.size("1")[0]
+            WIDTH = assets.big_font.size("1")[0]
             height = 2
             x = state.typing_box.x + 9 + assets.big_font.size(state.seed_string[:len(state.seed_string)])[0]
             y = state.typing_box.centery + assets.big_font.get_height() // 2
-            pygame.draw.line(assets.screen, (255,255,255), (x, y), (x + width, y), height)
+            pygame.draw.line(assets.screen, (255,255,255), (x, y), (x + WIDTH, y), height)
 
         assets.screen.blit(assets.COPY_ICON, (655, 475 + 10))
         assets.screen.blit(assets.PASTE_ICON, (730, 475 + 10))
@@ -591,18 +591,31 @@ def render_game_screen(downtime: int):
         pygame.time.set_timer(assets.ROSS_REWIND, 1000, loops=1)
 
     # Rewind timeline
-    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.topleft[0] + 1, state.TIMELINE_RECT.topleft[1]), (state.TIMELINE_RECT.topright[0] + 1, state.TIMELINE_RECT.topright[1]), 2)
-    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.bottomleft[0] + 1, state.TIMELINE_RECT.bottomleft[1]), (state.TIMELINE_RECT.bottomright[0] + 1, state.TIMELINE_RECT.bottomright[1]), 2)
+    pygame.draw.rect(assets.screen, "#FF0000", state.TIMELINE_RECT)
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.topleft[0], state.TIMELINE_RECT.topleft[1]), (state.TIMELINE_RECT.topright[0] - 1, state.TIMELINE_RECT.topright[1]), 2)
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.bottomleft[0], state.TIMELINE_RECT.bottomleft[1]), (state.TIMELINE_RECT.bottomright[0] - 1, state.TIMELINE_RECT.bottomright[1]), 2)
     buttons: list[Button.Button] = []
-    if len(state.world.history) > 0:
+    if state.world.history:
         for i in range(len(state.world.history)):
             x = state.TIMELINE_RECT.centerx
-            y = state.TIMELINE_RECT.top + 20
+            y = state.TIMELINE_RECT.top + 20 + state.y_offset + 50 * i
+            height = 35
+            WIDTH = 25 # type: ignore
+            if (state.TIMELINE_RECT.top >= y + height) or (state.TIMELINE_RECT.bottom <= y): continue
 
-            button = Button.Button(f"{i}", (x, y + 50 * i), "", style=Button.ButtonStyle(width = 25, height = 35))
+            text = create_text(f"{i + 1}", "#000000", 35)
+            text_rect: pygame.rect.Rect = text.get_rect(midtop = (x, y + height // 2))
+            crop = text_rect
+            if state.TIMELINE_RECT.bottom < y + height:
+                crop = text_rect.clip(state.TIMELINE_RECT)
+
+                height = state.TIMELINE_RECT.bottom - y
+            button = Button.Button("", (x, y), "", style=Button.ButtonStyle(width = WIDTH, height = height, border=2), id=f"{i + 1}")
+
             buttons.append(button)
             button.initialize()
             button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
+            assets.screen.blit(text, text_rect, crop)
 
 
 

@@ -185,8 +185,8 @@ class States:
 
 
     # Rewind timeline
-    TIMELINE_RECT = pygame.rect.Rect(19, 70, 31, 518)
-    y_offset: int = 0
+    TIMELINE_RECT = pygame.rect.Rect(20, 70, 31, 518)
+    y_offset: int = 15
 
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}
