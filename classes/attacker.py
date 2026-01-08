@@ -23,12 +23,12 @@ class Attacker(cell.Cell):
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None):
         super().__init__(pos, homebase_link, world_manager)
-        self.__health = 1
+        self.__health: float = 1.0
 
         self.__color = self.homebase.color
         self.__icon = self.homebase.attacker_icon
 
-        self.__damage: int = 1 # The amount of damage this cell deals to other cells. A variable in case I make a damage setting
+        self.__damage: float = round(world_manager.rng.randint(7, 12) / 10, 2)
 
         self.__ticks_since_valid_path: int = 0 # The amount of ticks that this attacker has lived for since its path was empty. Used to prevent "stuck" attackers
 
@@ -88,7 +88,7 @@ class Attacker(cell.Cell):
 
 
     @property
-    def health(self) -> int: return self.__health
+    def health(self) -> float: return self.__health
 
 
     @property
@@ -100,7 +100,7 @@ class Attacker(cell.Cell):
 
 
     @property
-    def damage(self) -> int: return self.__damage
+    def damage(self) -> float: return self.__damage
 
 
     @property
@@ -158,8 +158,8 @@ class Attacker(cell.Cell):
     def set_rotated(self) -> None: self.__rotated = True
 
 
-    def change_health(self, delta: int) -> None:
-        self.__health += delta
+    def change_health(self, delta: float) -> None:
+        self.__health = max(self.__health + delta, 0.0)
         self.__hurt = True
 
 
@@ -173,7 +173,7 @@ class Attacker(cell.Cell):
         if cell is self.__target:
             assert isinstance(cell, homebase.Homebase)
             cell.change_health(-self.__damage)
-            self.change_health(-self.damage)
+            self.change_health(-1.0)
             return
 
         if not self.__path: # gets rid of stuck attackers
@@ -242,13 +242,13 @@ class Attacker(cell.Cell):
             self.__path.clear()
             return
         elif isinstance(cell, Attacker) and cell.homebase is self.homebase:
-            self.__path.clear()   # force recompute next tick
+            self.__path.clear() # repath
             self.__rotated = False
             return
         elif isinstance(cell, Attacker):
             if cell.alive: 
-                cell.change_health(-self.__damage)
-                self.change_health(-self.__damage)
+                cell.change_health(-self.damage)
+                self.change_health(-cell.__damage)
             return
         elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):
             assert self.__target is not None # type checker was buggy, the tick code solves this already tho

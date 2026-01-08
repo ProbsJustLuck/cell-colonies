@@ -21,11 +21,11 @@ class Homebase(entity.Entity):
     __NAME: str = "Homebase"
     
 
-    def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: int = 5):
+    def __init__(self, pos: Position, world_manager: "WorldManager", color: ColorInfo, health: float = 5):
         super().__init__(pos, world_manager)
 
-        self.__max_health: int = max(round(health * States.health_multiplier), 1)
-        self.__health: int = max(round(health * States.health_multiplier), 1) # The health of the homebase.
+        self.__max_health: float = max(round(health * States.health_multiplier, 2), 1)
+        self.__health: float = max(round(health * States.health_multiplier, 2), 1) # The health of the homebase.
         self.__cells: list[entity.Entity] = [] # The cells that belong to this homebase.
         self.__max_cells_alive: int = 0
 
@@ -109,11 +109,11 @@ class Homebase(entity.Entity):
 
 
     @property
-    def health(self) -> int: return self.__health # Returns the health for this homebase
+    def health(self) -> float: return self.__health # Returns the health for this homebase
 
 
     @property
-    def max_health(self) -> int: return self.__max_health
+    def max_health(self) -> float: return self.__max_health
 
 
     @property
@@ -142,7 +142,7 @@ class Homebase(entity.Entity):
 
         if self.__hurt: self.__hurt = False
 
-        if self.__health < 1:
+        if self.__health <= 0.0:
             self.deregister(world_manager)
             return
         
@@ -165,8 +165,8 @@ class Homebase(entity.Entity):
 
 
 
-    def change_health(self, delta: int) -> None: # Changes the health of this homebase
-        self.__health += delta 
+    def change_health(self, delta: float) -> None: # Changes the health of this homebase
+        self.__health = max(self.__health + delta, 0.0)
         self.__hurt = True
 
 

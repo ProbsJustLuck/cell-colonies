@@ -87,6 +87,10 @@ class WorldManager:
 
     @property
     def walls_amount(self) -> int: return len(self.__walls)
+
+
+    @property
+    def history(self) -> collections.deque[dict[str, Any]]: return self.__tick_history
     
 
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
@@ -181,11 +185,11 @@ class WorldManager:
 
         # Kill dead cells
         for atk in sorted(self.__attackers, key=lambda cell: (cell.pos.x, cell.pos.y)):
-            if atk.health < 1: atk.deregister(self)
+            if atk.health <= 0.0: atk.deregister(self)
             if atk.hurt: atk.hurt = False
 
         for rot in sorted(self.__rotators, key=lambda cell: (cell.pos.x, cell.pos.y)):
-            if rot.health < 1: rot.deregister(self)
+            if rot.health <= 0.0: rot.deregister(self)
 
         # Tick normally
         for homebase in sorted(self.__homebases, key=lambda hb: (hb.pos.x, hb.pos.y)):
@@ -208,7 +212,7 @@ class WorldManager:
 
         # Kill dead homebases
         for homebase in self.__homebases[:]:
-            if homebase.health <= 0: homebase.deregister(self)
+            if homebase.health <= 0.0: homebase.deregister(self)
 
         if(len(self.__homebases) == 1):
             return GameState.WIN

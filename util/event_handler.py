@@ -301,8 +301,8 @@ def event_handler(event: pygame.Event):
         elif state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
 
-            cell_size = int((state.SIM_RECT.width / state.sim_size) * state.zoom)
-            world_rect = pygame.Rect(origin.x, origin.y, state.sim_size * cell_size, state.sim_size * cell_size)
+            cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+            world_rect = pygame.Rect(origin.x, origin.y, state.world.size * cell_size, state.world.size * cell_size)
 
             if world_rect.collidepoint(event.pos):
                 col = int((event.pos[0] - origin.x) / cell_size)
@@ -411,7 +411,7 @@ def event_handler(event: pygame.Event):
             elif state.typing_box and state.typing_box.collidepoint(mouse_pos): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
             else: pygame.mouse.set_cursor(assets.arrow_cursor)
         
-    elif event.type == pygame.MOUSEWHEEL: 
+    elif event.type == pygame.MOUSEWHEEL:
         mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
         _team_color_length = len(state.allowed_colonies)
 

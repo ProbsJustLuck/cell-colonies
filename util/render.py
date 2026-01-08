@@ -274,7 +274,7 @@ def render_game_screen(downtime: int):
         title = cell.name
         LINE_SPACING = 28
         if isinstance(cell, Homebase): 
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health} / {cell.max_health} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health: .2f} / {cell.max_health: .2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Cells Alive: {cell.cells_amount} (peak {cell.max_cells_alive})", "#000000", 35)
 
             last_cell = cell.last_cell_spawned
@@ -290,7 +290,7 @@ def render_game_screen(downtime: int):
         elif isinstance(cell, Attacker):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Target: {cell.target.color.name} {cell.target.name} - Position ({cell.target.pos.x}, {cell.target.pos.y})", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health} / 1 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health:.2f} / 1.00 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}", "#000000", 35)
 
@@ -306,7 +306,7 @@ def render_game_screen(downtime: int):
             draw_text(Position(675, 160 + (LINE_SPACING * 6)), f"Damage: {cell.damage}", "#000000", 35)
 
         elif isinstance(cell, Rotator):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health} / {cell.max_health} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
 
@@ -568,7 +568,6 @@ def render_game_screen(downtime: int):
         if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
             draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
-
     if state.waiting_for_pan and state.panned and state.zoomed:
         state.waiting_for_pan = False
         state.panned = False
@@ -590,6 +589,21 @@ def render_game_screen(downtime: int):
 
         pygame.time.set_timer(assets.ROSS_REWIND_REMINDER, 0, loops=1)
         pygame.time.set_timer(assets.ROSS_REWIND, 1000, loops=1)
+
+    # Rewind timeline
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.topleft[0] + 1, state.TIMELINE_RECT.topleft[1]), (state.TIMELINE_RECT.topright[0] + 1, state.TIMELINE_RECT.topright[1]), 2)
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.bottomleft[0] + 1, state.TIMELINE_RECT.bottomleft[1]), (state.TIMELINE_RECT.bottomright[0] + 1, state.TIMELINE_RECT.bottomright[1]), 2)
+    buttons: list[Button.Button] = []
+    if len(state.world.history) > 0:
+        for i in range(len(state.world.history)):
+            x = state.TIMELINE_RECT.centerx
+            y = state.TIMELINE_RECT.top + 20
+
+            button = Button.Button(f"{i}", (x, y + 50 * i), "", style=Button.ButtonStyle(width = 25, height = 35))
+            buttons.append(button)
+            button.initialize()
+            button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
+
 
 
     if Button.pending_tooltip:
