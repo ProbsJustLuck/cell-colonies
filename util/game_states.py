@@ -179,6 +179,7 @@ class States:
 
     # Catalogue stuff
     cell_color_index: int = 0
+    cell_color_timer: int = 0
     catalogue_area: str = "homebase"
     unlocked_teleporter: bool = False
 

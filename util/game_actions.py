@@ -927,6 +927,7 @@ def change_catalogue_area(button: "Button"):
             button.clicked = False
             return
         elif (state.finished_timer or state.skip_tutorial) and not state.unlocked_teleporter:
+            state.special_buttons[53].tooltip = ""
             state.unlocked_teleporter = True
             button.clicked = False
             return

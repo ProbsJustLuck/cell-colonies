@@ -849,43 +849,152 @@ def render_cells_catalogue() -> None:
     ICON_SPACING = 63
 
     hb = pygame.transform.scale_by(assets.base_homebase.copy(), 0.7)
-    if state.catalogue_area == "homebase": hb.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
-    else: hb.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    if state.catalogue_area == "homebase":
+        hb = pygame.transform.scale_by(hb, 1.1)
+        hb.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else:
+        hb = pygame.transform.scale_by(hb, 0.9)
+        hb.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
     assets.screen.blit(hb, hb.get_rect(center=(254, 229 + ICON_SPACING * 0)))
 
     atk = pygame.transform.scale_by(assets.base_attacker_right.copy(), 0.7)
-    if state.catalogue_area == "attacker": atk.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
-    else: atk.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    if state.catalogue_area == "attacker":
+        atk = pygame.transform.scale_by(atk, 1.1)
+        atk.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else:
+        atk = pygame.transform.scale_by(atk, 0.9) 
+        atk.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
     assets.screen.blit(atk, atk.get_rect(center=(254, 230 + ICON_SPACING * 1)))
 
     rot = pygame.transform.scale_by(assets.base_rotator.copy(), 0.7)
-    if state.catalogue_area == "rotator": rot.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
-    else: rot.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    if state.catalogue_area == "rotator": 
+        rot = pygame.transform.scale_by(rot, 1.1)
+        rot.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else:
+        rot = pygame.transform.scale_by(rot, 0.9) 
+        rot.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
     assets.screen.blit(rot, rot.get_rect(center=(254, 230 + ICON_SPACING * 2)))
 
     if (not state.finished_tutorial and not state.skip_tutorial) and not state.unlocked_teleporter: assets.screen.blit(assets.locked_icon, assets.locked_icon.get_rect(center=(254, 230 + ICON_SPACING * 3)))
     elif (state.finished_tutorial or state.skip_tutorial) and not state.unlocked_teleporter:
+        if state.special_buttons[53].tooltip == "Unlocked after finishing (or skipping) the tutorial!": state.special_buttons[53].tooltip = "Click to unlock!"
         icon = assets.unlocked_icon.convert_alpha()
         icon.fill((TeamColor.GREEN.value.primary[0], TeamColor.GREEN.value.primary[1], TeamColor.GREEN.value.primary[2], 0), special_flags=pygame.BLEND_RGB_ADD)
 
         assets.screen.blit(add_outline_to_image(icon, 1, "#000000"), icon.get_rect(center=(254, 229 + ICON_SPACING * 3)))
-
+    elif state.unlocked_teleporter and state.catalogue_area == "teleporter":
+        tele = pygame.transform.scale_by(assets.base_teleporter.copy(), 0.7)
+        tele = pygame.transform.scale_by(tele, 1.1)
+        tele.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        assets.screen.blit(tele, tele.get_rect(center=(254, 230 + ICON_SPACING * 3)))
+    elif state.unlocked_teleporter and state.catalogue_area != "teleporter":
+        tele = pygame.transform.scale_by(assets.base_teleporter.copy(), 0.7)
+        tele = pygame.transform.scale_by(tele, 0.9)
+        tele.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        assets.screen.blit(tele, tele.get_rect(center=(254, 230 + ICON_SPACING * 3)))
 
     match state.catalogue_area:
         case "homebase":
             button = state.special_buttons[50]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
 
+            icon = pygame.transform.scale_by(assets.base_homebase, 1.5)
+            icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+            assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
+
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Homebase", "#000000", 60)
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"CORE Cell", "#373737", 40)
+
+            LINE_SPACING = 30
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 3 HP", "#000000", 40)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Spawning Cooldown: 3 Ticks", "#000000", 40)
+
+            LINE_SPACING = 20 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "This cell spawns other cells around it on a set timer. Cells", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "spawned from a homebase also spawn on the same colony", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), '(or "team") as it.', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'The objective of Cell Colonies is for one homebase to be', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "left standing! If one homebase remains, it's counted as", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'a win for that homebase. If none remain, the game ends', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 7), 'in a loss.', "#000000", 32)
+
         case "attacker":
             button = state.special_buttons[51]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+            icon = pygame.transform.scale_by(assets.base_attacker_right, 1.5)
+            icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+            assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
+
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Attacker", "#000000", 60)
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSITLE Cell", "#373737", 40)
+
+            LINE_SPACING = 30 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Damage: 0.7-1.2 DMG (randomized)", "#000000", 40)
+
+            LINE_SPACING = 20 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "When spawned, this cell will target a random enemy", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "homebase, and move towards it. If it reaches its target, it", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), 'will deal damage to it and die.', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'When rotated by a rotator, this cell will move forwards in', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "the direction its facing until it hits a wall, then pathfind", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'as normal.', "#000000", 32)
 
         case "rotator":
             button = state.special_buttons[52]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
 
+            icon = pygame.transform.scale_by(assets.base_rotator, 1.5)
+            icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+            assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
+
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Rotator", "#000000", 60)
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
+
+            LINE_SPACING = 30 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
+
+            LINE_SPACING = 20 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space within 5 squares of", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "its homebase, and moves towards it. If it reaches its target,", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'it will become stationary and no longer move.', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell rotates cell surrounding it, flipping their direction', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'if possible.', "#000000", 32)
+
         case "teleporter":
             button = state.special_buttons[53]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
 
+            icon = pygame.transform.scale_by(assets.base_teleporter, 1.5)
+            icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+            assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
+
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Teleporter", "#000000", 60)
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
+
+            LINE_SPACING = 30 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
+
+            LINE_SPACING = 20 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell teleports cell ALL cells around it (including', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'homebases) not on its colony to a random empty spot', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 6), 'on the map.', "#000000", 32)
+
         case _: pass
+
+
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None

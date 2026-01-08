@@ -95,7 +95,7 @@ while state.running:
                     
                     if state.target_tps <= 0.1 and not state.tps_down.disabled: state.tps_down.toggle()
 
-            elif state.current_area is MenuArea.SIMULATION and state.world and not state.changing_seed and not state.show_tps:
+            elif state.world and not state.changing_seed and not state.show_tps:
                 offset = pygame.Vector2(0, 0)
 
                 if pressed_keys[state.bindings[KeyActions.PAN_UP]]: offset.y += 1
@@ -337,6 +337,11 @@ while state.running:
 
         case MenuArea.CATALOGUE:
             render_cells_catalogue()
+            state.cell_color_timer += downtime
+            if state.cell_color_timer > 1000:
+                state.cell_color_timer = 0
+                state.cell_color_index += 1
+                state.cell_color_index %= len(state.allowed_colonies)
         
 
         case _: pass
