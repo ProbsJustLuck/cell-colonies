@@ -107,6 +107,11 @@ ROSS_REWIND_REMINDER = pygame.USEREVENT + 13
 
 ## Misc
 REVERT_VIDEO_CHANGES = pygame.USEREVENT + 14
+CYCLE_CELL_COLOR = pygame.USEREVENT + 15
+
+# Catalogue
+locked_icon = pygame.transform.scale(pygame.image.load("assets/menu/locked.png").convert_alpha(), (30, 40))
+unlocked_icon = pygame.transform.scale(pygame.image.load("assets/menu/unlocked.png").convert_alpha(), (30, 40))
 
 # fix mouse scaling for different resolution
 MOUSE_SCALE_X = Constants.SCREEN_WIDTH / RESOLUTIONS[state.current_res][0]

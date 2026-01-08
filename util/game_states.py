@@ -172,5 +172,16 @@ class States:
     revert_res: int = 3
 
 
+    # Developer stuff
+    show_paths: bool = False
+    show_target_lines: bool = False
+
+
+    # Catalogue stuff
+    cell_color_index: int = 0
+    catalogue_area: str = "homebase"
+    unlocked_teleporter: bool = False
+
+
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

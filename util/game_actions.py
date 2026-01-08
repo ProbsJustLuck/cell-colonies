@@ -195,11 +195,39 @@ def return_to_main_menu(button: "Button") -> None:
 
 
 def go_to_options(button: "Button"):
+    if state.controls_section != "controls": change_option_section(state.special_buttons[23])
     state.current_area = MenuArea.OPTIONS
 
 
 def go_to_infopedia(button: "Button"):
-    state.current_area = MenuArea.INFO
+    match state.catalogue_area:
+        case "homebase": pass
+
+        case "attacker":
+            btn = state.special_buttons[51]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "rotator":
+            btn = state.special_buttons[52]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "teleporter":
+            btn = state.special_buttons[53]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case _: # default/placeholder
+            btn = state.special_buttons[49]
+            if btn.disabled: btn.toggle()
+    
+    btn = state.special_buttons[50]
+    if not btn.disabled: btn.toggle()
+
+    state.catalogue_area = "homebase"
+
+    state.current_area = MenuArea.CATALOGUE
 
 
 def go_to_credits(button: "Button"):
@@ -885,3 +913,68 @@ def set_music(value: float): state.music_volume = round(value, 2)
 
 
 def toggle_skip(button: "Button"): state.skip_tutorial = not state.skip_tutorial
+
+
+def toggle_paths(button: "Button"): state.show_paths = not state.show_paths
+
+
+def toggle_target_lines(button: "Button"): state.show_target_lines = not state.show_target_lines
+
+
+def change_catalogue_area(button: "Button"): 
+    if button.id and button.id == "teleporter":
+        if not state.finished_tutorial and not state.skip_tutorial and not state.unlocked_teleporter:
+            button.clicked = False
+            return
+        elif (state.finished_timer or state.skip_tutorial) and not state.unlocked_teleporter:
+            state.unlocked_teleporter = True
+            button.clicked = False
+            return
+
+    match state.catalogue_area:
+        case "homebase":
+            btn = state.special_buttons[50]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "attacker":
+            btn = state.special_buttons[51]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "rotator":
+            btn = state.special_buttons[52]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "teleporter":
+            btn = state.special_buttons[53]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case _: # default/placeholder
+            btn = state.special_buttons[49]
+            if btn.disabled: btn.toggle()
+
+    state.catalogue_area = button.id if button.id else "homebase"
+    
+    match state.catalogue_area:
+        case "homebase":
+            btn = state.special_buttons[50]
+            if not btn.disabled: btn.toggle()
+
+        case "attacker":
+            btn = state.special_buttons[51]
+            if not btn.disabled: btn.toggle()
+
+        case "rotator":
+            btn = state.special_buttons[52]
+            if not btn.disabled: btn.toggle()
+
+        case "teleporter":
+            btn = state.special_buttons[53]
+            if not btn.disabled: btn.toggle()
+
+        case _:
+            btn = state.special_buttons[49]
+            if not btn.disabled: btn.toggle()

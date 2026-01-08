@@ -8,7 +8,7 @@ import pygame
 
 from util.game_states import States as state
 from util.event_handler import event_handler
-from util.render import render_start_screen, render_game_screen, render_options_screen
+from util.render import render_start_screen, render_game_screen, render_options_screen, render_cells_catalogue
 from util.ui_helpers import draw_text
 from util.game_actions import toggle_pause_simulation, check_homebases, check_walls
 
@@ -334,6 +334,10 @@ while state.running:
             if state.reverting and state.reverting_time >= 0:
                 state.reverting_time = max(state.reverting_time - downtime, 0)
             render_options_screen()
+
+        case MenuArea.CATALOGUE:
+            render_cells_catalogue()
+        
 
         case _: pass
 

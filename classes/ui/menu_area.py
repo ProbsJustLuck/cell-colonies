@@ -4,7 +4,7 @@ class MenuArea(Enum):
     MAIN_MENU = auto()
     SIMULATION = auto()
     OPTIONS = auto()
-    INFO = auto()
+    CATALOGUE = auto()
     CREDITS = auto()
     DEBUG = auto()
     

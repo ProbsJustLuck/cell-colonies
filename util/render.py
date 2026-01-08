@@ -820,7 +820,10 @@ def render_options_screen() -> None:
                 num = round(state.reverting_time / 1000, 1)
                 text = add_outline_to_image(create_text(f"Reverting in {num:.1f}s...", "#FF0000", 30), 2, "#000000")
                 assets.screen.blit(text, text.get_rect(center = (assets.screen.size[0] // 2, assets.screen.size[1] // 2 - 30)))
-            
+
+        case "debug":
+            for i in range(47, 49):
+                state.special_buttons[i].draw(assets.screen, mouse_pos)
 
         case _: pass
 
@@ -829,3 +832,60 @@ def render_options_screen() -> None:
     if Button.pending_tooltip:
         Button.pending_tooltip()
         Button.pending_tooltip = None
+
+
+def render_cells_catalogue() -> None:
+    assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
+    mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
+
+    WIDTH = 600
+    HEIGHT = 400
+    rect = pygame.rect.Rect(assets.screen.size[0] // 2 - (WIDTH // 2) + 20, assets.screen.size[1] // 2 - HEIGHT // 2, WIDTH, HEIGHT)
+    pygame.draw.rect(assets.screen, "#888888", rect)
+    pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=4, border_radius=2)
+
+    for i in range(49, 54): state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+    ICON_SPACING = 63
+
+    hb = pygame.transform.scale_by(assets.base_homebase.copy(), 0.7)
+    if state.catalogue_area == "homebase": hb.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else: hb.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    assets.screen.blit(hb, hb.get_rect(center=(254, 229 + ICON_SPACING * 0)))
+
+    atk = pygame.transform.scale_by(assets.base_attacker_right.copy(), 0.7)
+    if state.catalogue_area == "attacker": atk.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else: atk.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    assets.screen.blit(atk, atk.get_rect(center=(254, 230 + ICON_SPACING * 1)))
+
+    rot = pygame.transform.scale_by(assets.base_rotator.copy(), 0.7)
+    if state.catalogue_area == "rotator": rot.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    else: rot.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+    assets.screen.blit(rot, rot.get_rect(center=(254, 230 + ICON_SPACING * 2)))
+
+    if (not state.finished_tutorial and not state.skip_tutorial) and not state.unlocked_teleporter: assets.screen.blit(assets.locked_icon, assets.locked_icon.get_rect(center=(254, 230 + ICON_SPACING * 3)))
+    elif (state.finished_tutorial or state.skip_tutorial) and not state.unlocked_teleporter:
+        icon = assets.unlocked_icon.convert_alpha()
+        icon.fill((TeamColor.GREEN.value.primary[0], TeamColor.GREEN.value.primary[1], TeamColor.GREEN.value.primary[2], 0), special_flags=pygame.BLEND_RGB_ADD)
+
+        assets.screen.blit(add_outline_to_image(icon, 1, "#000000"), icon.get_rect(center=(254, 229 + ICON_SPACING * 3)))
+
+
+    match state.catalogue_area:
+        case "homebase":
+            button = state.special_buttons[50]
+            pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+        case "attacker":
+            button = state.special_buttons[51]
+            pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+        case "rotator":
+            button = state.special_buttons[52]
+            pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+        case "teleporter":
+            button = state.special_buttons[53]
+            pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+        case _: pass

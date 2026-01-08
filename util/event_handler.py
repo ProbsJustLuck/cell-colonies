@@ -293,7 +293,12 @@ def event_handler(event: pygame.Event):
                 if state.special_buttons[46].rect.collidepoint(event.pos):
                     state.special_buttons[46].click()
 
-        if state.current_area is MenuArea.SIMULATION and state.world:
+            elif state.controls_section == "debug":
+                for i in range(47, 49):
+                    if state.special_buttons[i].rect.collidepoint(event.pos):
+                        state.special_buttons[i].click()
+
+        elif state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
 
             cell_size = int((state.SIM_RECT.width / state.sim_size) * state.zoom)
@@ -313,6 +318,12 @@ def event_handler(event: pygame.Event):
             else:
                 state.selected_cell = None
         
+        elif state.current_area is MenuArea.CATALOGUE:
+            for i in range(49, 54):
+                button = state.special_buttons[i]
+                if button.rect.collidepoint(event.pos):
+                    button.click()
+
         return
 
 
