@@ -602,10 +602,8 @@ def render_game_screen(downtime: int):
             draw_text(Position(410, 335), "Type seed...", "#ffffff", size=50, opacity=110)
 
         if state.seed_string:
-            if not state.typing_seed:
-                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
-            else: 
-                draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
+            if not state.typing_seed: draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
+            else: draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
     
         draw_text(Position(405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
 
@@ -649,6 +647,7 @@ def render_game_screen(downtime: int):
 
         if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
             draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
+
 
     if state.waiting_for_pan and state.panned and state.zoomed:
         state.waiting_for_pan = False

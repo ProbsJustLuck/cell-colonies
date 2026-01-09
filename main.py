@@ -1,6 +1,7 @@
 import time
 
 from classes.ui.key_actions import KeyActions
+from classes.ui.typewriter import Message
 from util import assets
 start_time = time.time()
 
@@ -10,7 +11,7 @@ from util.game_states import States as state
 from util.event_handler import event_handler
 from util.render import render_start_screen, render_game_screen, render_options_screen, render_cells_catalogue
 from util.ui_helpers import draw_text
-from util.game_actions import toggle_pause_simulation, check_homebases, check_walls
+from util.game_actions import toggle_pause_simulation, check_homebases, check_walls, set_tps
 
 from classes.position import Position
 from classes.game_state import GameState
@@ -26,12 +27,44 @@ last_measure = pygame.time.get_ticks()
 
 print(f"Load took {time.time() - start_time: .4f}s")
 
+count = 0
 while state.running:
     downtime = fps_clock.tick(60)  # Limits game loop to 60 FPS
     pressed_keys = pygame.key.get_pressed()
 
-    for event in pygame.event.get(): event_handler(event)
+    TRIGGER = 200
 
+    if downtime > TRIGGER and state.target_tps not in [2.0, 0.5]:
+        set_tps(2.0)
+
+        assert state.typewriter
+
+        if not state.typewriter.tps_reset():
+            if state.typewriter.has_lines_left():
+                state.typewriter.reset_to_queue()
+
+                state.typewriter.prepend(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!", "", "Anyways..."], -3))
+            else:
+                state.typewriter.queue(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!"], -3))
+        elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+            state.typewriter.reset_progress()
+
+    elif downtime > TRIGGER and state.target_tps == 2.0:
+        set_tps(0.5)
+
+        assert state.typewriter
+
+        if not state.typewriter.tps_reset():
+            if state.typewriter.has_lines_left():
+                state.typewriter.reset_to_queue()
+
+                state.typewriter.prepend(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device...", "", "Anyways..."], -4))
+            else:
+                state.typewriter.queue(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device..."], -4))
+        elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+            state.typewriter.reset_progress()
+
+    for event in pygame.event.get(): event_handler(event)
 
     match state.current_area:
         case MenuArea.MAIN_MENU:
@@ -43,10 +76,12 @@ while state.running:
                 accum += downtime
                 target = 1000.0 / state.target_tps
 
+                count = 0
                 for _ in range(state.max_catchup):
                     if accum < target: break
                     success = state.world.tick()
                     ticks_count += 1
+                    count += 1
 
                     if success in [GameState.WIN, GameState.LOSS] and state.pause: 
                         state.game_end = True
@@ -347,7 +382,7 @@ while state.running:
 
     
     draw_text(Position(3, 3), f"FPS: {round(fps_clock.get_fps(), 2)},   TPS: {round(state.tps, 2)},     Homebases Alive: {len(state.world.homebases) if state.world else 0}", "#000000", 20)
-    draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos} Offset: {state.y_offset}", "#000000", 20)
+    draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos} Offset: {state.y_offset}    Ticks Last Frame: {count}", "#000000", 20)
 
     # flip the display to put your work on screen
     assets.display_screen.blit(pygame.transform.smoothscale(assets.screen, assets.display_screen.get_size()), (0, 0))

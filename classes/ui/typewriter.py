@@ -42,7 +42,13 @@ class Typewriter:
     def finished_line(self) -> bool: return self.__progress >= self.__get_length()
 
 
-    def not_rude(self) -> bool: return True if self.__current and self.__current.id == -2 else False
+    def not_rude(self) -> bool: return True if self.__current and (self.__current.id == -2 or self.__current.id == -3 or self.__current.id == -4) else False
+
+
+    def tps_reset(self) -> bool: return True if self.__current and (self.__current.id == -3 or self.__current.id == -4) else False
+
+
+    def tps_reset_2(self) -> bool: return True if self.__current and self.__current.id == -4 else False
 
 
     def clear(self) -> None:

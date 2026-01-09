@@ -62,7 +62,7 @@ class Attacker(cell.Cell):
 
             return
 
-        choices = [homebase for homebase in world_manager.homebases if homebase is not self.homebase]
+        choices = choices = sorted((homebase for homebase in world_manager.homebases if homebase is not self.homebase), key=lambda hb: (hb.pos.x, hb.pos.y))
         while choices: # Sets a random Homebase as its target, if it can't find a valid path to any homebase then kill it
             self.__target = world_manager.rng.choice(choices)
 

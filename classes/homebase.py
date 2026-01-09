@@ -163,12 +163,12 @@ class Homebase(entity.Entity):
             spawned = self.spawn_cell(world_manager)
             if spawned: self.__spawn_ticks = 0
 
-        if self.__ticks_since_target > 8 and not self.__waiting_for_attacker: # If we haven't been targetted in at least 9 ticks, then force an attacker to spawn
+        if self.__ticks_since_target > 15 and not self.__waiting_for_attacker: # If we haven't been targetted in at least 16 ticks, then force an attacker to spawn
             self.__waiting_for_attacker = True
 
-            choices = [homebase for homebase in world_manager.homebases if homebase is not self]
+            choices = sorted((homebase for homebase in world_manager.homebases if homebase is not self),key=lambda hb: (hb.pos.x, hb.pos.y))
             if choices: world_manager.rng.choice(choices).spawn_cell(world_manager, target=self)
-        if self.__ticks_since_target > 10 and self.__waiting_for_attacker:
+        if self.__ticks_since_target > 17 and self.__waiting_for_attacker:
             self.deregister(world_manager)
             return            
 
