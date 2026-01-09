@@ -2,6 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 import pygame
 
+from classes import teleporter
 import classes.cell as cell
 import classes.homebase as homebase
 from classes.ui.colors import ColorInfo
@@ -34,9 +35,11 @@ class Attacker(cell.Cell):
 
         self.__rotated: bool = False # Whether this attacker has been rotated recently (resets upon a wall collision)
 
-        self.__direction: Direction = Direction.NORTH # Starting/default direction
+        self.__hurt_until: int = 0
 
-        self.__hurt = False
+        self.__skip = False
+
+        self.__direction: Direction = Direction.NORTH # Starting/default direction
 
         self.__path: list[Position] = [] # Default path, nothing
 
@@ -63,12 +66,14 @@ class Attacker(cell.Cell):
         while choices: # Sets a random Homebase as its target, if it can't find a valid path to any homebase then kill it
             self.__target = world_manager.rng.choice(choices)
 
-            self.__path = pathfinding.pathfind(
-                pos, 
-                self.__target.pos, 
-                lambda pos: world_manager.in_bounds(pos), 
-                lambda pos: self.__is_blocking(pos, world_manager)
-            )
+            for _ in range(5):
+                self.__path = pathfinding.pathfind(
+                    pos, 
+                    self.__target.pos, 
+                    lambda pos: world_manager.in_bounds(pos), 
+                    lambda pos: self.__is_blocking(pos, world_manager)
+                )
+                if self.__path: break
 
             if self.__path:
                 self.__direction = self.__set_starting_dir(self.__target.pos) # The direction that this Attacker is facing.
@@ -92,11 +97,11 @@ class Attacker(cell.Cell):
 
 
     @property
-    def hurt(self) -> bool: return self.__hurt
+    def hurt(self) -> bool: return self._hurt
 
 
     @hurt.setter
-    def hurt(self, value: bool) -> None: self.__hurt = value
+    def hurt(self, value: bool) -> None: self._hurt = value
 
 
     @property
@@ -117,7 +122,7 @@ class Attacker(cell.Cell):
 
     @property
     def icon(self) -> pygame.Surface: # Returns the icon for this attacker.
-        if self.__hurt: return self.__icon["hurt"][self.direction]
+        if self._hurt: return self.__icon["hurt"][self.direction]
         return self.__icon["base"][self.direction]
 
 
@@ -141,6 +146,22 @@ class Attacker(cell.Cell):
     def path(self) -> list[Position]: return self.__path
 
 
+    @property
+    def hurt_until(self) -> int: return self.__hurt_until
+
+    
+    @hurt_until.setter
+    def hurt_until(self, value: int): self.__hurt_until = value
+
+
+    @property
+    def skip(self) -> bool: return self.__skip
+
+
+    @skip.setter
+    def skip(self, value: bool) -> None: self.__skip = value
+
+
     def __set_starting_dir(self, target: Position) -> Direction:
         attacker: Position = self.pos
 
@@ -158,22 +179,38 @@ class Attacker(cell.Cell):
     def set_rotated(self) -> None: self.__rotated = True
 
 
+    def set_teleported(self) -> None: 
+        self._spawned = True
+        self.__path.clear()
+
+
     def change_health(self, delta: float) -> None:
         self.__health = max(self.__health + delta, 0.0)
-        self.__hurt = True
+        self._hurt = True
+        self.__skip = True
+
 
 
     def tick(self, world_manager: "world_manager.WorldManager") -> None:
         if self.spawned:
             self.spawned = False
             return
+        
+        if self.__skip: self.__skip = False
+
+        if self.__health <= 0.0:
+            self.deregister(world_manager)
+            return
+
 
         pos = Constants.DIRECTION_MAPPINGS[self.direction]
         cell = world_manager.get_cell(Position(self.pos.x + pos[0], self.pos.y + pos[1]))
         if cell is self.__target:
             assert isinstance(cell, homebase.Homebase)
             cell.change_health(-self.__damage)
-            self.change_health(-1.0)
+
+            self.__hurt_until = world_manager.current_tick
+            self.change_health(-self.health)
             return
 
         if not self.__path: # gets rid of stuck attackers
@@ -181,6 +218,7 @@ class Attacker(cell.Cell):
         else:
             self.__ticks_since_valid_path = 0
         if self.__ticks_since_valid_path > 4:
+            self.hurt_until = world_manager.current_tick
             self.change_health(-self.damage)
             return
         
@@ -218,11 +256,9 @@ class Attacker(cell.Cell):
     def __is_blocking(self, pos: Position, world_manager: "world_manager.WorldManager") -> bool:
         cell = world_manager.get_cell(pos)
 
-        if isinstance(cell, (homebase.Homebase, wall.Wall)):
-            return True
+        if isinstance(cell, (homebase.Homebase, wall.Wall)): return True
 
-        if isinstance(cell, (rotator.Rotator, Attacker)) and cell.homebase is self.homebase:
-            return True
+        if isinstance(cell, (rotator.Rotator, Attacker, teleporter.Teleporter)) and cell.homebase is self.homebase: return True
 
         return False
 
@@ -235,19 +271,20 @@ class Attacker(cell.Cell):
             used_path = False
 
         cell = world_manager.get_cell(next_pos)
-        if isinstance(cell, rotator.Rotator) and cell.homebase is self.homebase:
+        if isinstance(cell, (rotator.Rotator, homebase.Homebase, teleporter.Teleporter)): 
             self.__path.clear()
-            return
-        elif isinstance(cell, (rotator.Rotator, homebase.Homebase)): 
-            self.__path.clear()
+            if self.__rotated: self.__rotated = False
             return
         elif isinstance(cell, Attacker) and cell.homebase is self.homebase:
             self.__path.clear() # repath
             self.__rotated = False
             return
         elif isinstance(cell, Attacker):
-            if cell.alive: 
+            if cell.alive and cell.health > 0.0:
+                cell.hurt_until = world_manager.current_tick
                 cell.change_health(-self.damage)
+
+                self.hurt_until = world_manager.current_tick
                 self.change_health(-cell.__damage)
             return
         elif not world_manager.in_bounds(next_pos) or isinstance(cell, wall.Wall):

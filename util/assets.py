@@ -45,7 +45,7 @@ arrow_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_ARROW)
 crosshair_cursor = pygame.cursors.Cursor(pygame.SYSTEM_CURSOR_CROSSHAIR)
 
 # Cells
-cell_scale_sizes= (64, 64)
+cell_scale_sizes= (64, 65)
 ## Homebases
 base_homebase = pygame.image.load("assets/cells/homebase.png").convert_alpha()
 base_homebase = pygame.transform.scale(base_homebase, cell_scale_sizes)

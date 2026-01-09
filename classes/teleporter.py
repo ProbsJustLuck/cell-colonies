@@ -3,13 +3,11 @@ from typing import TYPE_CHECKING
 
 import pygame
 
+from classes import rotator, wall
 from classes.position import Position 
-from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
-import classes.wall as wall
-import classes.teleporter as teleporter
 
 from classes.ui.colors import ColorInfo
 from util.game_states import States
@@ -20,9 +18,9 @@ if TYPE_CHECKING:
 
 
 
-class Rotator(cell.Cell):
+class Teleporter(cell.Cell):
     __TYPE: str = "UTILITY"
-    __NAME: str = "Rotator"
+    __NAME: str = "Teleporter"
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
@@ -32,9 +30,9 @@ class Rotator(cell.Cell):
         self.__health: float = max(round(health * States.health_multiplier, 2), 1)
 
         self.__color = homebase_link.color
-        self.__icon = self.homebase.rotator_icon
+        self.__icon = self.homebase.teleporter_icon
 
-        if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager) # Sets the target to a random space within 5 blocks of its Homebase
+        if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager)
         elif isinstance(target, Position):
             self.__target = target
         else:
@@ -49,23 +47,15 @@ class Rotator(cell.Cell):
             )
 
         self.__stationary: bool = False
+        self.__hurt: bool = False
 
 
     @classmethod
-    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Rotator: return cls(pos, homebase, world_manager)
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Teleporter: return cls(pos, homebase, world_manager)
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
-        hb = self.homebase.pos
-        empties = world_manager.empty_spaces
-        positions: list[Position] = []
-
-        radius = 5
-        for dx in range(-radius, radius + 1): # Iterates from -5 to positive 6 (excluding 6)
-            rem = radius - abs(dx) # scales from 0 to 5
-            for dy in range(-rem, rem + 1): # same deal, from -rem to position rem +1
-                pos = Position(hb.x + dx, hb.y + dy)
-                if world_manager.in_bounds(pos) and pos in empties: positions.append(pos)
+        positions: list[Position] = list(world_manager.empty_spaces)
 
         if positions: return world_manager.rng.choice(positions)
         return None
@@ -73,7 +63,7 @@ class Rotator(cell.Cell):
 
     def change_health(self, delta: float) -> None: 
         self.__health = max(self.__health + delta, 0.0)
-        self._hurt = True
+        self.__hurt = True
 
 
     @property
@@ -81,12 +71,12 @@ class Rotator(cell.Cell):
 
 
     @property
-    def type(self) -> str: return self.__TYPE # Returns this homebase's type
+    def type(self) -> str: return self.__TYPE # Returns this cell's type
 
 
     @property
-    def icon(self) -> pygame.Surface: # Returns the icon for this homebase.
-        if self._hurt: return self.__icon["hurt"] 
+    def icon(self) -> pygame.Surface: # Returns the icon for this cell.
+        if self.__hurt: return self.__icon["hurt"] 
         else: return self.__icon["base"]
 
 
@@ -114,15 +104,12 @@ class Rotator(cell.Cell):
     def path(self) -> list[Position]: return self.__path
 
 
-    def set_teleported(self) -> None: self._spawned = True
-
-
     def __is_blocking(self, pos: Position, world_manager: "world_manager.WorldManager") -> bool:
         cell = world_manager.get_cell(pos)
 
         if isinstance(cell, (homebase.Homebase, wall.Wall)): return True
 
-        if isinstance(cell, (Rotator, attacker.Attacker, teleporter.Teleporter)) and cell.homebase is self.homebase: return True
+        if isinstance(cell, (rotator.Rotator, attacker.Attacker, Teleporter)) and cell.homebase is self.homebase: return True
 
         return False
 
@@ -132,19 +119,22 @@ class Rotator(cell.Cell):
             self.spawned = False
             return
         
-        if self._hurt: self._hurt = False
+        if self.__hurt: self.__hurt = False
 
-        if self.age > max(10, (round(world_manager.size * 1.5) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(1.0, round(self.max_health / 5, 2))) # take 20% of its max health as damage every other tick if its old
+        if self.age > max(10, (round(world_manager.size * 1.5) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(0.1, round(self.max_health / 5, 2))) # take 20% of its max health as damage every other tick if its old
         
 
         surroundings = self._get_surroundings(world_manager)
-        if surroundings: # Loop through all nearby attackers and rotate them
-            for atk in surroundings:
-                if not isinstance(atk, attacker.Attacker) or atk.homebase == self.homebase: continue
-
-                self.change_health(-atk.damage)
-                self.__rotate_target(atk)
-                atk.set_rotated()
+        if surroundings: # Loop through all nearby attackers and teleport them
+            for cell in surroundings:
+                if isinstance(cell, wall.Wall) or (isinstance(cell, (attacker.Attacker, rotator.Rotator, Teleporter)) and cell.homebase is self.homebase) or cell is self._homebase: continue
+                
+                pos = world_manager.rng.choice(list(world_manager.empty_spaces))
+                world_manager.move_entity(cell, pos)
+                if isinstance(cell, (attacker.Attacker, rotator.Rotator)): cell.set_teleported()
+                
+                if isinstance(cell, attacker.Attacker): self.change_health(-cell.damage)
+                else: self.change_health(-1.0)
         
         if self.__target and not self.__stationary and not self.__path: self.__path = pathfinding.pathfind(
                 self.pos,
@@ -166,16 +156,4 @@ class Rotator(cell.Cell):
             return
 
         world_manager.move_entity(self, next_pos)
-        self.__path.pop(0) # if we're rotated, then don't change the path (because we didn't follow it)
-
-
-    def __rotate_target(self, cell: attacker.Attacker) -> None:
-        dir: Direction = cell.direction
-        opposites: dict[Direction, Direction] = { # cleaner than 4 if/elif statements
-            Direction.NORTH: Direction.SOUTH,
-            Direction.SOUTH: Direction.NORTH,
-            Direction.EAST: Direction.WEST,
-            Direction.WEST: Direction.EAST
-        }
-
-        cell.direction = opposites[dir]
+        self.__path.pop(0)

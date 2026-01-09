@@ -20,7 +20,7 @@ class Constants:
     DISPLAY_WIDTH: int = 960
     DISPLAY_HEIGHT: int = 560
 
-    DISPLAY_MONITOR: int = 0
+    DISPLAY_MONITOR: int = 1
 
     # Sim
     DEFAULT_ZOOM: float = 1.05
@@ -49,4 +49,8 @@ class Constants:
         KeyActions.STEP_BACKWARD: pygame.K_COMMA,
 
         KeyActions.REGENERATE_WORLD: pygame.K_r,
+    }
+
+    GOOD_SEEDS: dict[str, int] = {
+        "tp_homebase_away": 3128439018
     }

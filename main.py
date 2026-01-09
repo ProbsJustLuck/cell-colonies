@@ -347,7 +347,7 @@ while state.running:
 
     
     draw_text(Position(3, 3), f"FPS: {round(fps_clock.get_fps(), 2)},   TPS: {round(state.tps, 2)},     Homebases Alive: {len(state.world.homebases) if state.world else 0}", "#000000", 20)
-    draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos}", "#000000", 20)
+    draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos} Offset: {state.y_offset}", "#000000", 20)
 
     # flip the display to put your work on screen
     assets.display_screen.blit(pygame.transform.smoothscale(assets.screen, assets.display_screen.get_size()), (0, 0))

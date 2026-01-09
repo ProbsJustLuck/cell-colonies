@@ -15,6 +15,7 @@ class Cell(entity.Entity):
         super().__init__(pos, world_manager)
         self._homebase: homebase.Homebase = homebase_link # The homebase that this cell belongs to
         self._spawned = True # If this entity just spawned, prevents moving on first tick alive.
+        self._hurt = False
 
         self.homebase.last_cell_spawned = self
 

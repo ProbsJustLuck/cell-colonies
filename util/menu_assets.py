@@ -9,7 +9,7 @@ from classes.ui.menu_area import MenuArea
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area, complete_tutorial
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -151,8 +151,9 @@ special_buttons: dict[int, Button] = {
     46: Button("SKIP TUTORIAL", (490, 500), "Played the game already? Want to jump into the action? Skip the tutorial today!", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=1, font_size=50, tooltip_scale=0.4, padding=20), on_enter=toggle_skip, on_leave=toggle_skip),
 
     # Debug options
-    47: Button("Show target lines", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery - 40), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=2, font_size=40, tooltip_scale=0.4, padding=20), on_enter=toggle_target_lines, on_leave=toggle_target_lines),
-    48: Button("Show pathing line", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery + 20), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=2, font_size=40, tooltip_scale=0.4, padding=20), on_enter=toggle_paths, on_leave=toggle_paths),
+    47: Button("Show target lines", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery - 60), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=2, font_size=40, tooltip_scale=0.4, padding=20), on_enter=toggle_target_lines, on_leave=toggle_target_lines),
+    48: Button("Show pathing line", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=2, font_size=40, tooltip_scale=0.4, padding=20), on_enter=toggle_paths, on_leave=toggle_paths),
+    54: Button('"Complete" tutorial', (assets.screen.get_rect().centerx, assets.screen.get_rect().centery + 60), "", style=ButtonStyle(height=40, width=220, scale=0.9, base="#c6c6c6", border=2, font_size=40, tooltip_scale=0.4, padding=20), on_enter=complete_tutorial),
 
     # Catalogue pages
     49: Button("<-", (250, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=120, scale=1.5, opacity=255, base="#888888"), on_enter=return_to_main_menu),
@@ -160,6 +161,8 @@ special_buttons: dict[int, Button] = {
     51: Button("", (254, assets.screen.get_rect().centery - 57), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.4, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="attacker"),
     52: Button("", (254, assets.screen.get_rect().centery + 6), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.4, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="rotator"),
     53: Button("", (254, assets.screen.get_rect().centery + 69), "Unlocked after finishing (or skipping) the tutorial!", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.7, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="teleporter"),
+
+    # 54 taken
 }
 for button in special_buttons.values():
     button.initialize()

@@ -45,6 +45,12 @@ class Typewriter:
     def not_rude(self) -> bool: return True if self.__current and self.__current.id == -2 else False
 
 
+    def clear(self) -> None:
+        self.__queue = []
+        self.__current = None
+        self.__lines = []
+
+
     def reset_to_queue(self) -> None:
         if self.__current: 
             self.__queue.insert(0, self.__current)

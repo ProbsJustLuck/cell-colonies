@@ -183,10 +183,10 @@ class States:
     catalogue_area: str = "homebase"
     unlocked_teleporter: bool = False
 
-
     # Rewind timeline
     TIMELINE_RECT = pygame.rect.Rect(20, 70, 31, 518)
     y_offset: int = 15
+    timeline_buttons: list["Button"] = []
 
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}

@@ -10,7 +10,8 @@ CELL_TYPES: tuple[type[entity.Entity], ...] = (
     rotator.Rotator
 )
 
-SPAWNABLE_CELLS: tuple[type[cell.Cell], ...] = (
+spawnable_cells: list[type[cell.Cell]] = [
     attacker.Attacker,
     rotator.Rotator
-)
+]
+spawn_rates = [85, 20]

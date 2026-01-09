@@ -8,6 +8,7 @@ from classes.game_state import GameState
 import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
+import classes.teleporter as teleporter
 from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
@@ -37,6 +38,7 @@ class WorldManager:
         self.__rotators: list[rotator.Rotator] = []
         self.__attackers: list[attacker.Attacker] = []
         self.__walls: list[wall.Wall] = []
+        self.__teleporters: list[teleporter.Teleporter] = []
 
 
         self.__empty_spaces: set[Position] = {
@@ -116,6 +118,7 @@ class WorldManager:
         self.__rotators = []
         self.__attackers = []
         self.__walls = []
+        self.__teleporters = []
         self.__empty_spaces = set()
         for x in range(self.__world_size):
             for y in range(self.__world_size):
@@ -130,6 +133,8 @@ class WorldManager:
                     self.__attackers.append(entity)
                 elif isinstance(entity, wall.Wall):
                     self.__walls.append(entity)
+                elif isinstance(entity, teleporter.Teleporter):
+                    self.__teleporters.append(entity)
 
         return True
 
@@ -183,14 +188,6 @@ class WorldManager:
 
         if self.__debug and self.__current_tick % 20 == 0: self.__check_empty()
 
-        # Kill dead cells
-        for atk in sorted(self.__attackers, key=lambda cell: (cell.pos.x, cell.pos.y)):
-            if atk.health <= 0.0: atk.deregister(self)
-            if atk.hurt: atk.hurt = False
-
-        for rot in sorted(self.__rotators, key=lambda cell: (cell.pos.x, cell.pos.y)):
-            if rot.health <= 0.0: rot.deregister(self)
-
         # Tick normally
         for homebase in sorted(self.__homebases, key=lambda hb: (hb.pos.x, hb.pos.y)):
             if not homebase.alive: continue
@@ -199,11 +196,41 @@ class WorldManager:
         
         for rotator in sorted(self.__rotators, key=lambda rot: (rot.pos.x, rot.pos.y)):
             if not rotator.alive: continue
+
+            if rotator.health <= 0.0:
+                rotator.deregister(self)
+                continue
+
             rotator.age += 1
             rotator.tick(self)
+
+        for teleporter in sorted(self.__teleporters, key=lambda tele: (tele.pos.x, tele.pos.y)):
+            if not teleporter.alive: continue
+
+            if teleporter.health <= 0.0:
+                teleporter.deregister(self)
+                continue
+
+            teleporter.age += 1
+            teleporter.tick(self)
         
         for attacker in sorted(self.__attackers, key=lambda atk: (atk.pos.x, atk.pos.y)):
             if not attacker.alive: continue
+
+            # time spent here: 3 hours
+            if attacker.skip:
+                if self.__current_tick > attacker.hurt_until: attacker.deregister(self)
+                continue
+
+            if attacker.hurt and self.__current_tick > attacker.hurt_until:
+                attacker.hurt = False
+
+            if attacker.health <= 0:
+                attacker.hurt = True
+                attacker.hurt_until = self.__current_tick
+                attacker.skip = True
+                continue
+
             attacker.age += 1
             attacker.tick(self)
 
@@ -224,8 +251,8 @@ class WorldManager:
     def spawn_cell(self, pos: Position, homebase: homebase.Homebase, type: Cell | None = None, target: Position | homebase.Homebase | None = None) -> entity.Entity: 
         if not type:
             choice = self.rng.choices(
-                population= [val for val in cell_registry.SPAWNABLE_CELLS],
-                weights=[85, 15], # attacker, rotator
+                population= [val for val in cell_registry.spawnable_cells],
+                weights=cell_registry.spawn_rates, # attacker, rotator
                 k=1
             )[0]
             new_cell: entity.Entity = choice.spawn(pos, homebase, self, target)
@@ -267,6 +294,8 @@ class WorldManager:
             if cell in self.__rotators: self.__rotators.remove(cell)
         elif isinstance(cell, wall.Wall):
             if cell in self.__walls: self.__walls.remove(cell)
+        elif isinstance(cell, teleporter.Teleporter):
+            if cell in self.__teleporters: self.__teleporters.remove(cell)
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
@@ -284,3 +313,5 @@ class WorldManager:
             self.__rotators.append(cell)
         elif isinstance(cell, wall.Wall):
             self.__walls.append(cell)
+        elif isinstance(cell, teleporter.Teleporter):
+            self.__teleporters.append(cell)

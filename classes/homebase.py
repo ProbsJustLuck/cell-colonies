@@ -70,6 +70,13 @@ class Homebase(entity.Entity):
         self.__rotator_icon["base"].fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
         self.__rotator_icon["hurt"].fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
 
+        self.__teleporter_icon = {
+            "base": assets.base_teleporter.copy(),
+            "hurt": assets.base_teleporter.copy()
+        }
+        self.__teleporter_icon["base"].fill(self.__color.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        self.__teleporter_icon["hurt"].fill((255, 60, 60, 150), special_flags=pygame.BLEND_RGBA_MULT)
+
         self.__spawn_ticks: int = 0
 
         self.__ticks_since_target: int = 0 # The number of ticks since this Homebase had an attacker successfully find a path to it.
@@ -92,6 +99,10 @@ class Homebase(entity.Entity):
 
     @property
     def attacker_icon(self) -> dict[str, dict[Direction, pygame.Surface]]: return self.__attacker_icon
+
+
+    @property
+    def teleporter_icon(self) -> dict[str, pygame.Surface]: return self.__teleporter_icon
 
 
     @property

@@ -46,7 +46,7 @@ def event_handler(event: pygame.Event):
         state.special_buttons[8].initialize()
 
     elif event.type == assets.ROSS_CALL:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.seen_bob = True
             state.typewriter.queue(Message(["Hello, welcome to Cell Colonies!", "My name is Bob Ross. You can tell from", " my hair.", "", "I will be your guide and tutorial for", "this game!"]))
 
@@ -55,30 +55,30 @@ def event_handler(event: pygame.Event):
             state.typewriter.queue(Message(["An example would be the simulation zone,", "the main attraction of this game!", "", "I've marked it in red on your screen.", "", "Here you'll find the main simulation", "with every cell and its team displayed!"], 0))
     
     elif event.type == assets.ROSS_PAN:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.typewriter.queue(Message(["Great work! You've got a knack for that.", "", "Anyways, we can move onto the next", "area of our tour."]))
             state.typewriter.queue(Message(["Take a look at those controls below the", "simulation zone.", "", "Those allow you to control the", "playback of the current simulation!"], 3))
             state.typewriter.queue(Message(["That middle button pauses/unpauses", "the current simulation.", "", "The buttons to the right of the pause", "button control moving the simulation one", "or two ticks forward respectively.", "When the simulation ends, you cannot", "use either of them!"], 4))
     elif event.type == assets.ROSS_PAN_REMINDER:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to pan and zoom", "remember?"]))
             state.typewriter.queue(Message(["If you've forgotten, you can pan by", "using (MMB) and moving your mouse,", "and zoom using (Wheel Up/Down)!"]))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "simulation zone to be able to do those!"], 2))
 
     elif event.type == assets.ROSS_PAUSE:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             if not state.sim_pause: toggle_pause_simulation(None)
             state.typewriter.queue(Message(["Good job! I gave you some extra time to", "play around with the simulation.", "", "The basis of Cell Colonies is for one", "homebase to be left standing! Homebases", "are marked by cells with house icons."]))
             state.typewriter.queue(Message(["For more information on every cell", "in the game, I recommend checking", "out the cell catalogue in the main menu!", "", "It houses most of the information in the", "game about every cell."]))
             state.typewriter.queue(Message(["Next up are the buttons to the left of the", "pause button! These are the rewind", "buttons, basically going back in time 1-2", "ticks in the simulation respectively!"], 6))
     elif event.type == assets.ROSS_PAUSE_REMINDER:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to unpause, remember?"]))
             state.typewriter.queue(Message(["If you've forgotten, you can unpause by", "using (LMB) on the middle pause button,", "and forward using (LMB) on the forward", "or fast forward buttons!"], 4))
             state.typewriter.queue(Message(["Remember, you have to hover over the", "buttons to do those!"], 7))
 
     elif event.type == assets.ROSS_REWIND:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.typewriter.queue(Message(["Nice!", "", "For the next area, we'll focus on", "controlling the unpaused speed of", "the simulation."]))
             state.typewriter.queue(Message(["See the tps button in the bottom?", "", "Scrolling directly on the tps button will", "change the TPS based off your input!"], 10))
             state.typewriter.queue(Message(["The two buttons beside the TPS button", "allow you to fine-tune the TPS to", "whatever you wish too."], 12))
@@ -94,6 +94,10 @@ def event_handler(event: pygame.Event):
             state.typewriter.queue(Message(["Try some of the options out!", "I'll let you play around with the settings", "for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the next part!"]))
 
             state.typewriter.queue(Message(["Now try clicking on a cell!", "It'll bring up a cool menu above me,", "showing you different information", "about the cell you clicked on.", "", "All cells have unique information to show in", "the sidebar!"]))
+            state.typewriter.queue(Message(["I'll let you play around for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the mext part!"]))
+
+            state.typewriter.queue(Message(["The final area I want to explain is the", "rewind timeline, seen on the left.", "It shows a timeline of all previous", "ticks, allowing you to easily rewind to", "previous ticks!"], 20))
+            state.typewriter.queue(Message(["You can scroll the list with (Wheel Up/Down).", "Its very handy, I use it all the time!"]))
             state.typewriter.queue(Message(["I'll let you play around for a bit.", "", f"Once you're finished, press ({pygame.key.name(state.bindings[KeyActions.ADVANCE_DIALOGUE]).upper()}) and", "I'll explain the final part!"]))
 
             state.typewriter.queue(Message(["The final area to cover is the bottom left,", "just above the seed button.", "This area only has two buttons in it."], 16))
@@ -104,7 +108,7 @@ def event_handler(event: pygame.Event):
 
             state.typewriter.queue(Message(["And that's everything!", "If you have any questions, you can", "always call me.", "", "Enjoy!"], 19))
     elif event.type == assets.ROSS_REWIND_REMINDER:
-        if state.typewriter:
+        if state.typewriter and not state.finished_tutorial:
             state.typewriter.queue(Message(["Hey, you okay?", "I'm waiting for you to rewind, remember?"]))
             state.typewriter.queue(Message(["If you've forgotten, you can rewind by", "using (LMB) on either rewind button!", "", "You have to have some ticks to rewind to", "in order to rewind!"], 9))
             state.typewriter.queue(Message(["If you can't rewind, try unpausing for", "a few ticks, then retrying."], 9))
@@ -263,21 +267,25 @@ def event_handler(event: pygame.Event):
             for i in range(22, 27): # Option sections
                 if state.special_buttons[i].rect.collidepoint(event.pos):
                     state.special_buttons[i].click()
+                    return
 
 
             if state.controls_section == "controls":
                 for i in range(33, 35): # Second bindings page
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].click()
+                        return
 
                 if not state.second_binding_page: # Controls 1
                     for i in range(27, 33):
                         if state.special_buttons[i].rect.collidepoint(event.pos):
                             state.special_buttons[i].click()
+                            return
                 else:
                     for i in range(35, 41): # Controls 2
                         if state.special_buttons[i].rect.collidepoint(event.pos):
                             state.special_buttons[i].click()
+                            return
 
             elif state.controls_section == "colonies":
                 for button in state.toggle_colonies:
@@ -289,14 +297,21 @@ def event_handler(event: pygame.Event):
                 for i in range(41, 44):
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].click()
+                        return
 
                 if state.special_buttons[46].rect.collidepoint(event.pos):
                     state.special_buttons[46].click()
+                    return
 
             elif state.controls_section == "debug":
                 for i in range(47, 49):
                     if state.special_buttons[i].rect.collidepoint(event.pos):
                         state.special_buttons[i].click()
+                        return
+            
+                if state.special_buttons[54].rect.collidepoint(event.pos):
+                    state.special_buttons[54].click()
+                    return
 
         elif state.current_area is MenuArea.SIMULATION and state.world:
             origin = state.SIM_RECT.topleft + state.offset
@@ -315,9 +330,15 @@ def event_handler(event: pygame.Event):
 
                 state.selected_cell = state.world.get_cell(pos)
                 state.selected_id = state.world.get_id(pos)
+                return
             else:
                 state.selected_cell = None
-        
+            
+            for button in state.timeline_buttons:
+                if button.rect.collidepoint(event.pos):
+                    button.click()
+                    return
+
         elif state.current_area is MenuArea.CATALOGUE:
             for i in range(49, 54):
                 button = state.special_buttons[i]
@@ -604,8 +625,10 @@ def event_handler(event: pygame.Event):
                     elif state.sim_size > 0 and button.disabled: button.toggle()
 
         elif state.current_area is MenuArea.SIMULATION and state.world and state.TIMELINE_RECT.collidepoint(mouse) and not state.changing_seed:
-            if event.y > 0: state.y_offset = min(state.y_offset + event.y * 5, 50 * len(state.world.history))
-            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 5, 0)
+            M = 50
+
+            if event.y > 0: state.y_offset = min(state.y_offset + event.y * 40, 15)
+            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 40, M * (min(10 - len(state.world.history), 0)) + 15)
 
 
     # Below are basically just keybinds

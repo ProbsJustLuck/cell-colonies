@@ -926,9 +926,16 @@ def change_catalogue_area(button: "Button"):
         if not state.finished_tutorial and not state.skip_tutorial and not state.unlocked_teleporter:
             button.clicked = False
             return
-        elif (state.finished_timer or state.skip_tutorial) and not state.unlocked_teleporter:
+        elif (state.finished_tutorial or state.skip_tutorial) and not state.unlocked_teleporter:
             state.special_buttons[53].tooltip = ""
             state.unlocked_teleporter = True
+
+            from classes.teleporter import Teleporter
+            from util import cell_registry
+
+            cell_registry.spawnable_cells.append(Teleporter)
+            cell_registry.spawn_rates.append(15)
+
             button.clicked = False
             return
 
@@ -979,3 +986,43 @@ def change_catalogue_area(button: "Button"):
         case _:
             btn = state.special_buttons[49]
             if not btn.disabled: btn.toggle()
+
+
+def rewind_button(button: "Button"):
+    if not state.world or type(button.id) != str: return
+    state.game_end = False
+
+    selected_id = state.selected_cell.id if state.selected_cell else None
+    state.world.restore_snapshot(int(button.id))
+    from util.render import clear_icon_cache
+    clear_icon_cache()
+    state.selected_cell = None
+
+    state.y_offset = max(state.y_offset, 50 * (min(10 - len(state.world.history), 0)) + 15)
+
+    if selected_id is not None: # have to do this cuz 0 would be skipped
+        for row in state.world.map:
+            for cell in row:
+                if cell and cell.id == selected_id:
+                    state.selected_cell = cell
+                    break
+            if state.selected_cell:
+                break
+
+    if state.waiting_for_rewind and not state.rewinded: state.rewinded = True
+                
+
+    if state.pause and state.pause.disabled: state.pause.toggle()
+    if state.forward and state.forward.disabled: state.forward.toggle()
+    if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
+
+    if not state.world.get_snapshot(1):
+        if state.rewind and not state.rewind.disabled: state.rewind.toggle()
+        if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
+
+
+def complete_tutorial(button: "Button"):
+    state.seen_bob = True
+    state.finished_tutorial = True
+    pygame.time.set_timer(assets.ROSS_REWIND, 0)
+    if state.typewriter: state.typewriter.clear()

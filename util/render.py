@@ -1,8 +1,10 @@
+import copy
 from typing import Callable
 import pygame
 
+from classes.teleporter import Teleporter
 from classes.ui.colors import TeamColor
-from classes.ui.key_actions import KeyActions # type: ignore
+from classes.ui.key_actions import KeyActions
 from classes.wall import Wall
 from constants import Constants
 from classes.lerp import Lerp
@@ -15,7 +17,7 @@ from classes.rotator import Rotator
 from util import assets
 from util.game_states import States as state
 from util.ui_helpers import create_text, add_outline_to_image, draw_text, fit_view
-from util.game_actions import create_world, toggle_color
+from util.game_actions import create_world, toggle_color, rewind_button
 from util import menu_assets
 
 STARTING_SIZE = 300
@@ -258,10 +260,9 @@ def render_game_screen(downtime: int):
 
 
     # Selected cell
+    if state.selected_cell and not state.selected_cell.alive: 
+        state.selected_cell = None
     if state.selected_cell:
-        if not state.selected_cell.alive: 
-            state.selected_cell = None
-            return
         cell = state.selected_cell
 
         rect = pygame.Rect(660, 70, 500, 300)
@@ -292,7 +293,7 @@ def render_game_screen(downtime: int):
 
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health:.2f} / 1.00 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}    Hurt Until: {cell.hurt_until}", "#000000", 35) # type: ignore
 
             draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Since Valid Path: {cell.ticks_since_valid_path} (max 5)", "#000000", 35)
 
@@ -304,6 +305,26 @@ def render_game_screen(downtime: int):
             draw_text(Position(675, 160 + (LINE_SPACING * 5)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 6)), f"Damage: {cell.damage}", "#000000", 35)
+
+            if state.show_target_lines and cell.target.pos:
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+
+                assets.screen.set_clip(state.SIM_RECT)
+                pygame.draw.line(assets.screen, "#ff0000", (int(origin.x + cell.pos.y * cell_size + cell_size // 2), int(origin.y + cell.pos.x * cell_size + cell_size // 2)), (int(origin.x + cell.target.pos.y * cell_size + cell_size // 2), int(origin.y + cell.target.pos.x * cell_size + cell_size // 2)), 5)
+                assets.screen.set_clip(None)
+
+            if state.show_paths and cell.path:
+                path: list[Position] = copy.copy(cell.path)
+                current: Position = cell.pos
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+                while path:
+                    assets.screen.set_clip(state.SIM_RECT)
+                    pygame.draw.line(assets.screen, "#00ff00", (int(origin.x + current.y * cell_size + cell_size // 2), int(origin.y + current.x * cell_size + cell_size // 2)), (int(origin.x + path[0].y * cell_size + cell_size // 2), int(origin.y + path[0].x * cell_size + cell_size // 2)), 5)
+                    assets.screen.set_clip(None)
+
+                    current = path.pop(0)
 
         elif isinstance(cell, Rotator):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
@@ -319,11 +340,65 @@ def render_game_screen(downtime: int):
 
             draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
 
+            if state.show_target_lines and cell.target and not cell.stationary:
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+
+                assets.screen.set_clip(state.SIM_RECT)
+                pygame.draw.line(assets.screen, "#ff0000", (int(origin.x + cell.pos.y * cell_size + cell_size // 2), int(origin.y + cell.pos.x * cell_size + cell_size // 2)), (int(origin.x + cell.target.y * cell_size + cell_size // 2), int(origin.y + cell.target.x * cell_size + cell_size // 2)), 5)
+                assets.screen.set_clip(None)
+
+            if state.show_paths and cell.path and not cell.stationary:
+                path: list[Position] = copy.copy(cell.path)
+                current: Position = cell.pos
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+                while path:
+                    assets.screen.set_clip(state.SIM_RECT)
+                    pygame.draw.line(assets.screen, "#00ff00", (int(origin.x + current.y * cell_size + cell_size // 2), int(origin.y + current.x * cell_size + cell_size // 2)), (int(origin.x + path[0].y * cell_size + cell_size // 2), int(origin.y + path[0].x * cell_size + cell_size // 2)), 5)
+                    assets.screen.set_clip(None)
+
+                    current = path.pop(0)
+
         elif isinstance(cell, Wall):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Generic wall.", "#000000", 35)
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Entities cannot move through this.", "#000000", 35)
             draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Does not belong to a colony.", "#000000", 35)
         
+        elif isinstance(cell, Teleporter):
+            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
+
+            if cell.target:
+                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
+            else:
+                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
+
+            if state.show_target_lines and cell.target and not cell.stationary:
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+
+                assets.screen.set_clip(state.SIM_RECT)
+                pygame.draw.line(assets.screen, "#ff0000", (int(origin.x + cell.pos.y * cell_size + cell_size // 2), int(origin.y + cell.pos.x * cell_size + cell_size // 2)), (int(origin.x + cell.target.y * cell_size + cell_size // 2), int(origin.y + cell.target.x * cell_size + cell_size // 2)), 5)
+                assets.screen.set_clip(None)
+
+            if state.show_paths and cell.path and not cell.stationary:
+                path: list[Position] = copy.copy(cell.path)
+                current: Position = cell.pos
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+                while path:
+                    assets.screen.set_clip(state.SIM_RECT)
+                    pygame.draw.line(assets.screen, "#00ff00", (int(origin.x + current.y * cell_size + cell_size // 2), int(origin.y + current.x * cell_size + cell_size // 2)), (int(origin.x + path[0].y * cell_size + cell_size // 2), int(origin.y + path[0].x * cell_size + cell_size // 2)), 5)
+                    assets.screen.set_clip(None)
+
+                    current = path.pop(0)
+
         # Name
         if cell.name != "Wall":
             draw_text(Position(750, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
@@ -488,6 +563,13 @@ def render_game_screen(downtime: int):
 
                     assets.screen.blit(surf, rect.topleft)
 
+            case 20: # timeline
+                rect = pygame.Rect(state.TIMELINE_RECT.topleft, (state.TIMELINE_RECT.size[0], state.TIMELINE_RECT.size[1])).inflate(11, 11)
+                surf = pygame.Surface(rect.size, pygame.SRCALPHA)
+                pygame.draw.rect(surf, (255, 0, 0), surf.get_rect(), width=4)
+
+                assets.screen.blit(surf, rect.topleft)
+
             case _:
                 pass
 
@@ -591,32 +673,40 @@ def render_game_screen(downtime: int):
         pygame.time.set_timer(assets.ROSS_REWIND, 1000, loops=1)
 
     # Rewind timeline
-    pygame.draw.rect(assets.screen, "#FF0000", state.TIMELINE_RECT)
-    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.topleft[0], state.TIMELINE_RECT.topleft[1]), (state.TIMELINE_RECT.topright[0] - 1, state.TIMELINE_RECT.topright[1]), 2)
-    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.bottomleft[0], state.TIMELINE_RECT.bottomleft[1]), (state.TIMELINE_RECT.bottomright[0] - 1, state.TIMELINE_RECT.bottomright[1]), 2)
-    buttons: list[Button.Button] = []
+    overlay = pygame.Surface(state.TIMELINE_RECT.size, pygame.SRCALPHA)
+    overlay.fill((10, 10, 10, 60))
+
+    assets.screen.blit(overlay,state.TIMELINE_RECT.topleft)
     if state.world.history:
+        state.timeline_buttons.clear()
         for i in range(len(state.world.history)):
             x = state.TIMELINE_RECT.centerx
             y = state.TIMELINE_RECT.top + 20 + state.y_offset + 50 * i
-            height = 35
+            HEIGHT = 36 # type: ignore
             WIDTH = 25 # type: ignore
-            if (state.TIMELINE_RECT.top >= y + height) or (state.TIMELINE_RECT.bottom <= y): continue
+            TOP = y - HEIGHT / 2
+            BOTTOM = y + HEIGHT / 2
+
+            if (state.TIMELINE_RECT.top >= BOTTOM) or (state.TIMELINE_RECT.bottom <= TOP): continue
 
             text = create_text(f"{i + 1}", "#000000", 35)
-            text_rect: pygame.rect.Rect = text.get_rect(midtop = (x, y + height // 2))
-            crop = text_rect
-            if state.TIMELINE_RECT.bottom < y + height:
-                crop = text_rect.clip(state.TIMELINE_RECT)
+            text_rect: pygame.rect.Rect = text.get_rect(midbottom = (x + 1, int(BOTTOM) - 4))
 
-                height = state.TIMELINE_RECT.bottom - y
-            button = Button.Button("", (x, y), "", style=Button.ButtonStyle(width = WIDTH, height = height, border=2), id=f"{i + 1}")
+            clip_top = max(TOP, state.TIMELINE_RECT.top)
+            clip_bottom = min(BOTTOM, state.TIMELINE_RECT.bottom)
+            if clip_bottom - clip_top <= 0: continue
 
-            buttons.append(button)
+            center_y = (clip_top + clip_bottom) / 2
+            button = Button.Button("", (x, int(center_y)), "", style=Button.ButtonStyle(width=WIDTH, height=int(clip_bottom - clip_top), border=2), id=f"{i+1}", on_enter=rewind_button)
             button.initialize()
             button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
-            assets.screen.blit(text, text_rect, crop)
+            state.timeline_buttons.append(button)
 
+            assets.screen.set_clip(state.TIMELINE_RECT)
+            assets.screen.blit(text, text_rect)
+            assets.screen.set_clip(None)
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.topleft[0], state.TIMELINE_RECT.topleft[1]), (state.TIMELINE_RECT.topright[0] - 1, state.TIMELINE_RECT.topright[1]), 2)
+    pygame.draw.line(assets.screen, "#000000", (state.TIMELINE_RECT.bottomleft[0], state.TIMELINE_RECT.bottomleft[1]), (state.TIMELINE_RECT.bottomright[0] - 1, state.TIMELINE_RECT.bottomright[1]), 2)
 
 
     if Button.pending_tooltip:
@@ -849,8 +939,9 @@ def render_options_screen() -> None:
                 assets.screen.blit(text, text.get_rect(center = (assets.screen.size[0] // 2, assets.screen.size[1] // 2 - 30)))
 
         case "debug":
-            for i in range(47, 49):
-                state.special_buttons[i].draw(assets.screen, mouse_pos)
+            for i in range(47, 49): state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+            state.special_buttons[54].draw(assets.screen, mouse_pos)
 
         case _: pass
 
