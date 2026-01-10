@@ -374,6 +374,8 @@ def hide_tps(button: "Button"): state.show_tps = False
 def set_tps(value: float): 
     state.target_tps = round(value, 1)
 
+    if state.tps_slider: state.tps_slider.value = state.target_tps
+
     if state.target_tps >= 40.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
     elif state.target_tps < 40.0 and state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
 

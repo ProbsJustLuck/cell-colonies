@@ -396,7 +396,7 @@ def render_game_screen(downtime: int):
 
             draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
 
             if state.show_target_lines and cell.target and not cell.stationary:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -430,7 +430,7 @@ def render_game_screen(downtime: int):
 
             draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
 
             if state.show_target_lines and cell.target and not cell.stationary:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -912,6 +912,8 @@ def render_options_screen() -> None:
 
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
             draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
+
+            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 70), "Click to disable spawning a colony of that color!", "#000000", 30, mode="center")
 
             for button in state.toggle_colonies:
                 button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))

@@ -32,37 +32,53 @@ while state.running:
     downtime = fps_clock.tick(60)  # Limits game loop to 60 FPS
     pressed_keys = pygame.key.get_pressed()
 
-    TRIGGER = 200
+    TRIGGER = 1000
 
-    if downtime > TRIGGER and state.target_tps not in [2.0, 0.5]:
-        set_tps(2.0)
+    if state.current_area is MenuArea.SIMULATION:
+        if downtime > TRIGGER and state.target_tps not in [2.0, 0.5, 0.1]:
+            set_tps(2.0)
 
-        assert state.typewriter
+            assert state.typewriter
 
-        if not state.typewriter.tps_reset():
-            if state.typewriter.has_lines_left():
-                state.typewriter.reset_to_queue()
+            if not state.typewriter.tps_reset() and not state.typewriter.tps_reset_2():
+                if state.typewriter.has_lines_left():
+                    state.typewriter.reset_to_queue()
 
-                state.typewriter.prepend(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!", "", "Anyways..."], -3))
-            else:
-                state.typewriter.queue(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!"], -3))
-        elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
-            state.typewriter.reset_progress()
+                    state.typewriter.prepend(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!", "", "Anyways..."], -3))
+                else:
+                    state.typewriter.queue(Message(["Uh oh. Your system was LAGGING hard!", "I've reset the TPS to 2. Be careful when", "setting the TPS too high!"], -3))
+            elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+                state.typewriter.reset_progress()
 
-    elif downtime > TRIGGER and state.target_tps == 2.0:
-        set_tps(0.5)
+        elif downtime > TRIGGER * 3 and state.target_tps == 2.0:
+            set_tps(0.5)
 
-        assert state.typewriter
+            assert state.typewriter
 
-        if not state.typewriter.tps_reset():
-            if state.typewriter.has_lines_left():
-                state.typewriter.reset_to_queue()
+            if not state.typewriter.tps_reset_2():
+                if state.typewriter.has_lines_left():
+                    state.typewriter.reset_to_queue()
 
-                state.typewriter.prepend(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device...", "", "Anyways..."], -4))
-            else:
-                state.typewriter.queue(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device..."], -4))
-        elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
-            state.typewriter.reset_progress()
+                    state.typewriter.prepend(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device...", "", "Anyways..."], -4))
+                else:
+                    state.typewriter.queue(Message(["UH OH. Your system was STILL lagging hard!", "I've set the TPS to 0.5. Be careful when", "setting the TPS too high!", "Maybe even consider a better device..."], -4))
+            elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+                state.typewriter.reset_progress()
+
+        elif downtime > TRIGGER * 3 and state.target_tps == 0.5:
+            set_tps(0.1)
+
+            assert state.typewriter
+
+            if not state.typewriter.tps_reset_3():
+                if state.typewriter.has_lines_left():
+                    state.typewriter.reset_to_queue()
+
+                    state.typewriter.prepend(Message(["UH OH. Your system was still lagging a lot!", "I've set the TPS to 0.1. Try setting some", "settings lower, it will help!!", "Maybe even consider a better device...", "", "Anyways..."], -5))
+                else:
+                    state.typewriter.queue(Message(["UH OH. Your system was still lagging a lot!", "I've set the TPS to 0.1. Try setting some", "settings lower, it will help!!", "Maybe even consider a better device..."], -5))
+            elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+                state.typewriter.reset_progress()
 
     for event in pygame.event.get(): event_handler(event)
 
@@ -75,6 +91,7 @@ while state.running:
 
             if state.world and not state.sim_pause and not state.full_pause and not state.game_end: # tick logic
                 accum += downtime
+                if accum > 20000: accum = 1000
                 target = 1000.0 / state.target_tps
 
                 count = 0

@@ -128,8 +128,8 @@ MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / RESOLUTIONS[state.current_res][1]
 
 
 def get_scale_mouse_pos(pos: tuple[int, int]) -> tuple[int, int]:
-    info = pygame.display.Info()
-    MOUSE_SCALE_X = Constants.SCREEN_WIDTH / info.current_w
-    MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / info.current_h
+    width, height = pygame.display.get_window_size()
+    MOUSE_SCALE_X = Constants.SCREEN_WIDTH / width
+    MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / height
     
     return (int(pos[0] * MOUSE_SCALE_X), int(pos[1] * MOUSE_SCALE_Y))

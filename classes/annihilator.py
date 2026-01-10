@@ -131,7 +131,7 @@ class Annihilator(cell.Cell):
         
         if self.__hurt: self.__hurt = False
 
-        if self.age > max(10, (round(world_manager.size * 1.5) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(0.1, round(self.max_health / 5, 2))) # take 20% of its max health as damage every other tick if its old
+        if self.age > max(10, (round(world_manager.size * 2) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(0.1, round(self.max_health / 5, 2))) # take 20% of its max health as damage every other tick if its old
         
 
         surroundings = self._get_surroundings(world_manager)

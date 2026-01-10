@@ -17,10 +17,10 @@ def event_handler(event: pygame.Event):
 
     if hasattr(event, "pos"):
         data = event.dict.copy()
-        info = pygame.display.Info()
+        width, height = pygame.display.get_window_size()
 
         data["pos"] = assets.get_scale_mouse_pos(event.pos)
-        if "rel" in data: data["rel"] = int(data["rel"][0] * (Constants.SCREEN_WIDTH / (Constants.SCREEN_WIDTH / info.current_w))), int(data["rel"][1] * (Constants.SCREEN_HEIGHT / (Constants.SCREEN_HEIGHT / info.current_h)))
+        if "rel" in data: data["rel"] = int(data["rel"][0] * (Constants.SCREEN_WIDTH / (Constants.SCREEN_WIDTH / width))), int(data["rel"][1] * (Constants.SCREEN_HEIGHT / (Constants.SCREEN_HEIGHT / height)))
 
         event = pygame.event.Event(event.type, data)
 
@@ -319,7 +319,7 @@ def event_handler(event: pygame.Event):
             cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
             world_rect = pygame.Rect(origin.x, origin.y, state.world.size * cell_size, state.world.size * cell_size)
 
-            if world_rect.collidepoint(event.pos):
+            if world_rect.collidepoint(event.pos) and state.SIM_RECT.collidepoint(event.pos):
                 col = int((event.pos[0] - origin.x) / cell_size)
                 row = int((event.pos[1] - origin.y) / cell_size)
 
@@ -482,8 +482,8 @@ def event_handler(event: pygame.Event):
                 return
             
         elif state.current_area is MenuArea.SIMULATION and state.tps_button and state.tps_slider and (state.tps_button.rect.collidepoint(mouse) or state.tps_slider.rect.collidepoint(mouse)) and state.tps_button and not state.changing_seed:
-            if event.y > 0 and state.target_tps < 20.0: # Up
-                state.target_tps = round(min(state.target_tps + (event.y / 5), 20.0), 1)
+            if event.y > 0 and state.target_tps < 40.0: # Up
+                state.target_tps = round(min(state.target_tps + (event.y / 4), 40.0), 1)
 
                 state.tps_slider.value = state.target_tps
 
@@ -498,7 +498,7 @@ def event_handler(event: pygame.Event):
                 return
 
             if event.y < 0 and state.target_tps > 0.1: # Down
-                state.target_tps = round(max(state.target_tps + (event.y / 5), 0.1), 1)
+                state.target_tps = round(max(state.target_tps + (event.y / 4), 0.1), 1)
 
                 state.tps_slider.value = state.target_tps
 

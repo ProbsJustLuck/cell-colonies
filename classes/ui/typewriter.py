@@ -51,6 +51,9 @@ class Typewriter:
     def tps_reset_2(self) -> bool: return True if self.__current and self.__current.id == -4 else False
 
 
+    def tps_reset_3(self) -> bool: return True if self.__current and self.__current.id == -5 else False
+
+
     def clear(self) -> None:
         self.__queue = []
         self.__current = None
