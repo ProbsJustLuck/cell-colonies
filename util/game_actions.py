@@ -135,6 +135,17 @@ def load_world(button: "Button"):
 
         start_game(button=None, world = state.last_played_game["world"], rng=state.last_played_game["rng"])
         state.last_played_game = None
+        if state.world and len(state.world.homebases) <= 1: state.game_end = True
+
+        if (state.rewind and state.world and not state.world.get_snapshot(1) and not state.rewind.disabled) or (state.rewind and state.world and state.world.get_snapshot(1) and state.rewind.disabled): state.rewind.toggle()
+
+        if (state.fast_rewind and state.world and not state.world.get_snapshot(2) and not state.fast_rewind.disabled) or (state.fast_rewind and state.world and state.world.get_snapshot(2) and state.fast_rewind.disabled): state.fast_rewind.toggle()
+
+        if (state.pause and state.pause.disabled and not state.game_end) or (state.pause and not state.pause.disabled and state.game_end): state.pause.toggle()
+
+        if (state.forward and state.forward.disabled and not state.game_end) or (state.forward and not state.forward.disabled and state.game_end): state.forward.toggle()
+
+        if (state.fast_forward and state.fast_forward.disabled and not state.game_end) or (state.fast_forward and not state.fast_forward.disabled and state.game_end): state.fast_forward.toggle()
 
 
 def quit(button: "Button | None" = None):
@@ -364,7 +375,7 @@ def set_tps(value: float):
     state.target_tps = round(value, 1)
 
     if state.target_tps >= 40.0 and state.tps_up and not state.tps_up.disabled: state.tps_up.toggle()
-    elif state.target_tps < 20.0 and state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
+    elif state.target_tps < 40.0 and state.tps_up and state.tps_up.disabled: state.tps_up.toggle()
 
     if state.target_tps <= 0.1 and state.tps_down and not state.tps_down.disabled: state.tps_down.toggle()
     elif state.target_tps > 0.1 and state.tps_down and state.tps_down.disabled: state.tps_down.toggle()

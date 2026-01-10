@@ -46,7 +46,7 @@ class Rotator(cell.Cell):
                 self.pos,
                 self.__target, 
                 lambda pos: world_manager.in_bounds(pos), 
-                lambda pos: world_manager.is_blocking(pos)
+                lambda pos: self.__is_blocking(pos, world_manager)
             )
 
         self.__stationary: bool = False

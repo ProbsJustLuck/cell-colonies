@@ -34,10 +34,8 @@ class Teleporter(cell.Cell):
         self.__icon = self.homebase.teleporter_icon
 
         if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager)
-        elif isinstance(target, Position):
-            self.__target = target
-        else:
-            raise TypeError("How did we get here?")
+        elif isinstance(target, Position): self.__target = target
+        else: raise TypeError("How did we get here?")
 
         self.__path: list[Position] = []
         if self.__target: self.__path = pathfinding.pathfind(
@@ -56,7 +54,7 @@ class Teleporter(cell.Cell):
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
-        positions: list[Position] = list(world_manager.empty_spaces)
+        positions: list[Position] = sorted(world_manager.empty_spaces, key=lambda pos: (pos.x, pos.y))
 
         if positions: return world_manager.rng.choice(positions)
         return None
@@ -130,7 +128,7 @@ class Teleporter(cell.Cell):
             for cell in surroundings:
                 if isinstance(cell, wall.Wall) or (isinstance(cell, (attacker.Attacker, rotator.Rotator, Teleporter, annihilator.Annihilator)) and cell.homebase is self.homebase) or cell is self._homebase: continue
                 
-                pos = world_manager.rng.choice(list(world_manager.empty_spaces))
+                pos = world_manager.rng.choice(sorted(world_manager.empty_spaces, key=lambda pos: (pos.x, pos.y)))
                 world_manager.move_entity(cell, pos)
                 if isinstance(cell, (attacker.Attacker, rotator.Rotator)): cell.set_teleported()
                 

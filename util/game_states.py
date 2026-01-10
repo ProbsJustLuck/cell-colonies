@@ -124,7 +124,7 @@ class States:
     waiting_for_pause: bool = False
     paused_forward: bool = False
 
-    waiting_for_rewind: bool = True
+    waiting_for_rewind: bool = False
     rewinded: bool = False
 
     finished_tutorial: bool = False

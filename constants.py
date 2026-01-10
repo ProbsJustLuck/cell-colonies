@@ -20,7 +20,7 @@ class Constants:
     DISPLAY_WIDTH: int = 960
     DISPLAY_HEIGHT: int = 560
 
-    DISPLAY_MONITOR: int = 1
+    DISPLAY_MONITOR: int = 0
 
     # Sim
     DEFAULT_ZOOM: float = 1.05
@@ -52,5 +52,6 @@ class Constants:
     }
 
     GOOD_SEEDS: dict[str, int] = {
-        "tp_homebase_away": 3128439018
+        "tp_homebase_away": 3128439018,
+        "many": 2707114562
     }
