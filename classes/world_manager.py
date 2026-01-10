@@ -12,6 +12,7 @@ import classes.teleporter as teleporter
 from classes.position import Position
 import classes.entity as entity
 import classes.wall as wall
+import classes.annihilator as annihilator
 from classes.cell import Cell
 
 from util.game_states import States
@@ -39,6 +40,7 @@ class WorldManager:
         self.__attackers: list[attacker.Attacker] = []
         self.__walls: list[wall.Wall] = []
         self.__teleporters: list[teleporter.Teleporter] = []
+        self.__annihilators: list[annihilator.Annihilator] = []
 
 
         self.__empty_spaces: set[Position] = {
@@ -119,6 +121,7 @@ class WorldManager:
         self.__attackers = []
         self.__walls = []
         self.__teleporters = []
+        self.__annihilators = []
         self.__empty_spaces = set()
         for x in range(self.__world_size):
             for y in range(self.__world_size):
@@ -135,6 +138,8 @@ class WorldManager:
                     self.__walls.append(entity)
                 elif isinstance(entity, teleporter.Teleporter):
                     self.__teleporters.append(entity)
+                elif isinstance(entity, annihilator.Annihilator):
+                    self.__annihilators.append(entity)
 
         return True
 
@@ -213,6 +218,16 @@ class WorldManager:
 
             teleporter.age += 1
             teleporter.tick(self)
+
+        for annihilator in sorted(self.__annihilators, key=lambda anni: (anni.pos.x, anni.pos.y)):
+            if not annihilator.alive: continue
+
+            if annihilator.health <= 0.0:
+                annihilator.deregister(self)
+                continue
+
+            annihilator.age += 1
+            annihilator.tick(self)
         
         for attacker in sorted(self.__attackers, key=lambda atk: (atk.pos.x, atk.pos.y)):
             if not attacker.alive: continue
@@ -296,6 +311,8 @@ class WorldManager:
             if cell in self.__walls: self.__walls.remove(cell)
         elif isinstance(cell, teleporter.Teleporter):
             if cell in self.__teleporters: self.__teleporters.remove(cell)
+        elif isinstance(cell, annihilator.Annihilator):
+            if cell in self.__annihilators: self.__annihilators.remove(cell)
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
@@ -315,3 +332,5 @@ class WorldManager:
             self.__walls.append(cell)
         elif isinstance(cell, teleporter.Teleporter):
             self.__teleporters.append(cell)
+        elif isinstance(cell, annihilator.Annihilator):
+            self.__annihilators.append(cell)

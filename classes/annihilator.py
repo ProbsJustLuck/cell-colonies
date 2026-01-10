@@ -8,7 +8,7 @@ from classes.position import Position
 import classes.cell as cell
 import classes.homebase as homebase
 import classes.attacker as attacker
-import classes.annihilator as annihilator
+import classes.teleporter as teleporter
 
 from classes.ui.colors import ColorInfo
 from util.game_states import States
@@ -19,9 +19,9 @@ if TYPE_CHECKING:
 
 
 
-class Teleporter(cell.Cell):
-    __TYPE: str = "UTILITY"
-    __NAME: str = "Teleporter"
+class Annihilator(cell.Cell):
+    __TYPE: str = "HOSTILE"
+    __NAME: str = "Annihilator"
 
 
     def __init__(self, pos: Position, homebase_link: homebase.Homebase, world_manager: "world_manager.WorldManager", health: int = 2, target: Position | homebase.Homebase | None = None):
@@ -31,7 +31,9 @@ class Teleporter(cell.Cell):
         self.__health: float = max(round(health * States.health_multiplier, 2), 1)
 
         self.__color = homebase_link.color
-        self.__icon = self.homebase.teleporter_icon
+        self.__icon = self.homebase.annihilator_icon
+
+        self.__grace_ticks = 0
 
         if not target: self.__target: Position | None = self.__set_target(world_manager=world_manager)
         elif isinstance(target, Position):
@@ -52,7 +54,7 @@ class Teleporter(cell.Cell):
 
 
     @classmethod
-    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Teleporter: return cls(pos, homebase, world_manager)
+    def spawn(cls, pos: Position, homebase: homebase.Homebase, world_manager: "world_manager.WorldManager", target: Position | homebase.Homebase | None = None) -> Annihilator: return cls(pos, homebase, world_manager)
 
 
     def __set_target(self, world_manager: "world_manager.WorldManager") -> Position | None:
@@ -78,6 +80,7 @@ class Teleporter(cell.Cell):
     @property
     def icon(self) -> pygame.Surface: # Returns the icon for this cell.
         if self.__hurt: return self.__icon["hurt"] 
+        elif self.__grace_ticks < 3: return self.__icon["grace"]
         else: return self.__icon["base"]
 
 
@@ -105,12 +108,16 @@ class Teleporter(cell.Cell):
     def path(self) -> list[Position]: return self.__path
 
 
+    @property
+    def grace_ticks(self) -> int: return self.__grace_ticks
+
+
     def __is_blocking(self, pos: Position, world_manager: "world_manager.WorldManager") -> bool:
         cell = world_manager.get_cell(pos)
 
         if isinstance(cell, (homebase.Homebase, wall.Wall)): return True
 
-        if isinstance(cell, (rotator.Rotator, attacker.Attacker, Teleporter, annihilator.Annihilator)) and cell.homebase is self.homebase: return True
+        if isinstance(cell, (rotator.Rotator, attacker.Attacker, Annihilator, teleporter.Teleporter)) and cell.homebase is self.homebase: return True
 
         return False
 
@@ -120,22 +127,25 @@ class Teleporter(cell.Cell):
             self.spawned = False
             return
         
+        if self.__grace_ticks < 3: self.__grace_ticks += 1
+        
         if self.__hurt: self.__hurt = False
 
         if self.age > max(10, (round(world_manager.size * 1.5) - world_manager.walls_amount // 6)) and self.age % 2 == 0: self.change_health(-max(0.1, round(self.max_health / 5, 2))) # take 20% of its max health as damage every other tick if its old
         
 
         surroundings = self._get_surroundings(world_manager)
-        if surroundings: # Loop through all nearby attackers and teleport them
+        if surroundings and self.__grace_ticks > 2: # Loop through all nearby attackers and kill them
             for cell in surroundings:
-                if isinstance(cell, wall.Wall) or (isinstance(cell, (attacker.Attacker, rotator.Rotator, Teleporter, annihilator.Annihilator)) and cell.homebase is self.homebase) or cell is self._homebase: continue
+                if isinstance(cell, wall.Wall) or (isinstance(cell, (attacker.Attacker, rotator.Rotator, teleporter.Teleporter, Annihilator)) and cell.homebase is self.homebase) or cell is self._homebase: continue
                 
-                pos = world_manager.rng.choice(list(world_manager.empty_spaces))
-                world_manager.move_entity(cell, pos)
-                if isinstance(cell, (attacker.Attacker, rotator.Rotator)): cell.set_teleported()
+                if isinstance(cell, (attacker.Attacker, rotator.Rotator, teleporter.Teleporter, Annihilator)): cell.change_health(-cell.health)
                 
                 if isinstance(cell, attacker.Attacker): self.change_health(-cell.damage)
+                elif isinstance(cell, Annihilator): self.change_health(-self.health)
                 else: self.change_health(-1.0)
+
+                if self.__health <= 0.0: return
         
         if self.__target and not self.__stationary and not self.__path: self.__path = pathfinding.pathfind(
                 self.pos,

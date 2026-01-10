@@ -77,6 +77,11 @@ WALL_ICON = pygame.transform.scale(pygame.image.load("assets/menu/wall_icon.png"
 base_teleporter = pygame.image.load("assets/cells/teleporter.png").convert_alpha()
 base_teleporter = pygame.transform.scale(base_teleporter, cell_scale_sizes)
 
+## Annihilator
+base_annihilator = pygame.image.load("assets/cells/annihilator.png").convert_alpha()
+base_annihilator = pygame.transform.scale(base_annihilator, cell_scale_sizes)
+
+
 # Icons
 COPY_ICON = pygame.transform.scale(pygame.image.load("assets/menu/copy_icon.png").convert_alpha(), (52, 52))
 PASTE_ICON = pygame.transform.scale(pygame.image.load("assets/menu/paste_icon.png").convert_alpha(), (48, 48))

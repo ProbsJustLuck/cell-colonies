@@ -9,7 +9,7 @@ from classes.ui.menu_area import MenuArea
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area, complete_tutorial
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area, complete_tutorial, show_first_credits, show_second_credits
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -161,11 +161,17 @@ special_buttons: dict[int, Button] = {
     51: Button("", (254, assets.screen.get_rect().centery - 57), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.4, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="attacker"),
     52: Button("", (254, assets.screen.get_rect().centery + 6), "", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.4, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="rotator"),
     53: Button("", (254, assets.screen.get_rect().centery + 69), "Unlocked after finishing (or skipping) the tutorial!", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888",border=3, font_size=40, tooltip_scale=0.7, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="teleporter"),
+    58: Button("", (254, assets.screen.get_rect().centery + 132), "Unlocked after unlocking ??? and visiting 10 unique seeds!", type=ButtonType.TOGGLE, style=ButtonStyle(height=60, width=130, scale=0.9, base="#5C5C5C", selected="#888888", border=3, font_size=40, tooltip_scale=0.7, padding=20, disabled="#888888", disabled_opacity=255), on_enter=change_catalogue_area, id="annihilator"),
 
     # 54 taken
+
+    55: Button("<-", (250, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=80, scale=1.5, opacity=255, base="#888888"), on_enter=return_to_main_menu),
+    56: Button("", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery - 51), "Click to reveal!", style=ButtonStyle(height=125, width=600, scale=1, opacity=70, base="#888888", border=0, padding=15), on_enter=show_first_credits),
+    57: Button("", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery + 76), "Click to reveal!", style=ButtonStyle(height=126, width=600, scale=1, opacity=70, base="#888888", border=0, padding=15), on_enter=show_second_credits),
+
+    # 58 taken
 }
-for button in special_buttons.values():
-    button.initialize()
+for button in special_buttons.values(): button.initialize()
 state.special_buttons = special_buttons
 
 

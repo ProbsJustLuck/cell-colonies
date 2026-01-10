@@ -125,6 +125,8 @@ def create_world(seed: int | None = None, world: WorldManager | None = None, rng
     state.old_walls = state.sim_walls
     state.old_health = state.health_multiplier
 
+    state.unique_seeds.add(state.world.seed)
+
 
 def load_world(button: "Button"):
     if state.last_played_game:
@@ -161,14 +163,14 @@ def go_to_main_menu(button: "Button"):
 
     assert state.typewriter
 
-    if not state.typewriter.not_rude() and not state.finished_tutorial:
+    if not state.typewriter.not_rude() and not state.finished_tutorial and not state.skip_tutorial:
         if state.typewriter.has_lines_left():
             state.typewriter.reset_to_queue()
 
             state.typewriter.prepend(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game...", "", "Anyways..."], -2))
         else:
             state.typewriter.queue(Message(["Hey!", "It's rude to randomly quit out when", "I'm trying to teach you the game..."], -2))
-    elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob):
+    elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob) and not state.skip_tutorial:
         state.typewriter.reset_progress()
 
     # Flags off (safety)
@@ -215,6 +217,11 @@ def go_to_infopedia(button: "Button"):
 
         case "teleporter":
             btn = state.special_buttons[53]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
+        case "annihilator":
+            btn = state.special_buttons[58]
             if btn.disabled: btn.toggle()
             btn.clicked = False
 
@@ -928,6 +935,7 @@ def change_catalogue_area(button: "Button"):
             return
         elif (state.finished_tutorial or state.skip_tutorial) and not state.unlocked_teleporter:
             state.special_buttons[53].tooltip = ""
+            state.special_buttons[58].tooltip = "Unlocked after unlocking Teleporter and visiting 10 unique seeds!"
             state.unlocked_teleporter = True
 
             from classes.teleporter import Teleporter
@@ -935,6 +943,23 @@ def change_catalogue_area(button: "Button"):
 
             cell_registry.spawnable_cells.append(Teleporter)
             cell_registry.spawn_rates.append(15)
+
+            button.clicked = False
+            return
+    
+    elif button.id and button.id == "annihilator":
+        if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 5:
+            button.clicked = False
+            return
+        elif state.unlocked_teleporter and len(state.unique_seeds) >= 5 and not state.unlocked_annihilator:
+            state.special_buttons[58].tooltip = ""
+            state.unlocked_annihilator = True
+
+            from classes.annihilator import Annihilator
+            from util import cell_registry
+
+            cell_registry.spawnable_cells.append(Annihilator)
+            cell_registry.spawn_rates.append(100)
 
             button.clicked = False
             return
@@ -960,6 +985,11 @@ def change_catalogue_area(button: "Button"):
             if btn.disabled: btn.toggle()
             btn.clicked = False
 
+        case "annihilator":
+            btn = state.special_buttons[58]
+            if btn.disabled: btn.toggle()
+            btn.clicked = False
+
         case _: # default/placeholder
             btn = state.special_buttons[49]
             if btn.disabled: btn.toggle()
@@ -981,6 +1011,10 @@ def change_catalogue_area(button: "Button"):
 
         case "teleporter":
             btn = state.special_buttons[53]
+            if not btn.disabled: btn.toggle()
+
+        case "annihilator":
+            btn = state.special_buttons[58]
             if not btn.disabled: btn.toggle()
 
         case _:
@@ -1026,3 +1060,13 @@ def complete_tutorial(button: "Button"):
     state.finished_tutorial = True
     pygame.time.set_timer(assets.ROSS_REWIND, 0)
     if state.typewriter: state.typewriter.clear()
+
+
+def show_first_credits(button: "Button") -> None:
+    state.show_first_credits = True
+    button.toggle()
+
+
+def show_second_credits(button: "Button") -> None:
+    state.show_second_credits = True
+    button.toggle()

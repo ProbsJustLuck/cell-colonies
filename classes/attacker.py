@@ -8,6 +8,7 @@ import classes.homebase as homebase
 from classes.ui.colors import ColorInfo
 import classes.wall as wall
 import classes.rotator as rotator
+import classes.annihilator as annihilator
 from classes.position import Position
 from classes.direction import Direction
 import util.pathfinding as pathfinding
@@ -258,7 +259,7 @@ class Attacker(cell.Cell):
 
         if isinstance(cell, (homebase.Homebase, wall.Wall)): return True
 
-        if isinstance(cell, (rotator.Rotator, Attacker, teleporter.Teleporter)) and cell.homebase is self.homebase: return True
+        if isinstance(cell, (rotator.Rotator, Attacker, teleporter.Teleporter, annihilator.Annihilator)) and cell.homebase is self.homebase: return True
 
         return False
 
@@ -271,7 +272,7 @@ class Attacker(cell.Cell):
             used_path = False
 
         cell = world_manager.get_cell(next_pos)
-        if isinstance(cell, (rotator.Rotator, homebase.Homebase, teleporter.Teleporter)): 
+        if isinstance(cell, (rotator.Rotator, homebase.Homebase, teleporter.Teleporter, annihilator.Annihilator)): 
             self.__path.clear()
             if self.__rotated: self.__rotated = False
             return

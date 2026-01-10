@@ -10,6 +10,7 @@ import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.wall as wall
 import classes.teleporter as teleporter
+import classes.annihilator as annihilator
 
 from classes.ui.colors import ColorInfo
 from util.game_states import States
@@ -122,7 +123,7 @@ class Rotator(cell.Cell):
 
         if isinstance(cell, (homebase.Homebase, wall.Wall)): return True
 
-        if isinstance(cell, (Rotator, attacker.Attacker, teleporter.Teleporter)) and cell.homebase is self.homebase: return True
+        if isinstance(cell, (Rotator, attacker.Attacker, teleporter.Teleporter, annihilator.Annihilator)) and cell.homebase is self.homebase: return True
 
         return False
 

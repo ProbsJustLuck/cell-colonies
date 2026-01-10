@@ -13,6 +13,7 @@ from classes.position import Position
 from classes.attacker import Attacker
 from classes.homebase import Homebase
 from classes.rotator import Rotator
+from classes.annihilator import Annihilator
 
 from util import assets
 from util.game_states import States as state
@@ -38,6 +39,10 @@ _icons: dict[tuple[int, int, int | None], pygame.Surface] = {}
 _cell_size: int | None = None
 
 
+_pos = 140
+_pos_2 = 1000
+
+
 def clear_icon_cache() -> None:
     global _icons, _cell_size
     _icons.clear()
@@ -56,6 +61,20 @@ def get_icon(surf: pygame.Surface, cell_size: int, opacity: int | None = None) -
         icon.set_alpha(opacity)
     _icons[key] = icon
     return icon
+
+
+def _reveal_line_1(surf: pygame.surface.Surface, rect: pygame.rect.Rect):
+    width = min(max(0, _pos - rect.left + 15), surf.get_width())
+    area = pygame.Rect(0, 0, width, surf.get_height())
+    assets.screen.blit(surf, rect, area=area)
+
+
+def _reveal_line_2(surf: pygame.surface.Surface, rect: pygame.rect.Rect):
+    width = min(max(0, rect.right - _pos_2 + 15), surf.get_width())
+    area = pygame.Rect(surf.get_width() - width, 0, width, surf.get_height())
+    dest = rect.copy()
+    dest.left = rect.right - width
+    assets.screen.blit(surf, dest, area=area)
 
 
 def render_start_screen() -> None:
@@ -369,6 +388,40 @@ def render_game_screen(downtime: int):
             draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
 
             draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
+
+            if cell.target:
+                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
+            else:
+                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
+
+            if state.show_target_lines and cell.target and not cell.stationary:
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+
+                assets.screen.set_clip(state.SIM_RECT)
+                pygame.draw.line(assets.screen, "#ff0000", (int(origin.x + cell.pos.y * cell_size + cell_size // 2), int(origin.y + cell.pos.x * cell_size + cell_size // 2)), (int(origin.x + cell.target.y * cell_size + cell_size // 2), int(origin.y + cell.target.x * cell_size + cell_size // 2)), 5)
+                assets.screen.set_clip(None)
+
+            if state.show_paths and cell.path and not cell.stationary:
+                path: list[Position] = copy.copy(cell.path)
+                current: Position = cell.pos
+                cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
+                origin = pygame.Vector2(state.SIM_RECT.topleft) + state.offset
+                while path:
+                    assets.screen.set_clip(state.SIM_RECT)
+                    pygame.draw.line(assets.screen, "#00ff00", (int(origin.x + current.y * cell_size + cell_size // 2), int(origin.y + current.x * cell_size + cell_size // 2)), (int(origin.x + path[0].y * cell_size + cell_size // 2), int(origin.y + path[0].x * cell_size + cell_size // 2)), 5)
+                    assets.screen.set_clip(None)
+
+                    current = path.pop(0)
+
+        elif isinstance(cell, Annihilator):
+            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+
+            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}    Grace Ticks: {cell.grace_ticks}", "#000000", 35)
 
             if cell.target:
                 draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
@@ -963,6 +1016,7 @@ def render_cells_catalogue() -> None:
     pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=4, border_radius=2)
 
     for i in range(49, 54): state.special_buttons[i].draw(assets.screen, mouse_pos)
+    state.special_buttons[58].draw(assets.screen, mouse_pos)
 
     ICON_SPACING = 63
 
@@ -1011,6 +1065,28 @@ def render_cells_catalogue() -> None:
         tele.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
         assets.screen.blit(tele, tele.get_rect(center=(254, 230 + ICON_SPACING * 3)))
 
+
+    if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 5: assets.screen.blit(assets.locked_icon, assets.locked_icon.get_rect(center=(254, 230 + ICON_SPACING * 4)))
+    elif state.unlocked_teleporter and not state.unlocked_annihilator and len(state.unique_seeds) >= 5:
+        if state.special_buttons[58].tooltip == "Unlocked after unlocking Teleporter and visiting 10 unique seeds!": state.special_buttons[58].tooltip = "Click to unlock!"
+        icon = assets.unlocked_icon.convert_alpha()
+        icon.fill((TeamColor.GREEN.value.primary[0], TeamColor.GREEN.value.primary[1], TeamColor.GREEN.value.primary[2], 0), special_flags=pygame.BLEND_RGB_ADD)
+
+        assets.screen.blit(add_outline_to_image(icon, 1, "#000000"), icon.get_rect(center=(254, 229 + ICON_SPACING * 4)))
+
+    elif state.unlocked_annihilator and state.catalogue_area == "annihilator":
+        anni = pygame.transform.scale_by(assets.base_annihilator.copy(), 0.7)
+        anni = pygame.transform.scale_by(anni, 1.1)
+        anni.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        assets.screen.blit(anni, anni.get_rect(center=(254, 230 + ICON_SPACING * 4)))
+
+    elif state.unlocked_annihilator and state.catalogue_area != "annihilator":
+        anni = pygame.transform.scale_by(assets.base_annihilator.copy(), 0.7)
+        anni = pygame.transform.scale_by(anni, 0.9)
+        anni.fill(TeamColor.GREY.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+        assets.screen.blit(anni, anni.get_rect(center=(254, 230 + ICON_SPACING * 4)))
+
+
     match state.catalogue_area:
         case "homebase":
             button = state.special_buttons[50]
@@ -1038,6 +1114,7 @@ def render_cells_catalogue() -> None:
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'a win for that homebase. If none remain, the game ends', "#000000", 32)
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 7), 'in a loss.', "#000000", 32)
 
+
         case "attacker":
             button = state.special_buttons[51]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
@@ -1063,6 +1140,7 @@ def render_cells_catalogue() -> None:
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "the direction its facing until it hits a wall, then pathfind", "#000000", 32)
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'as normal.', "#000000", 32)
 
+
         case "rotator":
             button = state.special_buttons[52]
             pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
@@ -1085,6 +1163,7 @@ def render_cells_catalogue() -> None:
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'it will become stationary and no longer move.', "#000000", 32)
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell rotates cell surrounding it, flipping their direction', "#000000", 32)
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'if possible.', "#000000", 32)
+
 
         case "teleporter":
             button = state.special_buttons[53]
@@ -1110,7 +1189,116 @@ def render_cells_catalogue() -> None:
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'homebases) not on its colony to a random empty spot', "#000000", 32)
             draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 6), 'on the map.', "#000000", 32)
 
+
+        case "annihilator":
+            button = state.special_buttons[58]
+            pygame.draw.line(assets.screen, "#888888", (button.rect.topright[0], button.rect.topright[1] + 3,), (button.rect.bottomright[0], button.rect.bottomright[1] - 4), 7)
+
+            icon = pygame.transform.scale_by(assets.base_annihilator, 1.5)
+            icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+            assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
+
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Annihilator", "#000000", 60)
+            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSTILE Cell", "#373737", 40)
+
+            LINE_SPACING = 30 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Grace Ticks: 3", "#000000", 40)
+
+            LINE_SPACING = 20 # type: ignore
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
+
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 4), 'This cell kills cell ALL cells around it (including', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 5), 'homebases) not on its colony. It has a 3 tick grace', "#000000", 32)
+            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 6), 'period on spawn, where cells cannot be killed.', "#000000", 32)
+
         case _: pass
+
+
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None
+
+
+def render_credits(downtime: int) -> None:
+    assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
+    mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
+
+    WIDTH = 600
+    HEIGHT = 400
+    rect = pygame.rect.Rect(assets.screen.size[0] // 2 - (WIDTH // 2), assets.screen.size[1] // 2 - HEIGHT // 2, WIDTH, HEIGHT)
+    pygame.draw.rect(assets.screen, "#888888", rect)
+    pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=4, border_radius=2)
+
+    for i in range(55, 58): state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+    draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
+    draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
+
+    if not state.show_first_credits and not state.show_second_credits and not state.special_buttons[56].rect.collidepoint(mouse_pos) and not state.special_buttons[57].rect.collidepoint(mouse_pos): draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 150), "confused? try hovering!", "#000000", 24, mode="center")
+
+    if state.show_first_credits:
+        global _pos
+        _pos = min(_pos + 5, 1000)
+
+        right_attacker = pygame.transform.scale_by(assets.base_attacker_right, 2.1)
+        right_attacker.fill(TeamColor.BLUE.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+
+        LINE_SPACING = 23
+
+        surfs: dict[int, pygame.surface.Surface] = {
+            1: create_text("That was Cell Colonies! I hope you enjoyed playing this small", "#000000", 30),
+            2: create_text("simulation game. There's not much content to do or things to", "#000000", 30),
+            3: create_text("unlock, but I still hope you enjoyed playing.", "#000000", 30),
+            4: create_text("Sim Idea: Bassem Farid", "#000000", 30),
+            5: create_text("Design + Code: Salman M.", "#000000", 30)
+        }
+        rects: dict[int, pygame.rect.Rect] = {
+            1: surfs[1].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 100 + LINE_SPACING * 0)),
+            2: surfs[2].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 100 + LINE_SPACING * 1)),
+            3: surfs[3].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 100 + LINE_SPACING * 2)),
+            4: surfs[4].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 110 + LINE_SPACING * 3)),
+            5: surfs[5].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 110 + LINE_SPACING * 4))
+        }
+
+        assets.screen.set_clip(rect)
+        for key, value in surfs.items(): _reveal_line_1(value, rects[key])
+        assets.screen.blit(right_attacker, right_attacker.get_rect(topleft=(_pos, rect.top + 83)))
+        assets.screen.set_clip(None)
+
+    if state.show_second_credits:
+        global _pos_2
+        _pos_2 = max(_pos_2 - 5, 140)
+
+        left_attacker = pygame.transform.scale_by(assets.base_attacker_left, 2.1)
+        left_attacker.fill(TeamColor.GREEN.value.primary, special_flags=pygame.BLEND_RGBA_MULT)
+
+        LINE_SPACING = 23 # type: ignore SHUT UP
+
+        surfs: dict[int, pygame.surface.Surface] = {
+            1: create_text("Cell icons: Salman M.", "#000000", 30),
+            2: create_text("Some assets (ex. background) were obtained from itch.io.", "#000000", 30),
+            3: create_text("Some assets were obtained from free icon sites, such as:", "#000000", 30),
+            4: create_text("https://icons8.com/, https://www.vecteezy.com/ (trial)", "#000000", 30),
+            5: create_text("Thanks!", "#000000", 30)
+        }
+        rects: dict[int, pygame.rect.Rect] = {
+            1: surfs[1].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 110 + LINE_SPACING * 5)),
+            2: surfs[2].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 120 + LINE_SPACING * 6)),
+            3: surfs[3].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 120 + LINE_SPACING * 7)),
+            4: surfs[4].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 120 + LINE_SPACING * 8)),
+            5: surfs[5].get_rect(center = (rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 125 + LINE_SPACING * 9))
+        }
+
+        assets.screen.set_clip(rect)
+        for key, value in surfs.items(): _reveal_line_2(value, rects[key])
+        assets.screen.blit(left_attacker, left_attacker.get_rect(topright=(_pos_2, rect.top + 209)))
+        assets.screen.set_clip(None)
+
 
 
     if Button.pending_tooltip:

@@ -182,11 +182,19 @@ class States:
     cell_color_timer: int = 0
     catalogue_area: str = "homebase"
     unlocked_teleporter: bool = False
+    unlocked_annihilator: bool = False
+
 
     # Rewind timeline
     TIMELINE_RECT = pygame.rect.Rect(20, 70, 31, 518)
     y_offset: int = 15
     timeline_buttons: list["Button"] = []
+    
 
     # Other stuff
     font_cache: dict[int, pygame.font.Font] = {}
+
+    show_first_credits: bool = False
+    show_second_credits: bool = False
+
+    unique_seeds: set[int] = set()

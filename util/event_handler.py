@@ -344,6 +344,17 @@ def event_handler(event: pygame.Event):
                 button = state.special_buttons[i]
                 if button.rect.collidepoint(event.pos):
                     button.click()
+            
+            button = state.special_buttons[58]
+            if button.rect.collidepoint(event.pos):
+                button.click()
+
+        elif state.current_area is MenuArea.CREDITS:
+            for i in range(55, 58):
+                button = state.special_buttons[i]
+                if button.rect.collidepoint(event.pos):
+                    button.click()
+                    return
 
         return
 
