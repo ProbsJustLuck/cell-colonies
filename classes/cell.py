@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Self
 from classes.direction import Direction
 import classes.entity as entity
 import classes.homebase as homebase
-from classes.position import Position
+from classes.position import Position, get_pos
 from constants import Constants
 
 if TYPE_CHECKING:
@@ -51,10 +51,10 @@ class Cell(entity.Entity):
 
         dir_mapping: dict[Direction, tuple[int, int]] = Constants.DIRECTION_MAPPINGS
         cells: tuple[entity.Entity | None, ...] = (
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.EAST][0], y_pos + dir_mapping[Direction.EAST][1])),
-            world_manager.get_cell(Position(x_pos + dir_mapping[Direction.WEST][0], y_pos + dir_mapping[Direction.WEST][1]))
+            world_manager.get_cell(get_pos((x_pos + dir_mapping[Direction.NORTH][0], y_pos + dir_mapping[Direction.NORTH][1]))),
+            world_manager.get_cell(get_pos((x_pos + dir_mapping[Direction.SOUTH][0], y_pos + dir_mapping[Direction.SOUTH][1]))),
+            world_manager.get_cell(get_pos((x_pos + dir_mapping[Direction.EAST][0], y_pos + dir_mapping[Direction.EAST][1]))),
+            world_manager.get_cell(get_pos((x_pos + dir_mapping[Direction.WEST][0], y_pos + dir_mapping[Direction.WEST][1])))
         )
 
         for cell in cells:

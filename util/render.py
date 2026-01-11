@@ -9,7 +9,7 @@ from classes.wall import Wall
 from constants import Constants
 from classes.lerp import Lerp
 import classes.ui.button as Button
-from classes.position import Position
+from classes.position import Position, get_pos
 from classes.attacker import Attacker
 from classes.homebase import Homebase
 from classes.rotator import Rotator
@@ -258,7 +258,7 @@ def render_game_screen(downtime: int):
 
     for row in range(world_size):
         for col in range(world_size):
-            cell = state.world.get_cell(Position(row, col))
+            cell = state.world.get_cell(get_pos((row, col)))
             if not cell: continue
             if cell.name in state.disabled_cells: continue
 
@@ -294,36 +294,36 @@ def render_game_screen(downtime: int):
         title = cell.name
         LINE_SPACING = 28
         if isinstance(cell, Homebase): 
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health: .2f} / {cell.max_health: .2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Cells Alive: {cell.cells_amount} (peak {cell.max_cells_alive})", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health: .2f} / {cell.max_health: .2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Cells Alive: {cell.cells_amount} (peak {cell.max_cells_alive})", "#000000", 35)
 
             last_cell = cell.last_cell_spawned
             if last_cell:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: {last_cell.name} - Position ({last_cell.pos.x}, {last_cell.pos.y})", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: {last_cell.name} - Position ({last_cell.pos.x}, {last_cell.pos.y})", "#000000", 35)
             else:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: None", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Last Cell Spawned: None", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {max(state.spawn_rate - cell.spawn_ticks, 0)}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 3)), f"Ticks Until Spawn: {max(state.spawn_rate - cell.spawn_ticks, 0)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Ticks Since Targetted: {max(0, cell.ticks_since_targeted - 1)} (max 8)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 4)), f"Ticks Since Targetted: {max(0, cell.ticks_since_targeted - 1)} (max 8)", "#000000", 35)
 
         elif isinstance(cell, Attacker):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Target: {cell.target.color.name} {cell.target.name} - Position ({cell.target.pos.x}, {cell.target.pos.y})", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Target: {cell.target.color.name} {cell.target.name} - Position ({cell.target.pos.x}, {cell.target.pos.y})", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health:.2f} / 1.00 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Health: {cell.health:.2f} / 1.00 HP ({(cell.health * 100):.2f}%)    Rotated: {cell.rotated}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}    Hurt Until: {cell.hurt_until}", "#000000", 35) # type: ignore
+            draw_text((675, 160 + (LINE_SPACING * 2)), f"Direction: {cell.direction}    Hurt Until: {cell.hurt_until}", "#000000", 35) # type: ignore
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Ticks Since Valid Path: {cell.ticks_since_valid_path} (max 5)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 3)), f"Ticks Since Valid Path: {cell.ticks_since_valid_path} (max 5)", "#000000", 35)
 
             if cell.path:
-                draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Next Spot: Position ({cell.path[0].x}, {cell.path[0].y})", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 4)), f"Next Spot: Position ({cell.path[0].x}, {cell.path[0].y})", "#000000", 35)
             else:
-                draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Next Spot: None!", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 4)), f"Next Spot: None!", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 5)), f"Path Length: {len(cell.path)}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 5)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 6)), f"Damage: {cell.damage}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 6)), f"Damage: {cell.damage}", "#000000", 35)
 
             if state.show_target_lines and cell.target.pos:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -346,18 +346,18 @@ def render_game_screen(downtime: int):
                     current = path.pop(0)
 
         elif isinstance(cell, Rotator):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
 
             if cell.target:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
             else:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 1.5) - state.world.walls_amount // 6))}", "#000000", 35)
 
             if state.show_target_lines and cell.target and not cell.stationary:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -380,23 +380,23 @@ def render_game_screen(downtime: int):
                     current = path.pop(0)
 
         elif isinstance(cell, Wall):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Generic wall.", "#000000", 35)
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Entities cannot move through this.", "#000000", 35)
-            draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Does not belong to a colony.", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Generic wall.", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Entities cannot move through this.", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 2)), f"Does not belong to a colony.", "#000000", 35)
         
         elif isinstance(cell, Teleporter):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}", "#000000", 35)
 
             if cell.target:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
             else:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
 
             if state.show_target_lines and cell.target and not cell.stationary:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -419,18 +419,18 @@ def render_game_screen(downtime: int):
                     current = path.pop(0)
 
         elif isinstance(cell, Annihilator):
-            draw_text(Position(675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 0)), f"Health: {cell.health:.2f} / {cell.max_health:.2f} HP ({(cell.health/cell.max_health * 100):.2f}%)", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}    Grace Ticks: {cell.grace_ticks}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 1)), f"Stationary: {cell.stationary}    Grace Ticks: {cell.grace_ticks}", "#000000", 35)
 
             if cell.target:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: Position ({cell.target.x}, {cell.target.y})", "#000000", 35)
             else:
-                draw_text(Position(675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
+                draw_text((675, 160 + (LINE_SPACING * 2)), f"Target: {cell.target}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 3)), f"Path Length: {len(cell.path)}", "#000000", 35)
 
-            draw_text(Position(675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
+            draw_text((675, 160 + (LINE_SPACING * 4)), f"Age Max: {max(10, (round(state.world.size * 2) - state.world.walls_amount // 6))}", "#000000", 35)
 
             if state.show_target_lines and cell.target and not cell.stationary:
                 cell_size = int((state.SIM_RECT.width / state.world.size) * state.zoom)
@@ -454,14 +454,14 @@ def render_game_screen(downtime: int):
 
         # Name
         if cell.name != "Wall":
-            draw_text(Position(750, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
-            draw_text(Position(751, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
+            draw_text((750, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
+            draw_text((751, 90), f"{cell.color.name} {title} (Age {cell.age})", "#000000", 43)
         else:
-            draw_text(Position(750, 90), f"{title} (Age {cell.age})", "#000000", 43)
-            draw_text(Position(751, 90), f"{title} (Age {cell.age})", "#000000", 43)
+            draw_text((750, 90), f"{title} (Age {cell.age})", "#000000", 43)
+            draw_text((751, 90), f"{title} (Age {cell.age})", "#000000", 43)
 
         # Type
-        draw_text(Position(751, 118), f"{cell.type} Cell - Position ({cell.pos.x}, {cell.pos.y}) [ID #{cell.id}]", "#000000", 35)
+        draw_text((751, 118), f"{cell.type} Cell - Position ({cell.pos.x}, {cell.pos.y}) [ID #{cell.id}]", "#000000", 35)
 
     # Typewriter
     if state.typewriter:
@@ -472,7 +472,7 @@ def render_game_screen(downtime: int):
             if state.typewriter.finished_line():
                 state.finished_timer += 1
 
-                if state.finished_timer > 50: draw_text(Position(1070, 650), "Press C to continue!", "#7B7B7B", 25, mode="bottomright", opacity=200)
+                if state.finished_timer > 50: draw_text((1070, 650), "Press C to continue!", "#7B7B7B", 25, mode="bottomright", opacity=200)
     
     pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
     for button in menu_assets.buttons.get(state.current_area, []):
@@ -489,7 +489,7 @@ def render_game_screen(downtime: int):
         rect = pygame.Rect(650, 381, 34, 249)
         pygame.draw.rect(assets.screen, "#a5a5a5", rect)
 
-        draw_text(Position(667, 398), f"{state.target_tps:.1f}", "#000000", 27, mode="center")
+        draw_text((667, 398), f"{state.target_tps:.1f}", "#000000", 27, mode="center")
 
         for slider in menu_assets.sliders.get(state.current_area, []):
             slider.draw(assets.screen)
@@ -635,11 +635,11 @@ def render_game_screen(downtime: int):
         state.seed_box = rect.copy()
         pygame.draw.rect(assets.screen, "#a5a5a5", rect, border_radius=4)
 
-        draw_text(Position(435, 150), "Seed Settings", "#000000", 80)
-        draw_text(Position(436, 150), "Seed Settings", "#000000", 80)
+        draw_text((435, 150), "Seed Settings", "#000000", 80)
+        draw_text((436, 150), "Seed Settings", "#000000", 80)
 
-        draw_text(Position(600, 250), "Current Seed", "#272727", 40, mode="center")
-        draw_text(Position(600, 290), f"{state.world.seed}", "#000000", 60, mode="center")
+        draw_text((600, 250), "Current Seed", "#272727", 40, mode="center")
+        draw_text((600, 290), f"{state.world.seed}", "#000000", 60, mode="center")
 
         rect = pygame.Rect(400, 320, 400, 50)
         if not state.typing_seed:
@@ -652,20 +652,20 @@ def render_game_screen(downtime: int):
         pygame.draw.rect(assets.screen, "#000000", rect, border_radius=1)
 
         if not state.seed_string: 
-            draw_text(Position(410, 335), "Type seed...", "#ffffff", size=50, opacity=110)
+            draw_text((410, 335), "Type seed...", "#ffffff", size=50, opacity=110)
 
         if state.seed_string:
-            if not state.typing_seed: draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
-            else: draw_text(Position(410, 335), f"{state.seed_string}", "#ffffff", size=50)
+            if not state.typing_seed: draw_text((410, 335), f"{state.seed_string}", "#ffffff", size=50, opacity=180)
+            else: draw_text((410, 335), f"{state.seed_string}", "#ffffff", size=50)
     
-        draw_text(Position(405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
+        draw_text((405, 375), "ENTER to confirm, ESC to cancel", "#000000", size=30)
 
         mouse = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
         for i in range(19):
             menu_assets.special_buttons[i].draw(assets.screen, mouse)
 
         string = state.seed_string.strip("-")
-        draw_text(Position(795, 370), f"{len(string)}/10", "#ffffff", size=25, mode="bottomright", opacity=160)
+        draw_text((795, 370), f"{len(string)}/10", "#ffffff", size=25, mode="bottomright", opacity=160)
 
         if state.typing_seed and state.caret_timer / 500 <= 1:
             WIDTH = assets.big_font.size("1")[0]
@@ -699,7 +699,7 @@ def render_game_screen(downtime: int):
             pygame.draw.line(assets.screen, "#000000", (563, 495), (563, 523), 2)
 
         if (state.old_health != state.health_multiplier) or (state.old_homebases != state.sim_homebases) or (state.old_size != state.sim_size) or (state.old_walls != state.sim_walls):
-            draw_text(Position(310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
+            draw_text((310, 580), "*Some changes will applied on next simulation reload!", "#B80000", 23)
 
 
     if state.waiting_for_pan and state.panned and state.zoomed:
@@ -731,7 +731,7 @@ def render_game_screen(downtime: int):
     assets.screen.blit(overlay,state.TIMELINE_RECT.topleft)
     if state.world.history:
         state.timeline_buttons.clear()
-        for i in range(len(state.world.history)):
+        for i in range(state.world.current_tick):
             x = state.TIMELINE_RECT.centerx
             y = state.TIMELINE_RECT.top + 20 + state.y_offset + 50 * i
             HEIGHT = 36 # type: ignore
@@ -780,13 +780,13 @@ def render_options_screen() -> None:
 
     match state.controls_section:
         case "controls":
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Change Controls", "#000000", 50, mode="center")
 
-            draw_text(Position(rect.topleft[0] + 150, rect.top + 90), "Action", "#000000", 40, mode="center")
+            draw_text((rect.topleft[0] + 150, rect.top + 90), "Action", "#000000", 40, mode="center")
             pygame.draw.line(assets.screen, "#000000", (rect.topleft[0] + 106, rect.top + 102), (rect.topleft[0] + 190, rect.top + 102), 2)
 
-            draw_text(Position(rect.topleft[0] + 400, rect.top + 90), "Key", "#000000", 40, mode="center")
+            draw_text((rect.topleft[0] + 400, rect.top + 90), "Key", "#000000", 40, mode="center")
             pygame.draw.line(assets.screen, "#000000", (rect.topleft[0] + 368, rect.top + 102), (rect.topleft[0] + 426, rect.top + 102), 2)
 
             for i in range(33, 35):
@@ -800,42 +800,42 @@ def render_options_screen() -> None:
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 115))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Pan Alias (grab)", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 130), "Pan Alias (grab)", "#000000", 30, mode="center")
 
                 # Pan Up
                 if KeyActions.PAN_UP in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 155))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 170), "Pan Up (key)", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 170), "Pan Up (key)", "#000000", 30, mode="center")
 
                 # Pan Down
                 if KeyActions.PAN_DOWN in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 185))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Pan Down (key)", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 200), "Pan Down (key)", "#000000", 30, mode="center")
 
                 # Pan Left
                 if KeyActions.PAN_LEFT in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 215))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pan Left (key)", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 230), "Pan Left (key)", "#000000", 30, mode="center")
 
                 # Pan Right
                 if KeyActions.PAN_RIGHT in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 245))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 260), "Pan Right (key)", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 260), "Pan Right (key)", "#000000", 30, mode="center")
 
                 # Regenerate World
                 if KeyActions.REGENERATE_WORLD in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 55, rect.topleft[1] + 285))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Regenerate World", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 300), "Regenerate World", "#000000", 30, mode="center")
 
                 for i in range(27, 33):
                     state.special_buttons[i].draw(assets.screen, mouse_pos)
@@ -848,14 +848,14 @@ def render_options_screen() -> None:
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 115))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 130), "Zoom In Alias", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 130), "Zoom In Alias", "#000000", 30, mode="center")
 
                 # Zoom Out Alias
                 if KeyActions.ZOOM_OUT_ALIAS in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 145))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 160), "Zoom Out Alias", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 160), "Zoom Out Alias", "#000000", 30, mode="center")
 
 
                 # Advance/Skip Dialogue
@@ -863,14 +863,14 @@ def render_options_screen() -> None:
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 185))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 200), "Advance/Skip Dialogue", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 200), "Advance/Skip Dialogue", "#000000", 30, mode="center")
 
                 # Pause/Unpause
                 if KeyActions.PAUSE_UNPAUSE in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 215))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 230), "Pause/Unpause Sim", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 230), "Pause/Unpause Sim", "#000000", 30, mode="center")
 
 
                 # Step Forward
@@ -878,22 +878,22 @@ def render_options_screen() -> None:
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 255))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 270), "Step Forward", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 270), "Step Forward", "#000000", 30, mode="center")
 
                 # Step Backward
                 if KeyActions.STEP_BACKWARD in state.conflicts: overlay.fill((255, 0, 0, 140))
                 else: overlay.fill((0, 0, 0, 72))
 
                 assets.screen.blit(overlay, (rect.topleft[0] + 35, rect.topleft[1] + 285))
-                draw_text(Position(rect.topleft[0] + 150, rect.top + 300), "Step Backward", "#000000", 30, mode="center")
+                draw_text((rect.topleft[0] + 150, rect.top + 300), "Step Backward", "#000000", 30, mode="center")
 
                 for i in range(35, 41):
                     state.special_buttons[i].draw(assets.screen, mouse_pos)
 
             if state.conflicts:
-                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 340), "There are some conflicts with keys!", "#AA0000", 25, mode="center")
-                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 355), "You cannot start a simulation until", "#AA0000", 25, mode="center")
-                draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 370), "the conflicts are resolved.", "#AA0000", 25, mode="center")
+                draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 340), "There are some conflicts with keys!", "#AA0000", 25, mode="center")
+                draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 355), "You cannot start a simulation until", "#AA0000", 25, mode="center")
+                draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 370), "the conflicts are resolved.", "#AA0000", 25, mode="center")
 
         case "colonies":
             if not state.toggle_colonies:
@@ -910,20 +910,20 @@ def render_options_screen() -> None:
                         x = rect.topleft[0] + 120
                         y += 100
 
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Toggle Colonies", "#000000", 50, mode="center")
 
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 70), "Click to disable spawning a colony of that color!", "#000000", 30, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 70), "Click to disable spawning a colony of that color!", "#000000", 30, mode="center")
 
             for button in state.toggle_colonies:
                 button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
 
         case "misc":
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
-            draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
+            draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 40), "Miscellaneous", "#000000", 50, mode="center")
 
-            draw_text(Position(390, rect.top + 75), "Max History Length", "#000000", 35)
-            draw_text(Position(665, rect.top + 75), "Max Ticks per Frame", "#000000", 35)
+            draw_text((390, rect.top + 75), "Snapshot Frequency", "#000000", 35)
+            draw_text((665, rect.top + 75), "Max Ticks per Frame", "#000000", 35)
             
             for i in range(2): state.special_sliders[i].draw(assets.screen)
 
@@ -932,37 +932,37 @@ def render_options_screen() -> None:
             # Max history
             slider = state.special_sliders[0]
             slider.draw(assets.screen)
-            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.max_history}", "#000000", 22, mode="center")
+            draw_text((slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
+            draw_text((slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100", "#000000", 15, mode="center")
+            draw_text((slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.snapshot_frequency}", "#000000", 22, mode="center")
 
             # Max catchup
             slider = state.special_sliders[1]
             slider.draw(assets.screen)
-            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "70", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.max_catchup}", "#000000", 22, mode="center")
+            draw_text((slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "1", "#000000", 15, mode="center")
+            draw_text((slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "70", "#000000", 15, mode="center")
+            draw_text((slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.max_catchup}", "#000000", 22, mode="center")
 
-            draw_text(Position(435, rect.top + 150), "Resolution", "#000000", 35)
-            draw_text(Position(720, rect.top + 150), "Fullscreen", "#000000", 35)
+            draw_text((435, rect.top + 150), "Resolution", "#000000", 35)
+            draw_text((720, rect.top + 150), "Fullscreen", "#000000", 35)
             for i in range(41, 44): state.special_buttons[i].draw(assets.screen, mouse_pos)
 
-            draw_text(Position(455, rect.top + 240), "Sound", "#000000", 35)
-            draw_text(Position(745, rect.top + 240), "Music", "#000000", 35)
+            draw_text((455, rect.top + 240), "Sound", "#000000", 35)
+            draw_text((745, rect.top + 240), "Music", "#000000", 35)
 
             # Sound fx
             slider = state.special_sliders[2]
             slider.draw(assets.screen)
-            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.sound_fx_volume * 100: .0f}%", "#000000", 22, mode="center")
+            draw_text((slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
+            draw_text((slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
+            draw_text((slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.sound_fx_volume * 100: .0f}%", "#000000", 22, mode="center")
 
             # Music
             slider = state.special_sliders[3]
             slider.draw(assets.screen)
-            draw_text(Position(slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
-            draw_text(Position(slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.music_volume * 100: .0f}%", "#000000", 22, mode="center")
+            draw_text((slider.rect.bottomleft[0], slider.rect.bottomleft[1] + VERTICAL_OFFSET), "0%", "#000000", 15, mode="center")
+            draw_text((slider.rect.bottomright[0], slider.rect.bottomright[1] + VERTICAL_OFFSET), "100%", "#000000", 15, mode="center")
+            draw_text((slider.rect.centerx, slider.rect.bottom + VERTICAL_OFFSET), f"{state.music_volume * 100: .0f}%", "#000000", 22, mode="center")
 
 
             button = state.special_buttons[46]
@@ -1067,8 +1067,8 @@ def render_cells_catalogue() -> None:
         assets.screen.blit(tele, tele.get_rect(center=(254, 230 + ICON_SPACING * 3)))
 
 
-    if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 5: assets.screen.blit(assets.locked_icon, assets.locked_icon.get_rect(center=(254, 230 + ICON_SPACING * 4)))
-    elif state.unlocked_teleporter and not state.unlocked_annihilator and len(state.unique_seeds) >= 5:
+    if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 10: assets.screen.blit(assets.locked_icon, assets.locked_icon.get_rect(center=(254, 230 + ICON_SPACING * 4)))
+    elif state.unlocked_teleporter and not state.unlocked_annihilator and len(state.unique_seeds) >= 10:
         if state.special_buttons[58].tooltip == "Unlocked after unlocking Teleporter and visiting 10 unique seeds!": state.special_buttons[58].tooltip = "Click to unlock!"
         icon = assets.unlocked_icon.convert_alpha()
         icon.fill((TeamColor.GREEN.value.primary[0], TeamColor.GREEN.value.primary[1], TeamColor.GREEN.value.primary[2], 0), special_flags=pygame.BLEND_RGB_ADD)
@@ -1097,23 +1097,23 @@ def render_cells_catalogue() -> None:
             icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
             assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
 
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Homebase", "#000000", 60)
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"CORE Cell", "#373737", 40)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 35), "Homebase", "#000000", 60)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 75), f"CORE Cell", "#373737", 40)
 
             LINE_SPACING = 30
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 3 HP", "#000000", 40)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Spawning Cooldown: 3 Ticks", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 3 HP", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Spawning Cooldown: 3 Ticks", "#000000", 40)
 
             LINE_SPACING = 20 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "This cell spawns other cells around it on a set timer. Cells", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "spawned from a homebase also spawn on the same colony", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), '(or "team") as it.', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'The objective of Cell Colonies is for one homebase to be', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "left standing! If one homebase remains, it's counted as", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'a win for that homebase. If none remain, the game ends', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 7), 'in a loss.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "This cell spawns other cells around it on a set timer. Cells", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "spawned from a homebase also spawn on the same colony", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), '(or "team") as it.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'The objective of Cell Colonies is for one homebase to be', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "left standing! If one homebase remains, it's counted as", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'a win for that homebase. If none remain, the game ends', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 7), 'in a loss.', "#000000", 32)
 
 
         case "attacker":
@@ -1124,22 +1124,22 @@ def render_cells_catalogue() -> None:
             icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
             assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
 
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Attacker", "#000000", 60)
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSITLE Cell", "#373737", 40)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 35), "Attacker", "#000000", 60)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSITLE Cell", "#373737", 40)
 
             LINE_SPACING = 30 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Damage: 0.7-1.2 DMG (randomized)", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Damage: 0.7-1.2 DMG (randomized)", "#000000", 40)
 
             LINE_SPACING = 20 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "When spawned, this cell will target a random enemy", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "homebase, and move towards it. If it reaches its target, it", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), 'will deal damage to it and die.', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'When rotated by a rotator, this cell will move forwards in', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "the direction its facing until it hits a wall, then pathfind", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'as normal.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 0), "When spawned, this cell will target a random enemy", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 1), "homebase, and move towards it. If it reaches its target, it", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 2), 'will deal damage to it and die.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 4), 'When rotated by a rotator, this cell will move forwards in', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 5), "the direction its facing until it hits a wall, then pathfind", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 220 + LINE_SPACING * 6), 'as normal.', "#000000", 32)
 
 
         case "rotator":
@@ -1150,20 +1150,20 @@ def render_cells_catalogue() -> None:
             icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
             assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
 
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Rotator", "#000000", 60)
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 35), "Rotator", "#000000", 60)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
 
             LINE_SPACING = 30 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
 
             LINE_SPACING = 20 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space within 5 squares of", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "its homebase, and moves towards it. If it reaches its target,", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'it will become stationary and no longer move.', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell rotates cell surrounding it, flipping their direction', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'if possible.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space within 5 squares of", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "its homebase, and moves towards it. If it reaches its target,", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'it will become stationary and no longer move.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell rotates cell surrounding it, flipping their direction', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'if possible.', "#000000", 32)
 
 
         case "teleporter":
@@ -1174,21 +1174,21 @@ def render_cells_catalogue() -> None:
             icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
             assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
 
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Teleporter", "#000000", 60)
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 35), "Teleporter", "#000000", 60)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 75), f"UTILITY Cell", "#373737", 40)
 
             LINE_SPACING = 30 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 2 HP", "#000000", 40)
 
             LINE_SPACING = 20 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell teleports cell ALL cells around it (including', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'homebases) not on its colony to a random empty spot', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 6), 'on the map.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 4), 'This cell teleports cell ALL cells around it (including', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 5), 'homebases) not on its colony to a random empty spot', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 180 + LINE_SPACING * 6), 'on the map.', "#000000", 32)
 
 
         case "annihilator":
@@ -1199,23 +1199,23 @@ def render_cells_catalogue() -> None:
             icon.fill(state.allowed_colonies[state.cell_color_index].value.primary, special_flags=pygame.BLEND_RGBA_MULT)
             assets.screen.blit(icon, (rect.topleft[0] + 20, rect.topleft[1] + 20))
 
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 35), "Annihilator", "#000000", 60)
-            draw_text(Position(rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSTILE Cell", "#373737", 40)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 35), "Annihilator", "#000000", 60)
+            draw_text((rect.topleft[0] + 130, rect.topleft[1] + 75), f"HOSTILE Cell", "#373737", 40)
 
             LINE_SPACING = 30 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Grace Ticks: 3", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 0), "Base Health: 1 HP", "#000000", 40)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 140 + LINE_SPACING * 1), "Base Grace Ticks: 3", "#000000", 40)
 
             LINE_SPACING = 20 # type: ignore
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 0), "When spawned, it picks an empty space anywhere on the", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 1), "map, and moves towards it. If it reaches its target, it will", "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 2), 'become stationary and no longer move.', "#000000", 32)
 
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 4), 'This cell kills cell ALL cells around it (including', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 5), 'homebases) not on its colony. It has a 3 tick grace', "#000000", 32)
-            draw_text(Position(rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 6), 'period on spawn, where cells cannot be killed.', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 4), 'This cell kills cell ALL cells around it (including', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 5), 'homebases) not on its colony. It has a 3 tick grace', "#000000", 32)
+            draw_text((rect.topleft[0] + 25, rect.topleft[1] + 210 + LINE_SPACING * 6), 'period on spawn, where cells cannot be killed.', "#000000", 32)
 
         case _: pass
 
@@ -1237,10 +1237,10 @@ def render_credits(downtime: int) -> None:
 
     for i in range(55, 58): state.special_buttons[i].draw(assets.screen, mouse_pos)
 
-    draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
-    draw_text(Position(rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
+    draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
+    draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 50), "Credits", "#000000", 60, mode="center")
 
-    if not state.show_first_credits and not state.show_second_credits and not state.special_buttons[56].rect.collidepoint(mouse_pos) and not state.special_buttons[57].rect.collidepoint(mouse_pos): draw_text(Position(rect.topleft[0] + rect.size[0] // 2, rect.top + 150), "confused? try hovering!", "#000000", 24, mode="center")
+    if not state.show_first_credits and not state.show_second_credits and not state.special_buttons[56].rect.collidepoint(mouse_pos) and not state.special_buttons[57].rect.collidepoint(mouse_pos)and mouse_pos[1] != 362: draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 150), "confused? try hovering!", "#000000", 24, mode="center")
 
     if state.show_first_credits:
         global _pos

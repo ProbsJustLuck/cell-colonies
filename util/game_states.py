@@ -46,7 +46,7 @@ class States:
     second_render_page: bool = False
     world: "WorldManager | None" = None
     max_catchup: int = 5
-    max_history: int = 30
+    snapshot_frequency: int = 5
     sound_fx_volume: float = 0.5
     music_volume: float = 0.5
 

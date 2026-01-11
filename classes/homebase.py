@@ -5,7 +5,7 @@ import pygame
 from classes.cell import Cell
 from classes.direction import Direction
 import classes.entity as entity
-from classes.position import Position
+from classes.position import Position, get_pos
 
 from util import assets
 from constants import Constants
@@ -217,10 +217,10 @@ class Homebase(entity.Entity):
         mapping = Constants.DIRECTION_MAPPINGS
 
         positions: list[Position] = [
-            Position(base.x + mapping[Direction.NORTH][0], base.y + mapping[Direction.NORTH][1]),
-            Position(base.x + mapping[Direction.SOUTH][0], base.y + mapping[Direction.SOUTH][1]),
-            Position(base.x + mapping[Direction.EAST][0], base.y + mapping[Direction.EAST][1]),
-            Position(base.x + mapping[Direction.WEST][0], base.y + mapping[Direction.WEST][1])
+            get_pos((base.x + mapping[Direction.NORTH][0], base.y + mapping[Direction.NORTH][1])),
+            get_pos((base.x + mapping[Direction.SOUTH][0], base.y + mapping[Direction.SOUTH][1])),
+            get_pos((base.x + mapping[Direction.EAST][0], base.y + mapping[Direction.EAST][1])),
+            get_pos((base.x + mapping[Direction.WEST][0], base.y + mapping[Direction.WEST][1]))
         ]
         positions = [pos for pos in positions if world_manager.in_bounds(pos)]
 

@@ -13,7 +13,6 @@ from util.render import render_start_screen, render_game_screen, render_options_
 from util.ui_helpers import draw_text
 from util.game_actions import toggle_pause_simulation, check_homebases, check_walls, set_tps
 
-from classes.position import Position
 from classes.game_state import GameState
 from classes.ui.menu_area import MenuArea
 
@@ -402,8 +401,8 @@ while state.running:
         case _: pass
 
     
-    draw_text(Position(3, 3), f"FPS: {round(fps_clock.get_fps(), 2)},   TPS: {round(state.tps, 2)},     Homebases Alive: {len(state.world.homebases) if state.world else 0}    Length: {len(state.unique_seeds)}", "#000000", 20)
-    draw_text(Position(3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos} Offset: {state.y_offset}    Ticks Last Frame: {count}", "#000000", 20)
+    draw_text((3, 3), f"FPS: {round(fps_clock.get_fps(), 2)},   TPS: {round(state.tps, 2)},     Homebases Alive: {len(state.world.homebases) if state.world else 0}    Mouse Pos: {assets.get_scale_mouse_pos(pygame.mouse.get_pos())}", "#000000", 20)
+    draw_text((3, 13), f"Current Tick: {state.world.current_tick if state.world else 0},    Hovered Position: {state.hovered_pos} Offset: {state.y_offset}    Ticks Last Frame: {count}", "#000000", 20)
 
     # flip the display to put your work on screen
     assets.display_screen.blit(pygame.transform.smoothscale(assets.screen, assets.display_screen.get_size()), (0, 0))

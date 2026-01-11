@@ -4,7 +4,6 @@ import pygame
 from util.game_states import States as state
 from util import assets
 from constants import Constants
-from classes.position import Position
 
 
 def fit_view(world_size: int):
@@ -31,7 +30,7 @@ def get_font(size: int) -> pygame.font.Font:
     return state.font_cache[size]
 
 
-def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool=False, italic: bool=False, opacity: int=255, mode: str = "topleft") -> None:
+def draw_text(pos: tuple[int, int], string: str, color: str, size: int = 20, bold: bool=False, italic: bool=False, opacity: int=255, mode: str = "topleft") -> None:
     """
     Draws text at a specific location on screen.
 
@@ -59,9 +58,9 @@ def draw_text(pos: Position, string: str, color: str, size: int = 20, bold: bool
     text = font.render(string, False, color)
     if opacity != 255: text.set_alpha(opacity)
 
-    if mode == "topleft": textbox = text.get_rect(topleft = (pos.x, pos.y))
-    elif mode == "bottomright": textbox = text.get_rect(bottomright = (pos.x, pos.y))
-    else: textbox = text.get_rect(center = (pos.x, pos.y))
+    if mode == "topleft": textbox = text.get_rect(topleft = pos)
+    elif mode == "bottomright": textbox = text.get_rect(bottomright = pos)
+    else: textbox = text.get_rect(center = pos)
 
     assets.screen.blit(text, textbox)
 

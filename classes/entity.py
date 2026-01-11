@@ -61,6 +61,9 @@ class Entity:
     def age(self, value: int) -> None: self._age = value
 
 
+    def __lt__(self, other: Entity) -> bool: return self.id < other.id
+
+
     def deregister(self, world_manager: "world_manager.WorldManager") -> None:
         self._alive = False
         world_manager.deregister(self) # Deregisters this entity from the world manager.

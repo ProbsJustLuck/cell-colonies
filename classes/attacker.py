@@ -9,7 +9,7 @@ from classes.ui.colors import ColorInfo
 import classes.wall as wall
 import classes.rotator as rotator
 import classes.annihilator as annihilator
-from classes.position import Position
+from classes.position import get_pos, Position
 from classes.direction import Direction
 import util.pathfinding as pathfinding
 from constants import Constants
@@ -205,7 +205,7 @@ class Attacker(cell.Cell):
 
 
         pos = Constants.DIRECTION_MAPPINGS[self.direction]
-        cell = world_manager.get_cell(Position(self.pos.x + pos[0], self.pos.y + pos[1]))
+        cell = world_manager.get_cell(get_pos((self.pos.x + pos[0], self.pos.y + pos[1])))
         if cell is self.__target:
             assert isinstance(cell, homebase.Homebase)
             cell.change_health(-self.__damage)
@@ -231,7 +231,8 @@ class Attacker(cell.Cell):
                 lambda pos: world_manager.in_bounds(pos),
                 lambda pos: self.__is_blocking(pos, world_manager)
             )
-            if not self.__rotated: return
+            if not self.__rotated: 
+                return
             next_pos = self.pos # "placeholder" because move() overrides it         
         else: next_pos = self.__path[0]
 
@@ -268,7 +269,7 @@ class Attacker(cell.Cell):
         used_path = True
         if self.__rotated: # if we're rotated, make the next pos the place we're looking
             dx, dy = Constants.DIRECTION_MAPPINGS[self.direction]
-            next_pos = Position(self.pos.x + dx, self.pos.y + dy)
+            next_pos = get_pos((self.pos.x + dx, self.pos.y + dy))
             used_path = False
 
         cell = world_manager.get_cell(next_pos)

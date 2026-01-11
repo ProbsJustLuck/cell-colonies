@@ -125,6 +125,8 @@ def create_world(seed: int | None = None, world: WorldManager | None = None, rng
     state.old_walls = state.sim_walls
     state.old_health = state.health_multiplier
 
+    state.selected_cell = None
+
     state.unique_seeds.add(state.world.seed)
 
 
@@ -137,9 +139,9 @@ def load_world(button: "Button"):
         state.last_played_game = None
         if state.world and len(state.world.homebases) <= 1: state.game_end = True
 
-        if (state.rewind and state.world and not state.world.get_snapshot(1) and not state.rewind.disabled) or (state.rewind and state.world and state.world.get_snapshot(1) and state.rewind.disabled): state.rewind.toggle()
+        if (state.rewind and state.world and not state.world.get_snapshot(1)[0] and not state.rewind.disabled) or (state.rewind and state.world and state.world.get_snapshot(1)[0] and state.rewind.disabled): state.rewind.toggle()
 
-        if (state.fast_rewind and state.world and not state.world.get_snapshot(2) and not state.fast_rewind.disabled) or (state.fast_rewind and state.world and state.world.get_snapshot(2) and state.fast_rewind.disabled): state.fast_rewind.toggle()
+        if (state.fast_rewind and state.world and not state.world.get_snapshot(2)[0] and not state.fast_rewind.disabled) or (state.fast_rewind and state.world and state.world.get_snapshot(2)[0] and state.fast_rewind.disabled): state.fast_rewind.toggle()
 
         if (state.pause and state.pause.disabled and not state.game_end) or (state.pause and not state.pause.disabled and state.game_end): state.pause.toggle()
 
@@ -266,8 +268,8 @@ def toggle_pause_simulation(button: "Button | None"):
         state.pause.label = ">"
         state.pause.style.scale = 2
 
-        if state.rewind and state.rewind.disabled and state.world.get_snapshot(1): state.rewind.toggle()
-        if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2): state.fast_rewind.toggle()
+        if state.rewind and state.rewind.disabled and state.world.get_snapshot(1)[0]: state.rewind.toggle()
+        if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2)[0]: state.fast_rewind.toggle()
         if not state.game_end and state.forward and state.forward.disabled: state.forward.toggle()
         if not state.game_end and state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
     else:
@@ -288,7 +290,7 @@ def forward(button: "Button | None"):
     if state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
-    if state.world.get_snapshot(2) and state.fast_rewind and state.fast_rewind.disabled: state.fast_rewind.toggle()
+    if state.world.get_snapshot(2)[0] and state.fast_rewind and state.fast_rewind.disabled: state.fast_rewind.toggle()
 
 
 def fast_forward(button: "Button | None"):
@@ -299,7 +301,7 @@ def fast_forward(button: "Button | None"):
     if state.waiting_for_pause and not state.paused_forward: state.paused_forward = True
 
     if state.rewind and state.rewind.disabled: state.rewind.toggle()
-    if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2): state.fast_rewind.toggle()
+    if state.fast_rewind and state.fast_rewind.disabled and state.world.get_snapshot(2)[0]: state.fast_rewind.toggle()
 
 
 def rewind(button: "Button | None"):
@@ -329,7 +331,7 @@ def rewind(button: "Button | None"):
     if state.forward and state.forward.disabled: state.forward.toggle()
     if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
 
-    if not state.world.get_snapshot(1):
+    if not state.world.get_snapshot(1)[0]:
         if state.rewind and not state.rewind.disabled: state.rewind.toggle()
         if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
 
@@ -339,7 +341,7 @@ def fast_rewind(button: "Button | None"):
     state.game_end = False
 
     selected_id = state.selected_cell.id if state.selected_cell else None
-    state.world.restore_snapshot(1)
+    state.world.restore_snapshot(2)
     from util.render import clear_icon_cache
     clear_icon_cache()
     state.selected_cell = None
@@ -361,8 +363,8 @@ def fast_rewind(button: "Button | None"):
     if state.forward and state.forward.disabled: state.forward.toggle()
     if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
 
-    if not state.world.get_snapshot(1) and state.rewind and not state.rewind.disabled: state.rewind.toggle()
-    if not state.world.get_snapshot(2) and state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
+    if not state.world.get_snapshot(1)[0] and state.rewind and not state.rewind.disabled: state.rewind.toggle()
+    if not state.world.get_snapshot(2)[0] and state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
 
 
 def show_tps(button: "Button"): state.show_tps = True
@@ -920,7 +922,7 @@ def keep_video_changes() -> None:
     if not button.disabled: button.toggle()
 
 
-def set_max_history(value: float): state.max_history = round(value)
+def set_max_history(value: float): state.snapshot_frequency = round(value)
 
 
 def set_max_catchup(value: float): state.max_catchup = round(value)
@@ -961,10 +963,10 @@ def change_catalogue_area(button: "Button"):
             return
     
     elif button.id and button.id == "annihilator":
-        if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 5:
+        if (not state.unlocked_teleporter and not state.unlocked_annihilator) or len(state.unique_seeds) < 10:
             button.clicked = False
             return
-        elif state.unlocked_teleporter and len(state.unique_seeds) >= 5 and not state.unlocked_annihilator:
+        elif state.unlocked_teleporter and len(state.unique_seeds) >= 10 and not state.unlocked_annihilator:
             state.special_buttons[58].tooltip = ""
             state.unlocked_annihilator = True
 
@@ -1045,7 +1047,7 @@ def rewind_button(button: "Button"):
     clear_icon_cache()
     state.selected_cell = None
 
-    state.y_offset = max(state.y_offset, 50 * (min(10 - len(state.world.history), 0)) + 15)
+    state.y_offset = max(state.y_offset, 50 * (min(10 - state.world.current_tick, 0)) + 15)
 
     if selected_id is not None: # have to do this cuz 0 would be skipped
         for row in state.world.map:
@@ -1063,7 +1065,7 @@ def rewind_button(button: "Button"):
     if state.forward and state.forward.disabled: state.forward.toggle()
     if state.fast_forward and state.fast_forward.disabled: state.fast_forward.toggle()
 
-    if not state.world.get_snapshot(1):
+    if not state.world.get_snapshot(1)[0]:
         if state.rewind and not state.rewind.disabled: state.rewind.toggle()
         if state.fast_rewind and not state.fast_rewind.disabled: state.fast_rewind.toggle()
 

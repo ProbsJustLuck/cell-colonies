@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 import pygame
 
-from classes.position import Position 
+from classes.position import Position, get_pos
 from classes.direction import Direction
 import classes.cell as cell
 import classes.homebase as homebase
@@ -65,7 +65,7 @@ class Rotator(cell.Cell):
         for dx in range(-radius, radius + 1): # Iterates from -5 to positive 6 (excluding 6)
             rem = radius - abs(dx) # scales from 0 to 5
             for dy in range(-rem, rem + 1): # same deal, from -rem to position rem +1
-                pos = Position(hb.x + dx, hb.y + dy)
+                pos = get_pos((hb.x + dx, hb.y + dy))
                 if world_manager.in_bounds(pos) and pos in empties: positions.append(pos)
 
         if positions: return world_manager.rng.choice(positions)

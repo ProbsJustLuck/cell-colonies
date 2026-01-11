@@ -1,7 +1,7 @@
 from __future__ import annotations
-import collections
 import copy
 import random
+import bisect
 from typing import Any
 
 from classes.game_state import GameState
@@ -9,7 +9,7 @@ import classes.homebase as homebase
 import classes.attacker as attacker
 import classes.rotator as rotator
 import classes.teleporter as teleporter
-from classes.position import Position
+from classes.position import Position, get_pos
 import classes.entity as entity
 import classes.wall as wall
 import classes.annihilator as annihilator
@@ -29,11 +29,12 @@ class WorldManager:
         if seed is not None: self.__seed = seed
         self.__rng = random.Random(self.__seed)
 
-        self.__tick_history: collections.deque[dict[str, Any]] = collections.deque(maxlen=States.max_history)
+        self.__tick_history: dict[int, dict[str, Any]] = {}
+
+        self.__snapshot_frequency = States.snapshot_frequency
 
         self.__current_tick: int = 0
         self.__id_counter: int = 0
-        self.__debug = True # Whether or not to check if the empty set is empty (im paranoid but want efficiency)
 
         self.__homebases: list[homebase.Homebase] = []
         self.__rotators: list[rotator.Rotator] = []
@@ -44,7 +45,7 @@ class WorldManager:
 
 
         self.__empty_spaces: set[Position] = {
-            Position(i, j)
+            get_pos((i, j))
             for i in range(size)
             for j in range(size)
         }
@@ -94,7 +95,7 @@ class WorldManager:
 
 
     @property
-    def history(self) -> collections.deque[dict[str, Any]]: return self.__tick_history
+    def history(self) -> dict[int, dict[str, Any]]: return self.__tick_history
     
 
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
@@ -102,19 +103,18 @@ class WorldManager:
             "map": copy.deepcopy(self.__world_map),
             "tick": self.__current_tick,
             "rng_state": self.rng.getstate(),
+            "id_count": self.__id_counter
         }
     
 
     def restore_snapshot(self, steps: int) -> bool:
-        snapshot = self.get_snapshot(steps)
-        if not snapshot: return False
-
-        for _ in range(steps):
-            self.__tick_history.pop()
+        snapshot, rem = self.get_snapshot(steps)
+        if not snapshot or rem is None: return False
 
         self.__world_map = snapshot["map"]
         self.__current_tick = snapshot["tick"]
         self.rng.setstate(snapshot["rng_state"])
+        self.__id_counter = snapshot["id_count"]
 
         self.__homebases = []
         self.__rotators = []
@@ -126,37 +126,39 @@ class WorldManager:
         for x in range(self.__world_size):
             for y in range(self.__world_size):
                 entity = self.__world_map[x][y]
-                if entity is None:
-                    self.__empty_spaces.add(Position(x, y))
-                elif isinstance(entity, homebase.Homebase):
-                    self.__homebases.append(entity)
-                elif isinstance(entity, rotator.Rotator):
-                    self.__rotators.append(entity)
-                elif isinstance(entity, attacker.Attacker):
-                    self.__attackers.append(entity)
-                elif isinstance(entity, wall.Wall):
-                    self.__walls.append(entity)
-                elif isinstance(entity, teleporter.Teleporter):
-                    self.__teleporters.append(entity)
-                elif isinstance(entity, annihilator.Annihilator):
-                    self.__annihilators.append(entity)
+                if entity is None: self.__empty_spaces.add(get_pos((x, y)))
+                
+                elif isinstance(entity, homebase.Homebase): self.__homebases.append(entity)
+
+                elif isinstance(entity, rotator.Rotator): self.__rotators.append(entity)
+
+                elif isinstance(entity, attacker.Attacker): self.__attackers.append(entity)
+
+                elif isinstance(entity, wall.Wall): self.__walls.append(entity)
+
+                elif isinstance(entity, teleporter.Teleporter): self.__teleporters.append(entity)
+
+                elif isinstance(entity, annihilator.Annihilator): self.__annihilators.append(entity)
+
+        self.__attackers.sort()
+        self.__rotators.sort()
+        self.__homebases.sort()
+        self.__walls.sort()
+        self.__teleporters.sort()
+        self.__annihilators.sort()
+
+        for _ in range(rem):
+            self.tick()
 
         return True
 
 
-    def get_snapshot(self, step: int) -> dict[str, Any] | None:
-        if step <= 0 or step > len(self.__tick_history): return None
-        return self.__tick_history[-step]
+    def get_snapshot(self, step: int) -> tuple[dict[str, Any], int] | tuple[None, None]:
+        if step <= 0 or step > self.__current_tick: return (None, None)
 
-
-    def __check_empty(self) -> None: # Testing to make sure the empty set is synced
-        empty_spaces = {
-            Position(i, j)
-            for i in range(self.__world_size)
-            for j in range(self.__world_size)
-            if self.__world_map[i][j] is None
-        }
-        assert empty_spaces == self.__empty_spaces, "The empty space set was desynced! Something is wrong..."
+        target_tick = self.__current_tick - step
+        rem = target_tick % self.__snapshot_frequency
+        return (self.__tick_history[target_tick - rem], rem)
 
 
     def new_id(self) -> int:
@@ -188,18 +190,15 @@ class WorldManager:
     
 
     def tick(self) -> GameState:
-        self.__tick_history.append(self.__snapshot())
+        if self.__current_tick % self.__snapshot_frequency == 0: self.__tick_history[self.__current_tick] = self.__snapshot()
         self.__current_tick += 1
 
-        if self.__debug and self.__current_tick % 20 == 0: self.__check_empty()
-
-        # Tick normally
-        for homebase in sorted(self.__homebases, key=lambda hb: (hb.pos.x, hb.pos.y)):
+        for homebase in self.__homebases[:]:
             if not homebase.alive: continue
             homebase.age += 1
             homebase.tick(self)
         
-        for rotator in sorted(self.__rotators, key=lambda rot: (rot.pos.x, rot.pos.y)):
+        for rotator in self.__rotators[:]:
             if not rotator.alive: continue
 
             if rotator.health <= 0.0:
@@ -209,7 +208,7 @@ class WorldManager:
             rotator.age += 1
             rotator.tick(self)
 
-        for teleporter in sorted(self.__teleporters, key=lambda tele: (tele.pos.x, tele.pos.y)):
+        for teleporter in self.__teleporters[:]:
             if not teleporter.alive: continue
 
             if teleporter.health <= 0.0:
@@ -219,7 +218,7 @@ class WorldManager:
             teleporter.age += 1
             teleporter.tick(self)
 
-        for annihilator in sorted(self.__annihilators, key=lambda anni: (anni.pos.x, anni.pos.y)):
+        for annihilator in self.__annihilators[:]:
             if not annihilator.alive: continue
 
             if annihilator.health <= 0.0:
@@ -229,7 +228,7 @@ class WorldManager:
             annihilator.age += 1
             annihilator.tick(self)
         
-        for attacker in sorted(self.__attackers, key=lambda atk: (atk.pos.x, atk.pos.y)):
+        for attacker in self.__attackers[:]:
             if not attacker.alive: continue
 
             # time spent here: 3 hours
@@ -249,17 +248,14 @@ class WorldManager:
             attacker.age += 1
             attacker.tick(self)
 
-        for wall in sorted(self.__walls, key=lambda wall: (wall.pos.x, wall.pos.y)):
-            wall.age += 1
+        for wall in self.__walls[:]: wall.age += 1
 
         # Kill dead homebases
         for homebase in self.__homebases[:]:
             if homebase.health <= 0.0: homebase.deregister(self)
 
-        if(len(self.__homebases) == 1):
-            return GameState.WIN
-        elif(len(self.__homebases) == 0):
-            return GameState.LOSS
+        if(len(self.__homebases) == 1): return GameState.WIN
+        elif(len(self.__homebases) == 0): return GameState.LOSS
         return GameState.CONTINUE
 
 
@@ -302,17 +298,28 @@ class WorldManager:
         self.__empty_spaces.add(cell.pos)
 
         if isinstance(cell, homebase.Homebase):
-            if cell in self.__homebases: self.__homebases.remove(cell)
+            index = bisect.bisect_left(self.__homebases, cell)
+            if index < len(self.__homebases) and self.__homebases[index].id == cell.id: self.__homebases.pop(index)
+
         elif isinstance(cell, attacker.Attacker):
-            if cell in self.__attackers: self.__attackers.remove(cell)
+            index = bisect.bisect_left(self.__attackers, cell)
+            if index < len(self.__attackers) and self.__attackers[index].id == cell.id: self.__attackers.pop(index)
+
         elif isinstance(cell, rotator.Rotator):
-            if cell in self.__rotators: self.__rotators.remove(cell)
+            index = bisect.bisect_left(self.__rotators, cell)
+            if index < len(self.__rotators) and self.__rotators[index].id == cell.id: self.__rotators.pop(index)
+
         elif isinstance(cell, wall.Wall):
-            if cell in self.__walls: self.__walls.remove(cell)
+            index = bisect.bisect_left(self.__walls, cell)
+            if index < len(self.__walls) and self.__walls[index].id == cell.id: self.__walls.pop(index)
+
         elif isinstance(cell, teleporter.Teleporter):
-            if cell in self.__teleporters: self.__teleporters.remove(cell)
+            index = bisect.bisect_left(self.__teleporters, cell)
+            if index < len(self.__teleporters) and self.__teleporters[index].id == cell.id: self.__teleporters.pop(index)
+
         elif isinstance(cell, annihilator.Annihilator):
-            if cell in self.__annihilators: self.__annihilators.remove(cell)
+            index = bisect.bisect_left(self.__annihilators, cell)
+            if index < len(self.__annihilators) and self.__annihilators[index].id == cell.id: self.__annihilators.pop(index)
 
 
     def register(self, cell: entity.Entity) -> None: # Register the cell to each entity sublist
@@ -323,14 +330,25 @@ class WorldManager:
         self.__empty_spaces.discard(cell.pos)
 
         if isinstance(cell, homebase.Homebase):
-            self.__homebases.append(cell)
+            index = bisect.bisect_right(self.__homebases, cell)
+            self.__homebases.insert(index, cell)
+
         elif isinstance(cell, attacker.Attacker):
-            self.__attackers.append(cell)
+            index = bisect.bisect_right(self.__attackers, cell)
+            self.__attackers.insert(index, cell)
+
         elif isinstance(cell, rotator.Rotator):
-            self.__rotators.append(cell)
+            index = bisect.bisect_right(self.__rotators, cell)
+            self.__rotators.insert(index, cell)
+
         elif isinstance(cell, wall.Wall):
-            self.__walls.append(cell)
+            index = bisect.bisect_right(self.__walls, cell)
+            self.__walls.insert(index, cell)
+
         elif isinstance(cell, teleporter.Teleporter):
-            self.__teleporters.append(cell)
+            index = bisect.bisect_right(self.__teleporters, cell)
+            self.__teleporters.insert(index, cell)
+
         elif isinstance(cell, annihilator.Annihilator):
-            self.__annihilators.append(cell)
+            index = bisect.bisect_right(self.__annihilators, cell)
+            self.__annihilators.insert(index, cell)

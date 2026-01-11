@@ -198,12 +198,12 @@ state.tps_slider = sliders[MenuArea.SIMULATION][0]
 
 special_sliders: dict[int, Slider] = {
     # Misc options
-    0: Slider( # Max history
+    0: Slider( # History Frequency
         rect=pygame.Rect(380, 260, 220, 15),
         orientation="h",
         min_value=1,
         max_value=100,
-        value=30.0,
+        value=5.0,
         snap=False,
         style=SliderStyle(head_radius=5),
         on_change=set_max_history,

@@ -151,7 +151,7 @@ class Annihilator(cell.Cell):
                 self.pos,
                 self.__target,
                 lambda pos: world_manager.in_bounds(pos), 
-                lambda pos: self.__is_blocking(pos, world_manager)
+                lambda pos: self.__is_blocking(pos, world_manager),
             )
         if self.__path and not self.__stationary:
             next_pos = self.__path[0]

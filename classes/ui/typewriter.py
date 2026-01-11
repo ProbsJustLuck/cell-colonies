@@ -1,7 +1,6 @@
 from dataclasses import dataclass
 import pygame
 
-from classes.position import Position
 from util.assets import TEXT_BUBBLE, BOB_ROSS
 from util.game_states import States as state
 from util.ui_helpers import get_font, draw_text
@@ -139,8 +138,8 @@ class Typewriter:
 
         screen.blit(BOB_ROSS, (pos[0] + 300, pos[1] + 20))
 
-        draw_text(Position(pos[0], pos[1] + 4), "Bob Ross", "#4F1212", 50)
-        draw_text(Position(pos[0] + 2, pos[1] + 4), "Bob Ross", "#4F1212", 50)
+        draw_text((pos[0], pos[1] + 4), "Bob Ross", "#4F1212", 50)
+        draw_text((pos[0] + 2, pos[1] + 4), "Bob Ross", "#4F1212", 50)
 
         y = pos[1] + 40
         for line in self.__lines:

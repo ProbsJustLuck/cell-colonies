@@ -1,6 +1,6 @@
 import pygame
 
-from classes.position import Position
+from classes.position import get_pos
 from classes.ui.key_actions import KeyActions
 from classes.ui.menu_area import MenuArea
 from classes.ui.typewriter import Message
@@ -181,7 +181,7 @@ def event_handler(event: pygame.Event):
                 pygame.time.set_timer(assets.ROSS_PAUSE_REMINDER, 20000, loops=1)
 
             case 6:
-                state.typewriter.queue(Message(["Unfortunately, there is a max history that", "is kept, but the length of the history", "can be adjusted in the options menu!", "", f"The current max is {state.max_history} ticks."]))
+                state.typewriter.queue(Message(["Taking snapshots every tick can be laggy,", "so snapshots are taken every few ticks,", "then the rest are manually simulated!", "", "The frequenct can be set in options!", f"The current frequency is every {state.snapshot_frequency} ticks."]))
                 state.typewriter.queue(Message(["Rewinding can only be done when the", "simulation is paused!", "", "Try it out now!"], 8))
                 return
 
@@ -323,7 +323,7 @@ def event_handler(event: pygame.Event):
                 col = int((event.pos[0] - origin.x) / cell_size)
                 row = int((event.pos[1] - origin.y) / cell_size)
 
-                pos = Position(row, col)
+                pos = get_pos((row, col))
                 cell = state.world.get_cell(pos)
 
                 if cell and ((cell.name in state.disabled_cells and state.second_render_page) or (cell.name in state.disabled_cells and not state.second_render_page)): return
@@ -437,7 +437,7 @@ def event_handler(event: pygame.Event):
                     col = int((event.pos[0] - origin.x) / cell_size)
                     row = int((event.pos[1] - origin.y) / cell_size)
 
-                    state.hovered_pos = Position(row, col)
+                    state.hovered_pos = get_pos((row, col))
                 else:
                     state.hovered_pos = None
             elif state.typing_box and state.typing_box.collidepoint(mouse_pos): pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_IBEAM)
@@ -639,7 +639,7 @@ def event_handler(event: pygame.Event):
             M = 50
 
             if event.y > 0: state.y_offset = min(state.y_offset + event.y * 40, 15)
-            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 40, M * (min(10 - len(state.world.history), 0)) + 15)
+            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 40, M * (min(10 - state.world.current_tick, 0)) + 15)
 
 
     # Below are basically just keybinds
@@ -684,5 +684,5 @@ def event_handler(event: pygame.Event):
         
         elif event.key == state.bindings[KeyActions.STEP_FORWARD] and not pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and not state.game_end: forward(None)
         elif event.key == state.bindings[KeyActions.STEP_FORWARD] and pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and not state.game_end: fast_forward(None)
-        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and not pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(1): rewind(None)
-        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(2): fast_rewind(None)
+        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and not pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(1)[0]: rewind(None)
+        elif event.key == state.bindings[KeyActions.STEP_BACKWARD] and pygame.key.get_pressed()[pygame.K_LSHIFT] and not state.changing_seed and state.sim_pause and state.world.get_snapshot(2)[0]: fast_rewind(None)
