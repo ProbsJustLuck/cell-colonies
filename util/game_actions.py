@@ -125,6 +125,7 @@ def create_world(seed: int | None = None, world: WorldManager | None = None, rng
     state.old_walls = state.sim_walls
     state.old_health = state.health_multiplier
 
+    state.y_offset = 15
     state.selected_cell = None
 
     state.unique_seeds.add(state.world.seed)
@@ -162,6 +163,11 @@ def start_game(button: "Button | None", world: WorldManager | None = None, rng: 
     if not state.typewriter: state.typewriter = Typewriter(30, speed=20)
 
     if not state.seen_bob and not state.skip_tutorial: pygame.time.set_timer(assets.ROSS_CALL, 1000, loops=1)
+    assets.menu_click.play(0)
+    if state.typewriter.id == -2:
+        rand = random.randint(0, len(assets.ross_lines) - 1)
+        state.typewriter.playing = rand
+        assets.ross_lines[rand].play(0)
 
 
 def go_to_main_menu(button: "Button"):
@@ -186,6 +192,8 @@ def go_to_main_menu(button: "Button"):
     elif not state.finished_tutorial and (not state.skip_tutorial or state.seen_bob) and not state.skip_tutorial:
         state.typewriter.reset_progress()
 
+    assets.ross_lines[state.typewriter.playing].stop()
+
     # Flags off (safety)
     state.panning = False
     state.changing_seed = False
@@ -197,6 +205,7 @@ def go_to_main_menu(button: "Button"):
     state.hovered_pos = None
 
     pygame.time.set_timer(assets.ROSS_CALL, 0)
+    assets.menu_click.play(0)
 
 
 def return_to_main_menu(button: "Button") -> None:
@@ -208,10 +217,13 @@ def return_to_main_menu(button: "Button") -> None:
 
     if (state.conflicts and not state.last_played_game and not state.special_buttons[19].disabled) or (not state.conflicts and not state.last_played_game and state.special_buttons[19].disabled): state.special_buttons[19].toggle()
 
+    assets.menu_click.play(0)
+
 
 def go_to_options(button: "Button"):
     if state.controls_section != "controls": change_option_section(state.special_buttons[23])
     state.current_area = MenuArea.OPTIONS
+    assets.menu_click.play(0)
 
 
 def go_to_infopedia(button: "Button"):
@@ -248,14 +260,12 @@ def go_to_infopedia(button: "Button"):
     state.catalogue_area = "homebase"
 
     state.current_area = MenuArea.CATALOGUE
+    assets.menu_click.play(0)
 
 
 def go_to_credits(button: "Button"):
     state.current_area = MenuArea.CREDITS
-
-
-def go_to_debug(button: "Button"):
-    state.current_area = MenuArea.DEBUG
+    assets.menu_click.play(0)
 
 
 def toggle_pause_simulation(button: "Button | None"):
@@ -710,6 +720,7 @@ def change_option_section(button: "Button"):
         case "26": state.controls_section = "debug"
         case _: pass
     button.toggle()
+    assets.menu_click.play(0)
 
 
 def toggle_second_bindings(button: "Button"):
@@ -928,10 +939,17 @@ def set_max_history(value: float): state.snapshot_frequency = round(value)
 def set_max_catchup(value: float): state.max_catchup = round(value)
 
 
-def set_sound_fx(value: float): state.sound_fx_volume = round(value, 2)
+def set_sound_fx(value: float): 
+    state.sound_fx_volume = round(value, 2)
+
+    assets.menu_click.set_volume(state.sound_fx_volume ** 1.5)
+    for sound in assets.ross_lines:
+        sound.set_volume(0.2 * state.sound_fx_volume ** 1.5)
 
 
-def set_music(value: float): state.music_volume = round(value, 2)
+def set_music(value: float): 
+    state.music_volume = round(value, 2)
+    assets.background_music.set_volume(state.music_volume ** 1.5)
 
 
 def toggle_skip(button: "Button"): state.skip_tutorial = not state.skip_tutorial
@@ -1036,6 +1054,8 @@ def change_catalogue_area(button: "Button"):
             btn = state.special_buttons[49]
             if not btn.disabled: btn.toggle()
 
+    assets.menu_click.play(0)
+
 
 def rewind_button(button: "Button"):
     if not state.world or type(button.id) != str: return
@@ -1080,8 +1100,27 @@ def complete_tutorial(button: "Button"):
 def show_first_credits(button: "Button") -> None:
     state.show_first_credits = True
     button.toggle()
+    assets.woosh.play(0)
 
 
 def show_second_credits(button: "Button") -> None:
     state.show_second_credits = True
     button.toggle()
+    assets.woosh.play(0)
+
+
+def go_to_feature_list(button: "Button") -> None:
+    state.current_area = MenuArea.FEATURE_LIST
+    assets.menu_click.play(0)
+
+
+def next_feature_list_page(button: "Button") -> None:
+    state.feature_page = min(state.feature_page + 1, 3)
+    if state.feature_page == 3 and not button.disabled: button.toggle()
+    elif state.feature_page != 0 and state.special_buttons[60].disabled: state.special_buttons[60].toggle()
+
+
+def prev_feature_list_page(button: "Button") -> None:
+    state.feature_page = max(state.feature_page - 1, 0)
+    if state.feature_page == 0 and not button.disabled: button.toggle()
+    elif state.feature_page != 3 and state.special_buttons[61].disabled: state.special_buttons[61].toggle()

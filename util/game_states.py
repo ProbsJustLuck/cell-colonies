@@ -197,4 +197,6 @@ class States:
     show_first_credits: bool = False
     show_second_credits: bool = False
 
+    feature_page: int = 0
+
     unique_seeds: set[int] = set()

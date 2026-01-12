@@ -9,7 +9,7 @@ import pygame
 
 from util.game_states import States as state
 from util.event_handler import event_handler
-from util.render import render_start_screen, render_game_screen, render_options_screen, render_cells_catalogue, render_credits
+from util.render import render_start_screen, render_game_screen, render_options_screen, render_cells_catalogue, render_credits, render_feature_list
 from util.ui_helpers import draw_text
 from util.game_actions import toggle_pause_simulation, check_homebases, check_walls, set_tps
 
@@ -26,12 +26,15 @@ last_measure = pygame.time.get_ticks()
 
 print(f"Load took {time.time() - start_time: .4f}s")
 
+woosh_channel = assets.woosh.play(0)
+bg_channel: pygame.Channel = pygame.Channel(1)
+
 count = 0
 while state.running:
     downtime = fps_clock.tick(60)  # Limits game loop to 60 FPS
     pressed_keys = pygame.key.get_pressed()
 
-    TRIGGER = 1000
+    TRIGGER = 2000
 
     if state.current_area is MenuArea.SIMULATION:
         if downtime > TRIGGER and state.target_tps not in [2.0, 0.5, 0.1]:
@@ -80,6 +83,8 @@ while state.running:
                 state.typewriter.reset_progress()
 
     for event in pygame.event.get(): event_handler(event)
+
+    if not woosh_channel.get_busy() and not bg_channel.get_busy(): bg_channel = assets.background_music.play(-1)
 
     match state.current_area:
         case MenuArea.MAIN_MENU:
@@ -396,6 +401,9 @@ while state.running:
 
         case MenuArea.CREDITS:
             render_credits(downtime)
+
+        case MenuArea.FEATURE_LIST:
+            render_feature_list()
 
 
         case _: pass

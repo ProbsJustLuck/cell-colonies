@@ -731,25 +731,29 @@ def render_game_screen(downtime: int):
     assets.screen.blit(overlay,state.TIMELINE_RECT.topleft)
     if state.world.history:
         state.timeline_buttons.clear()
-        for i in range(state.world.current_tick):
+
+        for i, tick in enumerate(range(0, state.world.current_tick + 1, state.world.snapshot_frequency)):
+            if tick not in state.world.history: continue
+
             x = state.TIMELINE_RECT.centerx
             y = state.TIMELINE_RECT.top + 20 + state.y_offset + 50 * i
             HEIGHT = 36 # type: ignore
             WIDTH = 25 # type: ignore
             TOP = y - HEIGHT / 2
             BOTTOM = y + HEIGHT / 2
+            if BOTTOM < state.TIMELINE_RECT.top or TOP > state.TIMELINE_RECT.bottom: continue
 
             if (state.TIMELINE_RECT.top >= BOTTOM) or (state.TIMELINE_RECT.bottom <= TOP): continue
 
-            text = create_text(f"{i + 1}", "#000000", 35)
-            text_rect: pygame.rect.Rect = text.get_rect(midbottom = (x + 1, int(BOTTOM) - 4))
+            text = create_text(f"{tick}", "#000000", 30)
+            text_rect: pygame.rect.Rect = text.get_rect(midbottom = (x + 1, int(BOTTOM) - 7))
 
             clip_top = max(TOP, state.TIMELINE_RECT.top)
             clip_bottom = min(BOTTOM, state.TIMELINE_RECT.bottom)
             if clip_bottom - clip_top <= 0: continue
 
             center_y = (clip_top + clip_bottom) / 2
-            button = Button.Button("", (x, int(center_y)), "", style=Button.ButtonStyle(width=WIDTH, height=int(clip_bottom - clip_top), border=2), id=f"{i+1}", on_enter=rewind_button)
+            button = Button.Button("", (x, int(center_y)), "", style=Button.ButtonStyle(width=WIDTH, height=int(clip_bottom - clip_top), border=2), id=f"{state.world.current_tick - tick}", on_enter=rewind_button)
             button.initialize()
             button.draw(assets.screen, assets.get_scale_mouse_pos(pygame.mouse.get_pos()))
             state.timeline_buttons.append(button)
@@ -1301,6 +1305,86 @@ def render_credits(downtime: int) -> None:
         assets.screen.set_clip(None)
 
 
+
+    if Button.pending_tooltip:
+        Button.pending_tooltip()
+        Button.pending_tooltip = None
+
+
+def render_feature_list():
+    assets.screen.blit(assets.main_menu_background, assets.main_menu_background.get_rect(topleft = (0, 0)))
+    mouse_pos = assets.get_scale_mouse_pos(pygame.mouse.get_pos())
+
+    WIDTH = 800
+    HEIGHT = 400
+    rect = pygame.rect.Rect(assets.screen.size[0] // 2 - (WIDTH // 2), assets.screen.size[1] // 2 - HEIGHT // 2, WIDTH, HEIGHT)
+    pygame.draw.rect(assets.screen, "#888888", rect)
+    pygame.draw.rect(assets.screen, "#000000", rect.inflate(3, 3), width=4, border_radius=2)
+
+    for i in range(59, 62): state.special_buttons[i].draw(assets.screen, mouse_pos)
+
+
+    draw_text((rect.topleft[0] + rect.size[0] // 2, rect.top + 50), "Feature List", "#000000", 60, mode="center")
+    draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 50), "Feature List", "#000000", 60, mode="center")
+
+    LINE_SPACING = 20
+
+    if state.feature_page == 0:
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 0), " - Grid-based world with entity storage/lifecycles", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 1), " - Tick-based simulation with pausing, stepping, fast-forward, and rewinding", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 2), " - Deterministic RNG per world seed (seeds will always be the same)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 3), " - Snapshot/rewind system with changeable snapshot frequency and catch-up ticks", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 4), " - Win/loss detection (0 homebases alive vs 1)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 5), " - 6 unique cells (homebases, attackers, rotators, teleporters, annihilator, wall)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 6), " - A* pathfinding with inbounds/blocking checks", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 7), " - Collision handling for destinations that are occupied", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 8), " - Main menu with animated title and button fade-in", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 9), " - Simulation screen (with a viewport, controls and an info panel)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 10), " - Options screen with subsections", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 11), " - Cells catalogue with information about cells and gating unlocks", "#000000", 24, mode="center")
+
+    elif state.feature_page == 1:
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 0), " - Credits screen with wiper reveal animation", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 1), " - Feature list screen (this thing!)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 2), " - FPS/TPS display, current tick/hovered position display", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 3), " - Selected cell info for each individual and unique cell", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 4), " - Target lines and pathing lines debug overlays", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 5), " - Gridlines & specific cell visibility toggles", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 6), " - Timeline sidebar for rewinding to specific ticks, with scrolling", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 7), " - Fully rebindable key actions", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 8), " - Key conflict detection with UI highlighting of specific keys", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 9), " - Simulation panning/zooming (with button aliases!)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 10), " - Tooltips for buttons, hover/selected/disabled states, right-click detections", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 11), " - Clipboard copypasting for seeds (with pygame.scrap)", "#000000", 24, mode="center")
+
+    elif state.feature_page == 2:
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 0), " - Seed entering dialog with typing cursor and input validation", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 1), " - Regenerating seeds with a button", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 2), " - Changable sim options (cell health, spawn ticks, world size, etc.)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 3), " - Toggling individual colony colors (with validation, so you can't have more homebases", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 4), "space on the map)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 5), " - Tinting sprites for all entities per colony (with hurt sprites)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 6), " - Icon caching (less lag), clipping simulation rendering to the viewport", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 7), " - Background art", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 8), " - Volume control for music/sound FX (with non-linear scaling, realistic to real life)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 9), " - Bob Ross", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 10), " - Bob Ross voicing randomization per dialogue", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 11), " - Typewriter queuing and multi-line messages", "#000000", 24, mode="center")
+
+    elif state.feature_page == 3:
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 0), " - Tutoring gates progression", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 1), " - Skip tutorial option (must be pressed before seeing Ross at all)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 2), " - Skipping/advancing dialogue with C", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 3), " - Resolution changing with a timeout confirm (applying/reverting)", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 4), " - Fullscreen toggle", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 5), " - Max ticks per frame slider for lower ended devices", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 6), " - TPS slider and fine tuning buttons", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 7), " - Unique seed tracking", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 9), "Don't ask why Bob Ross is helping you simulate.", "#000000", 24, mode="center")
+        draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 10), "Might have forgotten some stuff", "#000000", 24, mode="center")
+
+
+    draw_text((rect.topleft[0] + rect.size[0] // 2 + 2, rect.top + 90 + LINE_SPACING * 13), f"{state.feature_page + 1}/4", "#000000", 24, mode="center")
 
     if Button.pending_tooltip:
         Button.pending_tooltip()

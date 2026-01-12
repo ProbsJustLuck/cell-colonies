@@ -9,7 +9,7 @@ from classes.ui.menu_area import MenuArea
 
 from util import assets
 from util.game_states import States as state
-from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area, complete_tutorial, show_first_credits, show_second_credits
+from util.game_actions import quit, go_to_credits, go_to_infopedia, go_to_options, start_game, toggle_pause_simulation, forward, fast_forward, rewind, fast_rewind, go_to_main_menu, show_tps, hide_tps, set_tps, create_world, tps_down, tps_up, next_render_page, toggle_walls, toggle_homebases, toggle_rotators, toggle_attackers, toggle_gridlines, fit_view_button, toggle_change_seed, change_seed, copy_seed, paste_seed, regenerate_world, increase_homebases, decrease_homebases, increase_health, decrease_health, increase_spawn_rate, decrease_spawn_rate, increase_walls, decrease_walls, increase_sim_size, decrease_sim_size, reset_health, reset_homebases, reset_size, reset_spawn_ticks, reset_walls, load_world, return_to_main_menu, change_option_section, toggle_second_bindings, change_binding, reset_binding, increase_resolution, decrease_resolution, toggle_fullscreen, apply_video_changes, revert_video_changes, keep_video_changes, set_max_history, set_max_catchup, set_music, set_sound_fx, toggle_skip, toggle_paths, toggle_target_lines, change_catalogue_area, complete_tutorial, show_first_credits, show_second_credits, go_to_feature_list, next_feature_list_page, prev_feature_list_page
 
 _main_menu_style_quit = ButtonStyle(
     font_size=29,
@@ -42,7 +42,8 @@ buttons: dict[MenuArea, list[Button]] = {
         Button("OPTIONS", (535, 355), "Click to view and customize game options!", style=copy.copy(_main_menu_style_small), on_enter=go_to_options),
         Button("CELLS", (665, 355), "Click to view the cell catalogue!", style=copy.copy(_main_menu_style_small), on_enter=go_to_infopedia),
         Button("CREDITS", (600, 410), "Click to view the game credits!", style=ButtonStyle(font_size=29, height=45, width=250, scale=1.5), on_enter=go_to_credits),
-        Button("QUIT", (600, 465), "Click to quit the game :(", style=copy.copy(_main_menu_style_quit), on_enter=quit)
+        Button("QUIT", (600, 465), "Click to quit the game :(", style=copy.copy(_main_menu_style_quit), on_enter=quit),
+        Button("Feature List", (assets.screen.get_rect().left + 60, assets.screen.get_rect().bottom - 25), "Click to view a brief feature list!", style=ButtonStyle(font_size=24, width=100, height=30), on_enter=go_to_feature_list),
     ],
     MenuArea.SIMULATION: [
         Button("((", (264, 615), "", style=(_simulation_time), on_enter=fast_rewind, disabled=True),
@@ -170,6 +171,9 @@ special_buttons: dict[int, Button] = {
     57: Button("", (assets.screen.get_rect().centerx, assets.screen.get_rect().centery + 76), "Click to reveal!", style=ButtonStyle(height=126, width=600, scale=1, opacity=70, base="#888888", border=0, padding=15), on_enter=show_second_credits),
 
     # 58 taken
+    59: Button("<-", (140, 170), "Return to the main menu!", style=ButtonStyle(height=35, width=90, scale=1.5, opacity=255, base="#888888"), on_enter=return_to_main_menu),
+    60: Button("<", (250, 500), "Previous page", style=ButtonStyle(height=35, width=35, scale=1.5, opacity=255, base="#9D9D9D"), disabled=True, on_enter=prev_feature_list_page),
+    61: Button(">", (950, 500), "Next page", style=ButtonStyle(height=35, width=35, scale=1.5, opacity=255, base="#9D9D9D"), on_enter=next_feature_list_page)
 }
 for button in special_buttons.values(): button.initialize()
 state.special_buttons = special_buttons

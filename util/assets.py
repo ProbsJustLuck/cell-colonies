@@ -122,6 +122,34 @@ CYCLE_CELL_COLOR = pygame.USEREVENT + 15
 locked_icon = pygame.transform.scale(pygame.image.load("assets/menu/locked.png").convert_alpha(), (30, 40))
 unlocked_icon = pygame.transform.scale(pygame.image.load("assets/menu/unlocked.png").convert_alpha(), (30, 40))
 
+# Audio (most were gotten from https://pixabay.com/sound-effects/)
+background_music = pygame.mixer.Sound("assets/audio/background.mp3")
+background_music.set_volume(0.5 ** 1.5)
+
+woosh = pygame.mixer.Sound("assets/audio/woosh.wav")
+woosh.set_volume(0.5 ** 1.5)
+
+menu_click = pygame.mixer.Sound("assets/audio/menu_select.wav")
+menu_click.set_volume(0.5 ** 1.5)
+
+## Ross
+welcome = pygame.mixer.Sound("assets/audio/ross/welcome-back.mp3")
+welcome_playing = False
+
+welcome.set_volume(0.2)
+ross_lines = (
+    pygame.mixer.Sound("assets/audio/ross/all-right.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/all-there-is.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/big-decision.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/canvas-is-your-world.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/god-bless.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/happy-little-sky.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/let-the-brush-have-fun.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/thank-you.mp3"),
+    pygame.mixer.Sound("assets/audio/ross/wash-old-brush.mp3")
+)
+for sound in ross_lines: sound.set_volume(0.1)
+
 # fix mouse scaling for different resolution
 MOUSE_SCALE_X = Constants.SCREEN_WIDTH / RESOLUTIONS[state.current_res][0]
 MOUSE_SCALE_Y = Constants.SCREEN_HEIGHT / RESOLUTIONS[state.current_res][1]

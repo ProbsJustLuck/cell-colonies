@@ -48,9 +48,10 @@ def event_handler(event: pygame.Event):
     elif event.type == assets.ROSS_CALL:
         if state.typewriter and not state.finished_tutorial:
             state.seen_bob = True
-            state.typewriter.queue(Message(["Hello, welcome to Cell Colonies!", "My name is Bob Ross. You can tell from", " my hair.", "", "I will be your guide and tutorial for", "this game!"]))
+            assets.welcome.play(0)
+            state.typewriter.queue(Message(["Hello, welcome to Cell Colonies!", "My name is Bob Ross. You can tell from", " my hair.", "", "I will be your guide and tutorial for", "this game!"], -5))
 
-            state.typewriter.queue(Message(["I'll help get you started for now.", "", "If you look around the screen, you'll", "find many different buttons and sliders", "for you to play with!"]))
+            state.typewriter.queue(Message(["I'll help get you started for now.", "", "If you look around the screen, you'll", "find many different buttons and sliders", "for you to play with!"], -6))
 
             state.typewriter.queue(Message(["An example would be the simulation zone,", "the main attraction of this game!", "", "I've marked it in red on your screen.", "", "Here you'll find the main simulation", "with every cell and its team displayed!"], 0))
     
@@ -202,13 +203,19 @@ def event_handler(event: pygame.Event):
 
         
         state.typewriter.next()
-    elif event.type == pygame.KEYDOWN and state.typewriter and not state.typewriter.finished_line() and event.key == pygame.K_c: state.typewriter.skip()
+    elif event.type == pygame.KEYDOWN and state.typewriter and not state.typewriter.finished_line() and event.key == pygame.K_c: 
+        if state.typewriter.id == -5: assets.welcome.stop()
+        else:
+            for sound in assets.ross_lines:
+                sound.stop()
+        state.typewriter.skip()
 
 
     if not state.loaded_menu:
         if not state.skipped_animation and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1: 
             state.skipped_animation = True
             state.starting_opacity = 255
+            assets.woosh.stop()
         return
 
 
@@ -351,6 +358,13 @@ def event_handler(event: pygame.Event):
 
         elif state.current_area is MenuArea.CREDITS:
             for i in range(55, 58):
+                button = state.special_buttons[i]
+                if button.rect.collidepoint(event.pos):
+                    button.click()
+                    return
+
+        elif state.current_area is MenuArea.FEATURE_LIST:
+            for i in range(59, 62):
                 button = state.special_buttons[i]
                 if button.rect.collidepoint(event.pos):
                     button.click()
@@ -639,7 +653,7 @@ def event_handler(event: pygame.Event):
             M = 50
 
             if event.y > 0: state.y_offset = min(state.y_offset + event.y * 40, 15)
-            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 40, M * (min(10 - state.world.current_tick, 0)) + 15)
+            elif event.y < 0: state.y_offset = max(state.y_offset + event.y * 40, M * (min(10 - (state.world.current_tick // state.world.snapshot_frequency + 1), 0)) + 15)
 
 
     # Below are basically just keybinds

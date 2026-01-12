@@ -7,4 +7,4 @@ class MenuArea(Enum):
     CATALOGUE = auto()
     CREDITS = auto()
     DEBUG = auto()
-    
+    FEATURE_LIST = auto()

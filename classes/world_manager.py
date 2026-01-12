@@ -96,6 +96,10 @@ class WorldManager:
 
     @property
     def history(self) -> dict[int, dict[str, Any]]: return self.__tick_history
+
+
+    @property
+    def snapshot_frequency(self) -> int: return self.__snapshot_frequency
     
 
     def __snapshot(self) -> Any: # takes a screenshot of the current map (for )
@@ -279,9 +283,10 @@ class WorldManager:
     
 
     def get_id(self, pos: Position) -> int | None:
+        if not self.in_bounds(pos): return None
         entity = self.__world_map[pos.x][pos.y]
 
-        if self.in_bounds(pos) and entity: return entity.id
+        if entity: return entity.id
         return None
     
 

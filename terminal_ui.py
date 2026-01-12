@@ -25,7 +25,7 @@ def render(world: WorldManager) -> None:
         row = ""
         for y in range(size):
             cell = grid[x][y]
-            emoji = EMOJIS.get(type(cell), "❓") # type: ignore
+            emoji = EMOJIS.get(type(cell), "?") # type: ignore
             row += emoji + " " # type: ignore
         print(row) # type: ignore
     print("\n")

@@ -1,7 +1,9 @@
 from dataclasses import dataclass
+import random
 import pygame
 
-from util.assets import TEXT_BUBBLE, BOB_ROSS
+from classes.ui.menu_area import MenuArea
+from util.assets import TEXT_BUBBLE, BOB_ROSS, ross_lines
 from util.game_states import States as state
 from util.ui_helpers import get_font, draw_text
 
@@ -23,6 +25,7 @@ class Typewriter:
 
         self.__progress = 0
         self.__accum = 0
+        self.__playing: int = 0
 
         self.__done = True
 
@@ -33,6 +36,14 @@ class Typewriter:
 
     @property
     def id(self) -> int: return self.__current.id if self.__current else -1
+
+
+    @property
+    def playing(self) -> int: return self.__playing
+
+
+    @playing.setter
+    def playing(self, value: int) -> None: self.__playing = value
 
 
     def has_lines_left(self) -> bool: return True if self.__queue or self.__lines else False
@@ -91,6 +102,12 @@ class Typewriter:
         self.__current = self.__queue.pop(0)
         self.__lines = self.__current.lines
         self.__progress = 0
+
+        if self.__current.id != -5 and state.current_area is MenuArea.SIMULATION:
+            rand = random.randint(0, len(ross_lines) - 1)
+            self.__playing = rand
+            ross_lines[rand].play(0)
+
         self.__done = False
 
 
