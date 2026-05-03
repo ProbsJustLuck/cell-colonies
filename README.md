@@ -3,7 +3,7 @@
 ## Project Info
 
 Cell Colonies is a simulation game where different cells interact, compete, and shape the outcome of a living grid. Built entirely solo as my Grade 12 CS final project, my game combines original systems, mechanics, visuals, and design ideas.
-Every feature, concept, and piece of artwork was created by me. Music and sound effects were obtained from free-to-use music websites and are properly credited.
+<br>Every feature, concept, and piece of artwork was created by me. Music and sound effects were obtained from free-to-use music websites and are properly credited.
 
 ## Features
 
